@@ -1,0 +1,48 @@
+sinclude Makeconf
+
+OCTFILES = avifile.oct aviread.oct aviinfo.oct addframe.oct
+
+FFMPEG_CONFIG = @FFMPEG_CONFIG@
+ifdef FFMPEG_CONFIG
+  FFMPEG_LIBS = $(shell pkg-config libavformat --libs)
+  FFMPEG_CFLAGS = $(shell pkg-config libavformat --cflags)
+else
+  FFMPEG_LIBS = -lavformat -lavcodec -lz -lm
+  FFMPEG_CFLAGS =
+endif
+
+AVOBJS = AVHandler.o oct-avifile.o
+
+.PHONY: all strip
+all: ${OCTFILES}
+
+.PHONY: clean
+clean:
+	rm -f *.o *.oct avctest *~ octave-core
+
+oct-avifile.o: AVHandler.o
+
+${AVOBJS}: %.o: %.cc
+	mkoctfile -v -c $(FFMPEG_CFLAGS) $< -o $@
+
+${OCTFILES}: %.oct: %.cc AVHandler.o oct-avifile.o
+	mkoctfile -v $< $(filter %.o, $^) $(FFMPEG_LIBS) $(FFMPEG_CFLAGS)
+
+avctest.o: avctest.cc
+	g++ -Wall -c avctest.cc -o avctest.o
+
+avctest: AVHandler.o avctest.o
+	g++ $^ -Wall ${FFMPEG_OPTS} -o $@
+
+.PHONY: strip
+strip: all
+	strip $(shell find ./* -name "*.oct") avctest
+
+TEST_CASES =   \
+	avitest
+
+NOT_BROKEN_TEST_CASES = $(TEST_CASES:=.test)
+.PHONY: check
+check: $(NOT_BROKEN_TEST_CASES)
+%.test:
+	octave -q tests/$*.m > /dev/null

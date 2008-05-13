@@ -30,7 +30,15 @@
 #define INT64_C
 #define __STDC_CONSTANT_MACROS
 #include <errno.h>
+extern "C" {
+#if defined (HAVE_FFMPEG_AVFORMAT_H)
 #include <ffmpeg/avformat.h>
+#elif defined(HAVE_LIBAVFORMAT_AVFORMAT_H)
+#include <libavformat/avformat.h>
+#else
+#error "Missing ffmpeg headers"
+#endif
+}
 #include <iostream>
 
 class AVHandler {

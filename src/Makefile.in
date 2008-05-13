@@ -23,10 +23,10 @@ clean:
 oct-avifile.o: AVHandler.o
 
 ${AVOBJS}: %.o: %.cc
-	mkoctfile -v -c $(FFMPEG_CFLAGS) $< -o $@
+	mkoctfile -v -c $(FFMPEG_DEFS) $(FFMPEG_CFLAGS) $< -o $@
 
 ${OCTFILES}: %.oct: %.cc AVHandler.o oct-avifile.o
-	mkoctfile -v $< $(filter %.o, $^) $(FFMPEG_LIBS) $(FFMPEG_CFLAGS)
+	mkoctfile -v $(FFMPEG_DEFS) $< $(filter %.o, $^) $(FFMPEG_LIBS) $(FFMPEG_CFLAGS)
 
 avctest.o: avctest.cc
 	g++ -Wall -c avctest.cc -o avctest.o

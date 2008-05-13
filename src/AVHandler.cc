@@ -24,6 +24,12 @@
 
 #include "AVHandler.h"
 
+#include <string>
+
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
+
 std::ostream *AVHandler::out = &std::cout;
 
 AVHandler::~AVHandler(void) {
@@ -44,10 +50,10 @@ AVHandler::~AVHandler(void) {
 
     // flush buffers, write headers and close output file
     if (av_output) {
-	if (av_output->pb.buf_ptr) {
+	if (av_output->pb->buf_ptr) {
 	    while (write_frame() > 0) {}
 	    av_write_trailer(av_output);
-	    if (url_fclose( &(av_output->pb) ) < 0)
+	    if (url_fclose( av_output->pb ) < 0)
 		(*out) << "AVHandler: cannot close output file" << std::endl;
 	}
 	av_free(av_output);
@@ -308,7 +314,7 @@ AVHandler::read_frame(unsigned int nr) {
 		return -1;
 	    }
 
-	    if (url_feof(&(av_input->pb))) {
+	    if (url_feof(av_input->pb)) {
 		(*out) << "AVHandler: EOF reached" << std::endl;
 	    }
 	}

@@ -343,11 +343,25 @@ AC_CHECK_LIB([avcodec], [av_malloc], [],
 			[AC_MSG_ERROR([need libavcodec from FFMpeg])],
 			[$FFMPEG_FLAGS])
 
-AC_CHECK_HEADERS([ffmpeg/avformat.h ffmpeg/avcodec.h], [],
-	         AC_MSG_ERROR([FFMpeg header files not found]))
+FFMPEG_DEFS=
+AC_SUBST(FFMPEG_DEFS)
+AC_CHECK_HEADERS(ffmpeg/avformat.h,
+  FFMPEG_DEFS="$FFMPEG_DEFS -DHAVE_FFMPEG_AVFORMAT_H", [
+  AC_CHECK_HEADERS(libavformat/avformat.h, 
+    FFMPEG_DEFS="$FFMPEG_DEFS -DHAVE_LIBAVFORMAT_AVFORMAT_H",
+    AC_MSG_ERROR([FFMpeg header files not found]))])
+AC_CHECK_HEADERS(ffmpeg/avcodec.h, 
+  FFMPEG_DEFS="$FFMPEG_DEFS -DHAVE_FFMPEG_AVCODEC_H", [
+  AC_CHECK_HEADERS(libavcodec/avcodec.h, 
+    FFMPEG_DEFS="$FFMPEG_DEFS -DHAVE_LIBAVCODEC_AVCODEC_H",
+    AC_MSG_ERROR([FFMpeg header files not found]))])
 AC_CHECK_DECL(AVSEEK_FLAG_BACKWARD, [],
-	      AC_MSG_ERROR([need a newer version of FFMpeg]),
-	      [#include <ffmpeg/avformat.h>])
+	      AC_MSG_ERROR([need a newer version of FFMpeg]), [
+#if defined(HAVE_FFMPEG_AVFORMAT_H)
+#include <ffmpeg/avformat.h>
+#elif defined(HAVE_LIBAVFORMAT_AVFORMAT_H)
+#include <libavformat/avformat.h>
+#endif])
 
 AC_CONFIG_FILES([Makefile])
 AC_SUBST([FFMPEG_CONFIG])

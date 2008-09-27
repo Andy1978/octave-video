@@ -26,6 +26,16 @@
 
 #include <string>
 
+extern "C" {
+#if defined (HAVE_FFMPEG_AVFORMAT_H)
+#include <ffmpeg/swscale.h>
+#elif defined(HAVE_LIBAVFORMAT_AVFORMAT_H)
+#include <libswscale/swscale.h>
+#else
+#error "Missing ffmpeg headers"
+#endif
+}
+
 #ifdef _MSC_VER
 #define snprintf _snprintf
 #endif
@@ -224,14 +234,13 @@ AVHandler::write_frame() {
     lock_parameters = true;
 
     AVCodecContext *c = vstream->codec;
-    
+
     if (frame && rgbframe) {
-	if (img_convert((AVPicture *)frame, c->pix_fmt,
-			(AVPicture *)rgbframe, PIX_FMT_RGB24,
-			c->width, c->height) < 0) {
-	    (*out) << "AVHandler: error converting RGB image to output format" << std::endl;
-	    return -1;
-	}
+      SwsContext *sc = sws_getContext(c->width, c->height, PIX_FMT_BGR24, 
+				      c->width, c->height, c->pix_fmt, 
+				      SWS_BICUBIC, 0, 0, 0);
+      sws_scale(sc, rgbframe->data, rgbframe->linesize, 0,
+		c->height, frame->data, frame->linesize);
     }
     
     int out_size = avcodec_encode_video(c, video_outbuf,
@@ -334,9 +343,11 @@ AVHandler::read_frame(unsigned int nr) {
     }
     cc->hurry_up = 0;
 
-    img_convert((AVPicture *)rgbframe, PIX_FMT_RGB24,
-		(AVPicture *)frame, cc->pix_fmt,
-		cc->width, cc->height);
+    SwsContext *sc = sws_getContext(cc->width, cc->height, cc->pix_fmt, 
+				    cc->width, cc->height, PIX_FMT_BGR24, 
+				    SWS_BICUBIC, 0, 0, 0);
+    sws_scale(sc, frame->data, frame->linesize, 0,
+              cc->height, rgbframe->data, rgbframe->linesize);
 
     av_free_packet(&packet);
     av_free(frame); frame = NULL;
@@ -362,7 +373,7 @@ AVHandler::print_codecs() {
     av_register_all();
 
     AVCodec *codec;
-    for (codec = first_avcodec; codec != NULL; codec = codec->next) {
+    for (codec = av_codec_next(0); codec != NULL; codec = av_codec_next(codec)) {
 	if ((codec->type == CODEC_TYPE_VIDEO) &&
 	    (codec->encode)) {	    
 	    (*out) << codec->name << " ";

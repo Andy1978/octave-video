@@ -101,15 +101,19 @@ Avifile::addframe(const NDArray &f) {
 	return;
     }
     
-    for (int rgb = 0; rgb < 3; rgb++) {
-	for (unsigned int y = 0; y < frame_rows; y++) {
-	    for (unsigned int x = 0; x < frame_columns; x++) {
-		if (bands == 3)
-		    rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + rgb] = (unsigned char)(f(y,x,rgb)*255);
-		else
-		    rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + rgb] = (unsigned char)(f(y,x)*255);
-	    }
+    for (unsigned int y = 0; y < frame_rows; y++) {
+      for (unsigned int x = 0; x < frame_columns; x++) {
+	if (bands == 3) {
+	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 2] = (unsigned char)(f(y,x,0)*255);
+	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 1] = (unsigned char)(f(y,x,1)*255);
+	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 0] = (unsigned char)(f(y,x,2)*255);
 	}
+	else {
+	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 0] = (unsigned char)(f(y,x)*255);
+	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 1] = (unsigned char)(f(y,x)*255);
+	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 2] = (unsigned char)(f(y,x)*255);
+	}
+      }
     }
     
     if (av->write_frame() < 0) {

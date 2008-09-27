@@ -3,7 +3,7 @@ Octave-Avifile
 
 Description
 -----------
-A wrapper for FFMpeg's libavformat and libavcodec, allowing Octave to read
+A wrapper for ffmpeg's libavformat and libavcodec, allowing Octave to read
 and write fixed-framerate AVI (Audio/Video Interleaved) files.
 	     
 Author
@@ -14,18 +14,18 @@ http://mentat.za.net
 Contributors
 ------------
 Roman Stanchak
+Xavier Delacour
 
 Dependencies
 ------------
-You'll need the FFMpeg libraries and header files. Note that FFMpeg is
-released under the LGPL.  It can be downloaded from
+This package _should_ always work with the latest version of ffmpeg. It is
+known to at least work with ffmpeg SVN revision 15410.
 
-http://ffmpeg.sf.net,
+You can download ffmpeg from
+http://ffmpeg.mplayerhq.hu
 
-but your distribution may already have packages available.
-
-Debian: libavformat-dev libavcodec-dev
-Mandrake: libffmpeg0-devel libffmpeg0
+Note that you'll need to configure it with --enable-swscale and --enable-gpl,
+to enable the software scaler library (used for yuv/rgb conversions).
 
 Compiling
 ---------
@@ -36,7 +36,7 @@ The commands `avifile' and `addframe' should then be available in Octave.
 
 Usage Notes
 -----------
-- If FFMpeg complains about "too many threads", increase the frame height
+- If ffmpeg complains about "too many threads", increase the frame height
   and width.  For some obscure reason, they do a comparison between the number
   of threads and the frame dimensions.
   

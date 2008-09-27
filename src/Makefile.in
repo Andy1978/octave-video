@@ -4,10 +4,10 @@ OCTFILES = avifile.oct aviread.oct aviinfo.oct addframe.oct
 
 FFMPEG_CONFIG = @FFMPEG_CONFIG@
 ifdef FFMPEG_CONFIG
-  FFMPEG_LIBS = $(shell pkg-config libavformat --libs)
-  FFMPEG_CFLAGS = $(shell pkg-config libavformat --cflags)
+  FFMPEG_LIBS = $(shell pkg-config libavformat libavcodec libavutil libswscale --libs)
+  FFMPEG_CFLAGS = $(shell pkg-config libavformat libavcodec libavutil libswscale --cflags)
 else
-  FFMPEG_LIBS = -lavformat -lavcodec -lz -lm
+  FFMPEG_LIBS = -lavformat -lavcodec -lavutil -lswscale -lz -lm
   FFMPEG_CFLAGS =
 endif
 

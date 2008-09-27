@@ -333,7 +333,8 @@ if test -z $FFMPEG_CONFIG ; then
   FFMPEG_FLAGS="-lavcodec -lavutil -lm"
   echo $FFMPEG_FLAGS
 else
-  FFMPEG_FLAGS=`pkg-config libavformat --libs --cflags`
+  FFMPEG_FLAGS=`pkg-config libavformat libavcodec libavutil libswscale --libs --cflags`
+  echo $FFMPEG_FLAGS
 fi
 
 AC_CHECK_LIB([avformat], [av_write_frame], [],
@@ -342,7 +343,12 @@ AC_CHECK_LIB([avformat], [av_write_frame], [],
 AC_CHECK_LIB([avcodec], [av_malloc], [],
 			[AC_MSG_ERROR([need libavcodec from FFMpeg])],
 			[$FFMPEG_FLAGS])
+AC_CHECK_LIB([swscale], [sws_scale], [],
+			[AC_MSG_ERROR([need libswscale from FFMpeg])],
+			[$FFMPEG_FLAGS])
 
+OLD_CPPFLAGS=$CPPFLAGS
+CPPFLAGS="$CPPFLAGS $FFMPEG_FLAGS"
 FFMPEG_DEFS=
 AC_SUBST(FFMPEG_DEFS)
 AC_CHECK_HEADERS(ffmpeg/avformat.h,
@@ -362,6 +368,7 @@ AC_CHECK_DECL(AVSEEK_FLAG_BACKWARD, [],
 #elif defined(HAVE_LIBAVFORMAT_AVFORMAT_H)
 #include <libavformat/avformat.h>
 #endif])
+CPPFLAGS=$OLD_CPPFLAGS
 
 AC_CONFIG_FILES([Makefile])
 AC_SUBST([FFMPEG_CONFIG])

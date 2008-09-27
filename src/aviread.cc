@@ -71,9 +71,9 @@ Load frame @var{N} from the AVI file @var{filename}.\n\
     NDArray image = NDArray(d, 0);
     for (unsigned int y = 0; y < av.get_height(); y++) {	
 	for (unsigned int x = 0; x < av.get_width(); x++) {
-	    for (short rgb = 0; rgb < 3; rgb++) {
-		image(y, x, rgb) = (double)frame->data[0][y * frame->linesize[0] + 3*x + rgb]/255;
-	    }
+	  image(y, x, 0) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 2]/255;
+	  image(y, x, 1) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 1]/255;
+	  image(y, x, 2) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 0]/255;
 	}
     }
 

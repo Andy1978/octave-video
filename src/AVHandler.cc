@@ -25,6 +25,7 @@
 #include "AVHandler.h"
 
 #include <string>
+#include <cstdlib>
 
 extern "C" {
 #if defined (HAVE_FFMPEG_AVFORMAT_H)

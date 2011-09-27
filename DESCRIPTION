@@ -1,7 +1,7 @@
 Name: video
 Version: 1.0.2
 Date: 2009-05-03
-Author: Stefan van der Walt, Roman Stanchak
+Author: Stefan van der Walt <stefan@sun.ac.za> and Roman Stanchak
 Maintainer: The Octave Community
 Title: Video functions
 Description: Implements addframe, avifile, aviinfo, and aviread, using ffmpeg. (and approximately conforms to Matlab interface)

@@ -42,6 +42,8 @@ extern "C" {
 #endif
 
 std::ostream *AVHandler::out = &std::cout;
+/** head of registered output format linked list */
+static AVOutputFormat *first_oformat = NULL;
 
 AVHandler::~AVHandler(void) {
     if (frame) {
@@ -106,7 +108,7 @@ AVHandler::setup_write() {
 	return -1;
     }
     
-    av_output = av_alloc_format_context();
+    av_output = avformat_alloc_context();
     if (!av_output) {
 	(*out) << "AVHandler: Memory error allocating format context" << std::endl;
 	return -1;
@@ -127,9 +129,9 @@ AVHandler::setup_write() {
     }
 
     snprintf(av_output->filename, sizeof(av_output->filename), "%s", filename.c_str());
-    snprintf(av_output->title, sizeof(av_output->title), "%s", title.c_str());
-    snprintf(av_output->author, sizeof(av_output->author), "%s", author.c_str());
-    snprintf(av_output->comment, sizeof(av_output->comment), "%s", comment.c_str());
+//    snprintf(av_output->title, sizeof(av_output->title), "%s", title.c_str());
+//    snprintf(av_output->author, sizeof(av_output->author), "%s", author.c_str());
+//    snprintf(av_output->comment, sizeof(av_output->comment), "%s", comment.c_str());
     
     if (url_fopen(&av_output->pb, filename.c_str(), URL_WRONLY) < 0) {
 	(*out) << "AVHandler: Could not open \"" << filename << "\" for output" << std::endl;
@@ -162,7 +164,7 @@ AVHandler::setup_read() {
     }
 
     for (int i=0; i < av_input->nb_streams; i++) {
-	if (av_input->streams[i]->codec->codec_type == CODEC_TYPE_VIDEO) {
+	if (av_input->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
 	    vstream = av_input->streams[i];
 	    break;
 	}
@@ -173,7 +175,7 @@ AVHandler::setup_read() {
     }
 
     for (int i=0; i < av_input->nb_streams; i++) {
-	if (av_input->streams[i]->codec->codec_type == CODEC_TYPE_AUDIO) {
+	if (av_input->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
 	    astream = av_input->streams[i];
 	    break;
 	}
@@ -204,9 +206,9 @@ AVHandler::setup_read() {
     width = vstream->codec->width;
     height = vstream->codec->height;
 
-    title = av_input->title;
-    author = av_input->author;
-    comment = av_input->comment;
+//    title = av_input->title;
+//    author = av_input->author;
+//    comment = av_input->comment;
 
     rgbframe = create_frame(PIX_FMT_RGB24);
     if (!rgbframe) return -1;
@@ -258,7 +260,7 @@ AVHandler::write_frame() {
 	if (c->coded_frame)
 	    pkt.pts = c->coded_frame->pts;
 	if (c->coded_frame && c->coded_frame->key_frame)
-	    pkt.flags |= PKT_FLAG_KEY;
+	    pkt.flags |= AV_PKT_FLAG_KEY;
 	/// XXX FIXME XXX does this ensure that the first frame is always a key frame?
 	
 	if (av_write_frame(av_output, &pkt) != 0) {
@@ -296,7 +298,7 @@ AVHandler::read_frame(unsigned int nr) {
        	(*out) << "AVHandler: Error seeking to " << target_timestamp << std::endl;
        	return -1;
     }
-    cc->hurry_up = 1;
+    cc->skip_frame;
 
     // Flush stream buffers after seek
     avcodec_flush_buffers(cc);
@@ -331,7 +333,11 @@ AVHandler::read_frame(unsigned int nr) {
 
 	// Decode the packet into a frame
 	int frameFinished;
-	if (avcodec_decode_video(cc, frame, &frameFinished, packet.data, packet.size) < 0) {
+
+    // HACK for CorePNG to decode as normal PNG by default
+    packet.flags = AV_PKT_FLAG_KEY;
+	
+	if (avcodec_decode_video2(cc, frame, &frameFinished, &packet) < 0) {
 	    (*out) << "AVHandler: Error decoding video stream" << std::endl;
 	    av_free_packet(&packet);
 	    av_free(frame); frame = NULL;
@@ -342,7 +348,7 @@ AVHandler::read_frame(unsigned int nr) {
 	    current_timestamp = (uint64_t)(vstream->cur_dts * AV_TIME_BASE * (long double)stream_time_base);
 	}
     }
-    cc->hurry_up = 0;
+//    cc->hurry_up = 0;
 
     SwsContext *sc = sws_getContext(cc->width, cc->height, cc->pix_fmt, 
 				    cc->width, cc->height, PIX_FMT_BGR24, 
@@ -375,7 +381,7 @@ AVHandler::print_codecs() {
 
     AVCodec *codec;
     for (codec = av_codec_next(0); codec != NULL; codec = av_codec_next(codec)) {
-	if ((codec->type == CODEC_TYPE_VIDEO) &&
+	if ((codec->type == AVMEDIA_TYPE_VIDEO) &&
 	    (codec->encode)) {	    
 	    (*out) << codec->name << " ";
 	}
@@ -395,7 +401,7 @@ AVHandler::add_video_stream() {
     
     cc = vstream->codec;
 
-    cc->codec_type = CODEC_TYPE_VIDEO;
+    cc->codec_type = AVMEDIA_TYPE_VIDEO;
     
     cc->bit_rate = bitrate;
     cc->width = width;

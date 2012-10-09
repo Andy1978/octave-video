@@ -27,8 +27,11 @@
 
 #define VIDEO_OUTBUF_SIZE 200000
 
+// FIXME: should define -D__STDC_CONSTANT_MACROS instead of the following
 #define INT64_C
+#define UINT64_C
 #define __STDC_CONSTANT_MACROS
+
 #include <errno.h>
 extern "C" {
 #if defined (HAVE_FFMPEG_AVFORMAT_H)
@@ -165,7 +168,7 @@ class AVHandler {
 
   unsigned int get_total_frames() const {
     if (vstream) {
-      return (unsigned int)((double)framerate * vstream->duration / AV_TIME_BASE);
+      return (unsigned int) vstream->nb_frames;
     } else {
       return 0;
     }
@@ -173,7 +176,7 @@ class AVHandler {
 
   unsigned int get_filesize() const {
     if (av_input) {
-      return av_input->file_size;
+      return avio_size(av_input->pb);
     } else {
       return 0;
     }

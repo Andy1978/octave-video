@@ -66,6 +66,7 @@ Return the properties of an AVI file.\n\
     av.set_log(&octave_stdout);
 
     if (av.setup_read() != 0) {
+	error("aviread: AVHandler setup failed");
 	return retval;
     }
 

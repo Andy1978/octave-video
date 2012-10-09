@@ -56,10 +56,12 @@ Avifile::print(std::ostream& os, bool pr_as_read_syntax = false) const {
 void
 Avifile::addframe(const NDArray &f) {
     if (frames == 0) {
-	if ( (f.columns() % 2 != 0) || (f.rows() % 2 != 0) ) {
-	    error("avifile: matrix dimensions must be multiple of two");
-	    return;
-	}
+//	FIXME: this suppresses warnings from ffmpeg, but completely prevents
+//	       working with many videos.
+//	if ( (f.columns() % 2 != 0) || (f.rows() % 2 != 0) ) {
+//	    error("avifile: matrix dimensions must be multiple of two");
+//	    return;
+//	}
 
 	if ( (f.columns() == 0) || (f.rows() == 0) ) {
 	    error("avifile: matrix must have non-zero dimensions");

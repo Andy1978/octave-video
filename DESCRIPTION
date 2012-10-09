@@ -7,6 +7,6 @@ Title: Video functions
 Description: Implements addframe, avifile, aviinfo, and aviread, using ffmpeg. (and approximately conforms to Matlab interface)
 Depends: octave (>= 2.9.12)
 Autoload: yes
-SystemRequirements: ffmpeg
+SystemRequirements: >=ffmpeg-0.7
 License: BSD
 Url: http://octave.sf.net

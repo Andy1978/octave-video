@@ -42,8 +42,6 @@ extern "C" {
 #endif
 
 std::ostream *AVHandler::out = &std::cout;
-/** head of registered output format linked list */
-static AVOutputFormat *first_oformat = NULL;
 
 AVHandler::~AVHandler(void) {
     if (frame) {
@@ -66,7 +64,7 @@ AVHandler::~AVHandler(void) {
 	if (av_output->pb->buf_ptr) {
 	    while (write_frame() > 0) {}
 	    av_write_trailer(av_output);
-	    if (url_fclose( av_output->pb ) < 0)
+	    if (avio_close( av_output->pb ) < 0)
 		(*out) << "AVHandler: cannot close output file" << std::endl;
 	}
 	av_free(av_output);
@@ -80,7 +78,7 @@ AVHandler::~AVHandler(void) {
     }
 
     if (av_input) {
-	av_close_input_file(av_input);
+	avformat_close_input(&av_input);
     } else {
 	// close output stream
 	if (vstream) av_freep(&vstream);    
@@ -96,8 +94,8 @@ int
 AVHandler::setup_write() {
     av_register_all();
 
-    AVOutputFormat *avifmt;   
-    for (avifmt = first_oformat; avifmt != NULL; avifmt = avifmt->next) {
+    AVOutputFormat *avifmt = NULL;   
+    while (NULL != (avifmt = av_oformat_next(avifmt))) {
 	if (std::string(avifmt->name) == "avi") {
 	    break;
 	}
@@ -123,17 +121,18 @@ AVHandler::setup_write() {
     }
     
     /* av_set_parameters is mandatory */
+    // FIXME: deprecated, but there's no replacement yet
     if (av_set_parameters(av_output, NULL) < 0) {
 	(*out) << "AVHandler: Error setting output format parameters" << std::endl;
 	return -1;
     }
 
     snprintf(av_output->filename, sizeof(av_output->filename), "%s", filename.c_str());
-//    snprintf(av_output->title, sizeof(av_output->title), "%s", title.c_str());
-//    snprintf(av_output->author, sizeof(av_output->author), "%s", author.c_str());
-//    snprintf(av_output->comment, sizeof(av_output->comment), "%s", comment.c_str());
+// FIXME:    snprintf(av_output->title, sizeof(av_output->title), "%s", title.c_str());
+// FIXME:    snprintf(av_output->author, sizeof(av_output->author), "%s", author.c_str());
+// FIXME:    snprintf(av_output->comment, sizeof(av_output->comment), "%s", comment.c_str());
     
-    if (url_fopen(&av_output->pb, filename.c_str(), URL_WRONLY) < 0) {
+    if (avio_open(&av_output->pb, filename.c_str(), URL_WRONLY) < 0) {
 	(*out) << "AVHandler: Could not open \"" << filename << "\" for output" << std::endl;
 	return -1;
     }
@@ -143,8 +142,8 @@ AVHandler::setup_write() {
     frame = create_frame(vstream->codec->pix_fmt);
     rgbframe = create_frame(PIX_FMT_RGB24);
     if (!frame || !rgbframe) return -1;
-    
-    av_write_header(av_output);
+
+    avformat_write_header(av_output, NULL);
     
     return 0;
 }
@@ -153,12 +152,12 @@ int
 AVHandler::setup_read() {
     av_register_all();
 
-    if (av_open_input_file(&av_input, filename.c_str(), NULL, 0, NULL) != 0) {
+    if (avformat_open_input(&av_input, filename.c_str(), NULL, NULL) != 0) {
 	(*out) << "AVHandler: Could not open \"" << filename << "\" for reading" << std::endl;
 	return -1;
     }
 
-    if (av_find_stream_info(av_input) < 0) {
+    if (avformat_find_stream_info(av_input, NULL) < 0) {
 	(*out) << "AVHandler: No stream information available" << std::endl;
 	return -1;
     }
@@ -194,7 +193,7 @@ AVHandler::setup_read() {
     if (codec->capabilities & CODEC_CAP_TRUNCATED)
 	vstream->codec->flags |= CODEC_FLAG_TRUNCATED;
 
-    if (avcodec_open(vstream->codec, codec) < 0) {
+    if (avcodec_open2(vstream->codec, codec, NULL) < 0) {
 	(*out) << "AVHandler: Cannot open codec " << codec_name << std::endl;
 	vstream->codec->codec = NULL;
 	return -1;
@@ -206,9 +205,9 @@ AVHandler::setup_read() {
     width = vstream->codec->width;
     height = vstream->codec->height;
 
-//    title = av_input->title;
-//    author = av_input->author;
-//    comment = av_input->comment;
+// FIXME:    title = av_input->title;
+// FIXME:    author = av_input->author;
+// FIXME:    comment = av_input->comment;
 
     rgbframe = create_frame(PIX_FMT_RGB24);
     if (!rgbframe) return -1;
@@ -326,7 +325,7 @@ AVHandler::read_frame(unsigned int nr) {
 		return -1;
 	    }
 
-	    if (url_feof(av_input->pb)) {
+	    if (av_input->pb->eof_reached) {
 		(*out) << "AVHandler: EOF reached" << std::endl;
 	    }
 	}
@@ -348,6 +347,8 @@ AVHandler::read_frame(unsigned int nr) {
 	    current_timestamp = (uint64_t)(vstream->cur_dts * AV_TIME_BASE * (long double)stream_time_base);
 	}
     }
+// http://ffmpeg.org/pipermail/ffmpeg-cvslog/2011-April/035933.html
+// FIXME maybe use: cc->skip_frame;
 //    cc->hurry_up = 0;
 
     SwsContext *sc = sws_getContext(cc->width, cc->height, cc->pix_fmt, 
@@ -367,9 +368,9 @@ AVHandler::print_file_formats() {
     (*out) << "Supported file formats:" << std::endl;
     av_register_all();
 
-    AVOutputFormat *ofmt;
-    for (ofmt = first_oformat; ofmt != NULL; ofmt = ofmt->next) {
-	(*out) << ofmt->name << " ";
+    AVOutputFormat *ofmt = NULL;
+    while (NULL != (ofmt = av_oformat_next(ofmt))) {
+    	(*out) << ofmt->name << " ";
     }
     (*out) << std::endl << std::endl;
 }
@@ -392,8 +393,9 @@ AVHandler::print_codecs() {
 int
 AVHandler::add_video_stream() {
     AVCodecContext *cc;
-    
-    vstream = av_new_stream(av_output, 0);
+
+    // FIXME: vstream = avformat_new_stream(av_output, av_find_default_stream_index(av_output));
+    vstream = avformat_new_stream(av_output, NULL);
     if (!vstream) {
 	(*out) << "AVHandler: error opening video output stream" << std::endl;
 	return -1;
@@ -402,7 +404,7 @@ AVHandler::add_video_stream() {
     cc = vstream->codec;
 
     cc->codec_type = AVMEDIA_TYPE_VIDEO;
-    
+
     cc->bit_rate = bitrate;
     cc->width = width;
     cc->height = height;
@@ -432,7 +434,7 @@ AVHandler::init_video_codecs() {
 	return -1;
     }
 
-    if (avcodec_open(cc, codec) < 0) {
+    if (avcodec_open2(cc, codec, NULL) < 0) {
 	(*out) << "AVHandler: cannot open codec" << std::endl;
 	cc->codec = NULL;
 	return -1;

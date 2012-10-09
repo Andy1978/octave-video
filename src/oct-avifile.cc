@@ -56,34 +56,34 @@ Avifile::print(std::ostream& os, bool pr_as_read_syntax = false) const {
 void
 Avifile::addframe(const NDArray &f) {
     if (frames == 0) {
-//	FIXME: this suppresses warnings from ffmpeg, but completely prevents
-//	       working with many videos.
-//	if ( (f.columns() % 2 != 0) || (f.rows() % 2 != 0) ) {
-//	    error("avifile: matrix dimensions must be multiple of two");
-//	    return;
-//	}
+//      FIXME: this suppresses warnings from ffmpeg, but completely prevents
+//             working with many videos.
+//      if ( (f.columns() % 2 != 0) || (f.rows() % 2 != 0) ) {
+//          error("avifile: matrix dimensions must be multiple of two");
+//          return;
+//      }
 
-	if ( (f.columns() == 0) || (f.rows() == 0) ) {
-	    error("avifile: matrix must have non-zero dimensions");
-	    return;
-	}
+        if ( (f.columns() == 0) || (f.rows() == 0) ) {
+            error("avifile: matrix must have non-zero dimensions");
+            return;
+        }
 
-	frame_columns = f.columns();
-	frame_rows = f.rows();
+        frame_columns = f.columns();
+        frame_rows = f.rows();
 
-	av->set_height(frame_rows);
-	av->set_width(frame_columns);
+        av->set_height(frame_rows);
+        av->set_width(frame_columns);
 
-	if (av->setup_write() != 0) {
-	    error("avifile: AVHandler setup failed");
-	    return;
-	}
+        if (av->setup_write() != 0) {
+            error("avifile: AVHandler setup failed");
+            return;
+        }
     }
     if ( (frame_columns != f.columns()) ||
-	 (frame_rows != f.rows()) ) {
-	error("avifile: all frames must have the same dimensions (%dx%d)",
-	      frame_rows, frame_columns);
-	return;
+         (frame_rows != f.rows()) ) {
+        error("avifile: all frames must have the same dimensions (%dx%d)",
+              frame_rows, frame_columns);
+        return;
     }
 
     // convert matrix to AVFrame
@@ -93,34 +93,34 @@ Avifile::addframe(const NDArray &f) {
     unsigned char bands = 0;
 
     if  ( (d.length() == 3) && (d(2) == 3) ) {
-	// RGB image
-	bands = 3;
+        // RGB image
+        bands = 3;
     } else if ( d.length() == 2 ) {
-	// gray or B&W image
-	bands = 1;
+        // gray or B&W image
+        bands = 1;
     } else {
-	error("avifile: invalid matrix dimensions");
-	return;
+        error("avifile: invalid matrix dimensions");
+        return;
     }
     
     for (unsigned int y = 0; y < frame_rows; y++) {
       for (unsigned int x = 0; x < frame_columns; x++) {
-	if (bands == 3) {
-	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 2] = (unsigned char)(f(y,x,0)*255);
-	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 1] = (unsigned char)(f(y,x,1)*255);
-	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 0] = (unsigned char)(f(y,x,2)*255);
-	}
-	else {
-	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 0] = (unsigned char)(f(y,x)*255);
-	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 1] = (unsigned char)(f(y,x)*255);
-	  rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 2] = (unsigned char)(f(y,x)*255);
-	}
+        if (bands == 3) {
+          rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 2] = (unsigned char)(f(y,x,0)*255);
+          rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 1] = (unsigned char)(f(y,x,1)*255);
+          rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 0] = (unsigned char)(f(y,x,2)*255);
+        }
+        else {
+          rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 0] = (unsigned char)(f(y,x)*255);
+          rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 1] = (unsigned char)(f(y,x)*255);
+          rgbframe->data[0][y * rgbframe->linesize[0] + 3*x + 2] = (unsigned char)(f(y,x)*255);
+        }
       }
     }
     
     if (av->write_frame() < 0) {
-	error("avifile: error writing frame");
-	return;
+        error("avifile: error writing frame");
+        return;
     }
     frames++;
 }

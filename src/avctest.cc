@@ -14,16 +14,16 @@ int output_avi(std::string fn, std::string codec)
 
     int err = av->setup_write();
     if (err != 0) {
-	delete av;
-	return err;
+        delete av;
+        return err;
     }
 
     std::cout << "starting..." << std::endl;
     for (int i = 0; i < FRAMES; i++) {
-	std::cout << "\r" << i << std::flush;
-	av->draw_background((unsigned char)((1+sin(double(i)/1000*2*M_PI))*255/2),
-			  (unsigned char)((1+cos(double(i)/1000*2*M_PI))*255/2), 200);
-	av->write_frame();
+        std::cout << "\r" << i << std::flush;
+        av->draw_background((unsigned char)((1+sin(double(i)/1000*2*M_PI))*255/2),
+                            (unsigned char)((1+cos(double(i)/1000*2*M_PI))*255/2), 200);
+        av->write_frame();
     }
 
     delete av;
@@ -39,16 +39,16 @@ int main() {
     std::cout << " (using version " << avcodec_build() << ")" << std::endl;
 
     if (output_avi("testc1.avi", "wmv1") != 0)
-	std::cout << "Error writing testc1.avi" << std::endl;
+        std::cout << "Error writing testc1.avi" << std::endl;
     if (output_avi("testc2.avi", "wmv1") != 0)
-	std::cout << "Error writing testc2.avi" << std::endl;
+        std::cout << "Error writing testc2.avi" << std::endl;
 
     AVHandler av = AVHandler();
     av.set_filename("testc2.avi");
     av.setup_read();
     for (unsigned int i = 1; i < av.get_total_frames()+1; i++) {
-	std::cout << "Reading frame " << i << "...\r" << std::flush;
-	av.read_frame(i);
+        std::cout << "Reading frame " << i << "...\r" << std::flush;
+        av.read_frame(i);
     }
    
     return 0;

@@ -28,9 +28,9 @@
 template <typename Num>
 void setp(Num &p, Num v) {
     if (!error_state) {
-	p = v;
+        p = v;
     } else {
-	error_state = 0;
+        error_state = 0;
     }
 }
 
@@ -65,19 +65,19 @@ To see a list of the available codecs, do @code{avifile(\"codecs\")}.\n\
     octave_value_list retval;
 
     if ( (args.length() == 1) && (args(0).string_value() == "codecs") ) {
-	AVHandler::print_codecs();
-	return retval;
+        AVHandler::print_codecs();
+        return retval;
     }
 
     if ((args.length() == 0) || (args.length() % 2 != 1)) {
-	print_usage();
-	return retval;
+        print_usage();
+        return retval;
     }
 
     std::string filename = args(0).string_value();
     if (error_state) {
-	print_usage();
-	return retval;
+        print_usage();
+        return retval;
     }
 
     // Parse parameters
@@ -90,27 +90,27 @@ To see a list of the available codecs, do @code{avifile(\"codecs\")}.\n\
     std::string comment = "Created using Octave-Avifile";
 
     for (unsigned int i = 1; i < args.length(); i++) {
-	std::string p = args(i).string_value();
-	octave_value v = args(i+1);
-	if (!error_state) {
-	    if ((p == "codec") || (p == "compression")) { setp(codec, v.string_value()); }
-	    else if (p == "bitrate") { setp(bitrate, (unsigned int)v.int_value()); }
-	    else if (p == "gop") { setp(gop_size, v.int_value()); }
-	    else if (p == "fps") { setp(fps, v.double_value()); }
-	    else if (p == "title") { setp(title, v.string_value()); }
-	    else if (p == "author") { setp(author, v.string_value()); }
-	    else if (p == "comment") { setp(comment, v.string_value()); }
-	    else {
-		error("avifile: unknown parameter \"%s\"", p.c_str());
-		return retval;
-	    }
-	}
-	i++;
+        std::string p = args(i).string_value();
+        octave_value v = args(i+1);
+        if (!error_state) {
+            if ((p == "codec") || (p == "compression")) { setp(codec, v.string_value()); }
+            else if (p == "bitrate") { setp(bitrate, (unsigned int)v.int_value()); }
+            else if (p == "gop") { setp(gop_size, v.int_value()); }
+            else if (p == "fps") { setp(fps, v.double_value()); }
+            else if (p == "title") { setp(title, v.string_value()); }
+            else if (p == "author") { setp(author, v.string_value()); }
+            else if (p == "comment") { setp(comment, v.string_value()); }
+            else {
+                error("avifile: unknown parameter \"%s\"", p.c_str());
+                return retval;
+            }
+        }
+        i++;
     }
 
     Avifile *m = new Avifile(filename);
     if (error_state) {
-	return retval;
+        return retval;
     }
     m->av->set_codec(codec);
     m->av->set_bitrate(bitrate);

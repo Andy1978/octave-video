@@ -36,19 +36,19 @@ Load frame @var{N} from the AVI file @var{filename}.\n\
     octave_value_list retval;
 
     if (args.length() != 2) {
-	print_usage();
-	return retval;
+        print_usage();
+        return retval;
     }
    
     std::string filename = args(0).string_value();
     if (error_state) {
-	print_usage();
-	return retval;
+        print_usage();
+        return retval;
     }
 
     unsigned int framenr = (unsigned int)args(1).scalar_value();
     if (error_state) {
-	print_usage();
+        print_usage();
     }
 
     AVHandler av = AVHandler();
@@ -56,25 +56,25 @@ Load frame @var{N} from the AVI file @var{filename}.\n\
     av.set_log(&octave_stdout);
 
     if (av.setup_read() != 0) {
-	error("aviread: AVHandler setup failed");
-	return retval;
+        error("aviread: AVHandler setup failed");
+        return retval;
     }
 
     if (av.read_frame(framenr) != 0) {
-	error("aviread: cannot read frame %d", framenr);
-	return retval;
+        error("aviread: cannot read frame %d", framenr);
+        return retval;
     }
 
     AVFrame *frame = av.get_rgbframe();
 
     dim_vector d = dim_vector(av.get_height(), av.get_width(), 3);
     NDArray image = NDArray(d, 0);
-    for (unsigned int y = 0; y < av.get_height(); y++) {	
-	for (unsigned int x = 0; x < av.get_width(); x++) {
-	  image(y, x, 0) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 2]/255;
-	  image(y, x, 1) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 1]/255;
-	  image(y, x, 2) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 0]/255;
-	}
+    for (unsigned int y = 0; y < av.get_height(); y++) {
+        for (unsigned int x = 0; x < av.get_width(); x++) {
+          image(y, x, 0) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 2]/255;
+          image(y, x, 1) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 1]/255;
+          image(y, x, 2) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 0]/255;
+        }
     }
 
     retval.append(octave_value(image));
@@ -103,5 +103,4 @@ Load frame @var{N} from the AVI file @var{filename}.\n\
 %!
 %! # Display the frame read
 %! imshow(I(:,:,1), I(:,:,2), I(:,:,3));
-
 */

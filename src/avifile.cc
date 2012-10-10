@@ -36,7 +36,7 @@ void setp(Num &p, Num v) {
 
 DEFUN_DLD(avifile, args, nargout,
 "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {@var{f} =} avifile (@var{filename}, [@var{parameter}, @var{value}, ...])\n\
+@deftypefn {Loadable Function} {@var{f} =} avifile (@var{filename}, [@var{parameter}, @var{value}, @dots{}])\n\
 @deftypefnx {Loadable Function} avifile (\"codecs\")\n\
 Create an AVI-format video file.\n\
 \n\

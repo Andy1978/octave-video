@@ -2,7 +2,7 @@ Name: video
 Version: 1.0.2
 Date: 2009-05-03
 Author: Stefan van der Walt <stefan@sun.ac.za> and Roman Stanchak
-Maintainer: The Octave Community
+Maintainer: Octave-Forge community <octave-dev@lists.sourceforge.net>
 Title: Video functions
 Description: Implements addframe, avifile, aviinfo, and aviread, using ffmpeg. (and approximately conforms to Matlab interface)
 Depends: octave (>= 2.9.12)

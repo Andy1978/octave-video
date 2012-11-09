@@ -1,21 +1,3 @@
-Octave-Avifile
-==============
-
-Description
------------
-A wrapper for ffmpeg's libavformat and libavcodec, allowing Octave to read
-and write fixed-framerate AVI (Audio/Video Interleaved) files.
-	     
-Author
-------
-Stefan van der Walt <stefan@sun.ac.za>
-http://mentat.za.net
-
-Contributors
-------------
-Roman Stanchak
-Xavier Delacour
-
 Dependencies
 ------------
 This package _should_ always work with the latest version of ffmpeg. It is
@@ -26,13 +8,6 @@ http://ffmpeg.mplayerhq.hu
 
 Note that you'll need to configure it with --enable-swscale and --enable-gpl,
 to enable the software scaler library (used for yuv/rgb conversions).
-
-Compiling
----------
-$ ./configure
-$ make
-
-The commands `avifile' and `addframe' should then be available in Octave.
 
 Usage Notes
 -----------
@@ -53,7 +28,3 @@ Usage Notes
   $ export GLIBCXX_FORCE_NEW=1
   
   before running Octave.
-
-Licence
--------
-See the file `COPYING'.

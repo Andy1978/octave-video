@@ -1,0 +1,4 @@
+Summary of important user-visible changes for video 1.2.0:
+-------------------------------------------------------------------
+
+ ** Package is no longer automatically loaded.

@@ -7,7 +7,7 @@ Title: Video functions
 Description: A wrapper for ffmpeg's libavformat and libavcodec, implementing
  addframe, avifile, aviinfo, and aviread.
 Depends: octave (>= 2.9.12)
-SystemRequirements: >=ffmpeg-0.7
+BuildRequires: ffmpeg (>=0.7) [Debian] libavformat-dev [Debian] libswscale-dev
 License: FreeBSD
 Url: http://octave.sf.net
 Url: http://mentat.za.net

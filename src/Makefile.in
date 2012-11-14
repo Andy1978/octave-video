@@ -1,5 +1,3 @@
-sinclude Makeconf
-
 OCTFILES = avifile.oct aviread.oct aviinfo.oct addframe.oct
 
 FFMPEG_CONFIG = @FFMPEG_CONFIG@
@@ -12,9 +10,6 @@ else
 endif
 
 AVOBJS = AVHandler.o oct-avifile.o
-
-.PHONY: all strip
-all: ${OCTFILES}
 
 .PHONY: clean
 clean:
@@ -33,10 +28,6 @@ avctest.o: avctest.cc
 
 avctest: AVHandler.o avctest.o
 	g++ $^ -Wall ${FFMPEG_OPTS} -o $@
-
-.PHONY: strip
-strip: all
-	strip $(shell find ./* -name "*.oct") avctest
 
 TEST_CASES =   \
 	avitest

@@ -1,0 +1,7 @@
+#!/bin/bash
+## Octave-Forge: video package bootstrap script
+## Run this to generate the configure script
+
+set -e
+
+autoconf

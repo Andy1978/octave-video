@@ -2,6 +2,5 @@
 ## Octave-Forge: video package bootstrap script
 ## Run this to generate the configure script
 
-set -e
-
-autoconf
+set -e      # halt if unhandled error
+autoconf    # generate configure script

@@ -22,6 +22,7 @@
   OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
+#include "config.h"
 #include <octave/oct.h>
 #include "oct-avifile.h"
 
@@ -126,7 +127,6 @@ Avifile::addframe(const NDArray &f) {
 }
 
 Avifile::~Avifile(void) {
-    octave_stdout << "avifile: writing headers and closing " << filename << std::endl;
+    //octave_stdout << "avifile: writing headers and closing " << filename << std::endl;
     delete av;
 }
-

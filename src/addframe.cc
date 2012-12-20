@@ -22,6 +22,7 @@
   OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
+#include "config.h"
 #include <octave/oct.h>
 #include "oct-avifile.h"
 
@@ -71,6 +72,44 @@ of class @code{double} and scaled to be in [0-1].\n\
 
 /*
 %!test
-%!  m = avifile("test.avi")
-%!  addframe(m, zeros(2,2))
+%!  fn="test_addframe.avi";
+%!  m = avifile(fn);
+%!  addframe(m, zeros(10,15))
+%!  addframe(m, ones(10,15))
+%!  addframe(m, rand(10,15))
+%!  clear m 
+%!  assert(exist(fn,"file"))
+%!  r=aviinfo(fn);
+%!  assert(r.Filename,fn);
+%!  assert(r.NumFrames,3);
+%!  assert(r.Width,15);
+%!  assert(r.Height,10);
+%! 	delete(fn)
+*/
+
+/*
+%!demo
+%!  fn="test_avifile2.avi";
+%!  m = avifile(fn, "codec", "mpeg4");
+%!  for i = 1:100
+%!    I = zeros(100,100,3);
+%!
+%!    for x = 1:100
+%!       I(round(50+10*sin((x+i)/100*4*pi)), x, 1) = 40;
+%!       I(round(50+10*sin((x+i)/100*4*pi)), x, 2) = 40;
+%!       I(round(50+10*sin((x+i)/100*4*pi)), x, 3) = 180;
+%!    endfor
+%!
+%!    I(i,:,1) = 0;
+%!    I(i,:,2) = 50 + i*2;
+%!    I(i,:,3) = 0;
+%!    I(:,i,1) = 200 - i*2;
+%!    I(:,i,2) = 0;
+%!    I(:,i,3) = i*2;
+%!
+%!    addframe(m, I/255)
+%!  endfor
+%!  clear m
+%!  assert(exist(fn,"file"))
+%! 	delete(fn)
 */

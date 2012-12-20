@@ -24,22 +24,16 @@
 
 #ifndef _AVHANDLER_H
 #define _AVHANDLER_H
-
-#define VIDEO_OUTBUF_SIZE 200000
-
-// FIXME: should define -D__STDC_CONSTANT_MACROS instead of the following
-#define INT64_C
-#define UINT64_C
-#define __STDC_CONSTANT_MACROS
+#include "config.h"
 
 #include <errno.h>
 extern "C" {
 #if defined (HAVE_FFMPEG_AVFORMAT_H)
-#include <ffmpeg/avformat.h>
+ #include <ffmpeg/avformat.h>
 #elif defined(HAVE_LIBAVFORMAT_AVFORMAT_H)
-#include <libavformat/avformat.h>
+ #include <libavformat/avformat.h>
 #else
-#error "Missing ffmpeg headers"
+ #error "Missing ffmpeg headers"
 #endif
 }
 #include <iostream>

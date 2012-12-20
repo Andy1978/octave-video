@@ -1,51 +1,40 @@
-dnl Process this file with autoconf to produce a configure script.
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
 AC_INIT([Octave-Forge video package], [1.1.0+])
+AC_CONFIG_HEADERS([config.h])
 
+# Checks for programs.
 AC_PROG_CXX
 AC_LANG(C++)
+
+# Define macros needed for libav
+AC_DEFINE(__STDC_CONSTANT_MACROS, [], [workaround for C++ programs to use C99 macros])
+AC_DEFINE(VIDEO_OUTBUF_SIZE, [200000], [size of video buffer])
 
 AC_CHECK_PROG([HAVE_MKOCTFILE], [mkoctfile], [yes], [no])
 if [test $HAVE_MKOCTFILE = "no"]; then
   AC_MSG_ERROR([mkoctfile required to install $PACKAGE_NAME])
 fi
 
-dnl Check for ffmpeg
-AC_CHECK_PROG([FFMPEG_CONFIG], [pkg-config], [pkg-config])
-if test -z $FFMPEG_CONFIG ; then
-  AC_MSG_WARN([`pkg-config' not found -- using default configuration])
-  FFMPEG_FLAGS="-lavcodec -lavutil -lm"
-  echo $FFMPEG_FLAGS
-else
-  FFMPEG_FLAGS=`pkg-config libavformat libavcodec libavutil libswscale --libs --cflags`
-  echo $FFMPEG_FLAGS
-fi
+# Checks for libraries.
 
 AC_CHECK_LIB([avformat], [av_write_frame], [],
-             [AC_MSG_ERROR([$PACKAGE_NAME requires libavformat from FFmpeg])],
-             [$FFMPEG_FLAGS])
+             [AC_MSG_ERROR([$PACKAGE_NAME requires libavformat from FFmpeg])])
 AC_CHECK_LIB([avcodec], [av_malloc], [],
-             [AC_MSG_ERROR([$PACKAGE_NAME requires libavcodec from FFmpeg])],
-             [$FFMPEG_FLAGS])
+             [AC_MSG_ERROR([$PACKAGE_NAME requires libavcodec from FFmpeg])])
 AC_CHECK_LIB([swscale], [sws_scale], [],
-             [AC_MSG_ERROR([$PACKAGE_NAME requires libswscale from FFmpeg])],
-             [$FFMPEG_FLAGS])
+             [AC_MSG_ERROR([$PACKAGE_NAME requires libswscale from FFmpeg])])
+             
+# Checks for header files.
 
-OLD_CPPFLAGS=$CPPFLAGS
-CPPFLAGS="$CPPFLAGS $FFMPEG_FLAGS"
-FFMPEG_DEFS=
-AC_SUBST(FFMPEG_DEFS)
-AC_CHECK_HEADERS(ffmpeg/avformat.h,
-  FFMPEG_DEFS="$FFMPEG_DEFS -DHAVE_FFMPEG_AVFORMAT_H", [
-  AC_CHECK_HEADERS(libavformat/avformat.h, 
-    FFMPEG_DEFS="$FFMPEG_DEFS -DHAVE_LIBAVFORMAT_AVFORMAT_H",
-    AC_MSG_ERROR([FFMpeg header files not found]))])
-AC_CHECK_HEADERS(ffmpeg/avcodec.h, 
-  FFMPEG_DEFS="$FFMPEG_DEFS -DHAVE_FFMPEG_AVCODEC_H", [
-  AC_CHECK_HEADERS(libavcodec/avcodec.h, 
-    FFMPEG_DEFS="$FFMPEG_DEFS -DHAVE_LIBAVCODEC_AVCODEC_H",
-    AC_MSG_ERROR([FFMpeg header files not found]))])
+AC_CHECK_HEADERS([ffmpeg/avformat.h], [], [AC_CHECK_HEADERS([libavformat/avformat.h], [],
+  AC_MSG_ERROR([FFMpeg header avformat.h not found]))])
+
+AC_CHECK_HEADERS([ffmpeg/avcodec.h], [], [AC_CHECK_HEADERS([libavcodec/avcodec.h], [],
+  AC_MSG_ERROR([FFMpeg header avcodec.h not found]))])
+
 AC_CHECK_DECL(AVSEEK_FLAG_BACKWARD, [],
               AC_MSG_ERROR([need a newer version of FFMpeg]), [
 #if defined(HAVE_FFMPEG_AVFORMAT_H)
@@ -53,8 +42,23 @@ AC_CHECK_DECL(AVSEEK_FLAG_BACKWARD, [],
 #elif defined(HAVE_LIBAVFORMAT_AVFORMAT_H)
 #include <libavformat/avformat.h>
 #endif])
-CPPFLAGS=$OLD_CPPFLAGS
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_CHECK_HEADER_STDBOOL
+AC_TYPE_UINT64_T
+AC_TYPE_UINT8_T
+
+# Checks for library functions.
+AC_FUNC_ERROR_AT_LINE
+AC_FUNC_MALLOC
 
 AC_CONFIG_FILES([Makefile])
-AC_SUBST([FFMPEG_CONFIG])
 AC_OUTPUT
+
+AC_MSG_NOTICE([
+
+$PACKAGE_NAME is now configured with
+
+   FFMPEG LIBS:       $LIBS
+   DEFS:              $DEFS
+])

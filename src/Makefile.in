@@ -1,39 +1,28 @@
 OCTFILES = avifile.oct aviread.oct aviinfo.oct addframe.oct
-
-FFMPEG_CONFIG = @FFMPEG_CONFIG@
-ifdef FFMPEG_CONFIG
-  FFMPEG_LIBS = $(shell pkg-config libavformat libavcodec libavutil libswscale --libs)
-  FFMPEG_CFLAGS = $(shell pkg-config libavformat libavcodec libavutil libswscale --cflags)
-else
-  FFMPEG_LIBS = -lavformat -lavcodec -lavutil -lswscale -lz -lm
-  FFMPEG_CFLAGS =
-endif
-
 AVOBJS = AVHandler.o oct-avifile.o
+FILES_WITH_TESTS = avifile.cc addframe.cc
 
 .PHONY: clean
-clean:
-	rm -f *.o *.oct avctest *~ octave-core
+.PHONY: realclean
+.PHONY: distclean
+
+all: ${OCTFILES}
 
 oct-avifile.o: AVHandler.o
 
 ${AVOBJS}: %.o: %.cc
-	mkoctfile -v -c $(FFMPEG_DEFS) $(FFMPEG_CFLAGS) $< -o $@
+	mkoctfile -Wall -v -c @DEFS@ $< -o $@
 
 ${OCTFILES}: %.oct: %.cc AVHandler.o oct-avifile.o
-	mkoctfile -v $(FFMPEG_DEFS) $< $(filter %.o, $^) $(FFMPEG_LIBS) $(FFMPEG_CFLAGS)
+	mkoctfile -Wall -v @DEFS@ $< $(filter %.o, $^) @LIBS@
 
-avctest.o: avctest.cc
-	g++ -Wall -c avctest.cc -o avctest.o
+clean:
+	rm -f *.o *~ *.orig octave-workspace
 
-avctest: AVHandler.o avctest.o
-	g++ $^ -Wall ${FFMPEG_OPTS} -o $@
-
-TEST_CASES =   \
-	avitest
-
-NOT_BROKEN_TEST_CASES = $(TEST_CASES:=.test)
-.PHONY: check
-check: $(NOT_BROKEN_TEST_CASES)
-%.test:
-	octave -q tests/$*.m > /dev/null
+realclean: clean
+	rm -f *.oct avctest
+	
+distclean: realclean
+	rm -rf autom4te.cache
+	rm -f Makefile config.status config.log config.h configure
+	rm -f *.avi

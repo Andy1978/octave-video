@@ -22,6 +22,7 @@
   OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
+#include "config.h"
 #include <octave/oct.h>
 #include "AVHandler.h"
 
@@ -92,9 +93,11 @@ Load frame @var{N} from the AVI file @var{filename}.\n\
 %! I = cat(3, I, 0.3*ones(256,256));
 %!
 %! # Display the picture
-%! imshow(I(:,:,1), I(:,:,2), I(:,:,3));
+%! figure(1)
+%! imshow(I);
 %! 
 %! # Write it to the AVI and close the AVI
+%! addframe(x, I);
 %! addframe(x, I);
 %! clear x
 %! 
@@ -102,5 +105,39 @@ Load frame @var{N} from the AVI file @var{filename}.\n\
 %! I = aviread("test.avi", 1);
 %!
 %! # Display the frame read
-%! imshow(I(:,:,1), I(:,:,2), I(:,:,3));
+%! figure(2) 
+%! imshow(I);
+*/
+
+/*
+%!test
+%! fn = tmpnam; 
+%! x = avifile(fn);
+%!
+%! # Generate some picture
+%! I = repmat(0:255, 256, 1)/255;
+%! I = cat(3, I, repmat([0:255]', 1, 256)/255);
+%! I = cat(3, I, 0.3*ones(256,256));
+%!
+%! # Write it to the AVI and close the AVI
+%! addframe(x, I);
+%! addframe(x, I);  #FIXME: aviread currently fails if only 1 frame
+%! clear x
+%! assert(exist(fn,"file"))
+%! I2 = aviread(fn, 1);
+%!
+%! #allow max. 5% difference between pixels
+%! assert(!any((I-I2)(:)>0.05))
+%! delete(fn);
+*/
+
+/*
+%!xtest
+%! fn = tmpnam; 
+%! x = avifile(fn);
+%! I = ones(256,256);
+%! addframe(x, I);
+%! clear x
+%! #FIXME: This fails if there is only 1 frame
+%! I = aviread(fn, 1);
 */

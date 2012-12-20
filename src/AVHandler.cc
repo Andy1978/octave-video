@@ -473,4 +473,3 @@ AVHandler::create_frame(PixelFormat fmt) {
     
     return frame;
 }
-

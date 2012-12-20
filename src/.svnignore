@@ -1,0 +1,3 @@
+*.oct
+configure
+autom4te.cache

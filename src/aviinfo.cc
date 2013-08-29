@@ -71,7 +71,7 @@ Return the properties of an AVI file.\n\
         return retval;
     }
 
-    Octave_map m;
+    octave_scalar_map m;
 
     m.assign("Filename", av.get_filename());
     m.assign("FileSize", av.get_filesize());

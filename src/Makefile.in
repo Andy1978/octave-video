@@ -2,6 +2,8 @@ OCTFILES = avifile.oct aviread.oct aviinfo.oct addframe.oct
 AVOBJS = AVHandler.o oct-avifile.o
 FILES_WITH_TESTS = avifile.cc addframe.cc
 
+MKOCTFILE ?= mkoctfile
+
 .PHONY: clean
 .PHONY: realclean
 .PHONY: distclean
@@ -11,10 +13,10 @@ all: ${OCTFILES}
 oct-avifile.o: AVHandler.o
 
 ${AVOBJS}: %.o: %.cc
-	mkoctfile -Wall -v -c @DEFS@ $< -o $@
+	$(MKOCTFILE) -Wall -v -c @DEFS@ $< -o $@ @CPPFLAGS@
 
 ${OCTFILES}: %.oct: %.cc AVHandler.o oct-avifile.o
-	mkoctfile -Wall -v @DEFS@ $< $(filter %.o, $^) @LIBS@
+	$(MKOCTFILE) -Wall -v @DEFS@ $< $(filter %.o, $^) @LIBS@ @CPPFLAGS@
 
 clean:
 	rm -f *.o *~ *.orig octave-workspace

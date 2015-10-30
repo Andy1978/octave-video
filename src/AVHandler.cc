@@ -120,18 +120,22 @@ AVHandler::setup_write() {
         if (add_video_stream() != 0) return -1;
     }
     
+#ifdef HAVE_AV_SET_PARAMETERS
     /* av_set_parameters is mandatory */
-    // FIXME: deprecated, but there's no replacement yet
     if (av_set_parameters(av_output, NULL) < 0) {
         (*out) << "AVHandler: Error setting output format parameters" << std::endl;
         return -1;
     }
+#endif
 
     snprintf(av_output->filename, sizeof(av_output->filename), "%s", filename.c_str());
 // FIXME:    snprintf(av_output->title, sizeof(av_output->title), "%s", title.c_str());
 // FIXME:    snprintf(av_output->author, sizeof(av_output->author), "%s", author.c_str());
 // FIXME:    snprintf(av_output->comment, sizeof(av_output->comment), "%s", comment.c_str());
     
+#ifndef URL_WRONLY
+#define URL_WRONLY AVIO_FLAG_WRITE
+#endif
     if (avio_open(&av_output->pb, filename.c_str(), URL_WRONLY) < 0) {
         (*out) << "AVHandler: Could not open \"" << filename << "\" for output" << std::endl;
         return -1;
@@ -383,7 +387,12 @@ AVHandler::print_codecs() {
     AVCodec *codec;
     for (codec = av_codec_next(0); codec != NULL; codec = av_codec_next(codec)) {
         if ((codec->type == AVMEDIA_TYPE_VIDEO) &&
-            (codec->encode)) {
+#ifdef HAVE_AV_CODEC_IS_ENCODER
+            (av_codec_is_encoder(codec)))
+#else
+            (codec->encode)) 
+#endif
+        {
             (*out) << codec->name << " ";
         }
     }
@@ -461,7 +470,7 @@ AVHandler::create_frame(PixelFormat fmt) {
                                   vstream->codec->width,
                                   vstream->codec->height);
 
-    frame_buf = (uint8_t *)malloc(size);
+    frame_buf = (uint8_t *)av_malloc(size);
     if (!frame_buf) {
         av_free(frame);
         (*out) << "AVHandler: error initialising frame" << std::endl;

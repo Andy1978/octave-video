@@ -90,7 +90,7 @@ To see a list of the available codecs, do @code{avifile(\"codecs\")}.\n\
     std::string author = "";
     std::string comment = "Created using Octave-Avifile";
 
-    for (unsigned int i = 1; i < args.length(); i++) {
+    for (octave_idx_type i = 1; i < args.length(); i++) {
         std::string p = args(i).string_value();
         octave_value v = args(i+1);
         if (!error_state) {

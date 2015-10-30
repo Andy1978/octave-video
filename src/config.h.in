@@ -1,4 +1,10 @@
-/* config.h.in.  Generated from configure.ac by autoheader and edited by hand */
+/* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Define to 1 if you have the `av_codec_is_encoder' function. */
+#undef HAVE_AV_CODEC_IS_ENCODER
+
+/* Define to 1 if you have the `av_set_parameters' function. */
+#undef HAVE_AV_SET_PARAMETERS
 
 /* Define to 1 if you have the <ffmpeg/avcodec.h> header file. */
 #undef HAVE_FFMPEG_AVCODEC_H
@@ -20,6 +26,9 @@
 
 /* Define to 1 if you have the <libavformat/avformat.h> header file. */
 #undef HAVE_LIBAVFORMAT_AVFORMAT_H
+
+/* Define to 1 if you have the `avutil' library (-lavutil). */
+#undef HAVE_LIBAVUTIL
 
 /* Define to 1 if you have the `swscale' library (-lswscale). */
 #undef HAVE_LIBSWSCALE
@@ -71,7 +80,7 @@
    #define below would cause a syntax error. */
 #undef _UINT8_T
 
-/* workaraound for C++ programs to use C99 makros */
+/* workaround for C++ programs to use C99 macros */
 #undef __STDC_CONSTANT_MACROS
 
 /* Define to rpl_malloc if the replacement function should be used. */

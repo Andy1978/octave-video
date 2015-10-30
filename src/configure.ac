@@ -6,6 +6,7 @@ AC_INIT([Octave-Forge video package], [1.1.0+])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
+PKG_PROG_PKG_CONFIG
 AC_PROG_CXX
 AC_LANG(C++)
 
@@ -20,12 +21,36 @@ fi
 
 # Checks for libraries.
 
+if test "x$PKG_CONFIG" = "x"; then
+AC_CHECK_LIB([avutil], [av_mallocz], [],[])
 AC_CHECK_LIB([avformat], [av_write_frame], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libavformat from FFmpeg])])
-AC_CHECK_LIB([avcodec], [av_malloc], [],
+AC_CHECK_LIB([avcodec], [avcodec_alloc_frame], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libavcodec from FFmpeg])])
 AC_CHECK_LIB([swscale], [sws_scale], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libswscale from FFmpeg])])
+else
+PKG_CHECK_MODULES(avutil, [libavutil],
+ [
+   CPPFLAGS="$CPPFLAGS $avutil_CFLAGS"
+   LIBS="$LIBS $avutil_LIBS"
+ ],[])
+PKG_CHECK_MODULES(avformat, [libavformat],
+ [
+   CPPFLAGS="$CPPFLAGS $avformat_CFLAGS"
+   LIBS="$LIBS $avformat_LIBS"
+ ], [AC_MSG_ERROR([$PACKAGE_NAME requires libavformat from FFmpeg])])
+PKG_CHECK_MODULES(avcodec, [libavcodec],
+ [
+   CPPFLAGS="$CPPFLAGS $avcodec_CFLAGS"
+   LIBS="$LIBS $avcodec_LIBS"
+ ], [AC_MSG_ERROR([$PACKAGE_NAME requires libavcodec from FFmpeg])])
+PKG_CHECK_MODULES(swscale, [libswscale],
+ [
+   CPPFLAGS="$CPPFLAGS $swscale_CFLAGS"
+   LIBS="$LIBS $swscale_LIBS"
+ ], [AC_MSG_ERROR([$PACKAGE_NAME requires libswscale from FFmpeg])])
+fi
              
 # Checks for header files.
 
@@ -51,6 +76,10 @@ AC_TYPE_UINT8_T
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MALLOC
+
+AC_CHECK_FUNCS([av_set_parameters av_codec_is_encoder],[],[])
+
+AC_SUBST(CPPFLAGS)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

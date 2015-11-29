@@ -26,7 +26,6 @@
 #include <octave/oct.h>
 #include "oct-avifile.h"
 
-DEFINE_OCTAVE_ALLOCATOR(Avifile);
 DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(Avifile, "avifile", "avifile");
 
 Avifile::Avifile(std::string fn) : octave_base_value(),

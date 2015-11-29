@@ -129,6 +129,10 @@ AVHandler::setup_write() {
 #endif
 
     snprintf(av_output->filename, sizeof(av_output->filename), "%s", filename.c_str());
+    
+// note from Andy:
+// I think we nees to use metadata here:
+// see for example this patch https://launchpadlibrarian.net/71985647/libav_0.7_support.patch
 // FIXME:    snprintf(av_output->title, sizeof(av_output->title), "%s", title.c_str());
 // FIXME:    snprintf(av_output->author, sizeof(av_output->author), "%s", author.c_str());
 // FIXME:    snprintf(av_output->comment, sizeof(av_output->comment), "%s", comment.c_str());

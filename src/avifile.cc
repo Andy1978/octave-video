@@ -118,7 +118,8 @@ To see a list of the available codecs, do @code{avifile(\"codecs\")}.\n\
     m->av->set_gop_size(gop_size);
     m->av->set_framerate(fps);
 
-    // Doesn't look like these values are ever encoded
+    // Setting title, author and comment doesn't work with libav > 0.7
+    // see FIXME in AVHandler.cc:135
     m->av->set_title(title);
     m->av->set_author(author);
     m->av->set_comment(comment);

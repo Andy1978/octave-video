@@ -88,10 +88,10 @@ Return the properties of an AVI file.\n\
     m.assign("AudioRate", av.get_audio_samplerate());
     m.assign("NumAudioChannels", av.get_audio_channels());
 
-    //    m.assign("Title", av.get_title());
-    //    m.assign("Author", av.get_author());
-    //    m.assign("Comment", av.get_comment());
- 
+    m.assign("Title", av.get_title());
+    m.assign("Author", av.get_author());
+    m.assign("Comment", av.get_comment());
+
     retval.append(octave_value(m));
     return retval;
 }

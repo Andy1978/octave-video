@@ -88,9 +88,9 @@ of class @code{double} and scaled to be in [0-1].\n\
 */
 
 /*
-%!demo
+%!test
 %!  fn="test_avifile2.avi";
-%!  m = avifile(fn, "codec", "mpeg4");
+%!  m = avifile(fn, "codec", "mpeg4", "title", "a moving sin", "author", "John Doe");
 %!  for i = 1:100
 %!    I = zeros(100,100,3);
 %!

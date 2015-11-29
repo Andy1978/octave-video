@@ -81,6 +81,10 @@ run: all
 	$(OCTAVE) --silent --persist \
 	  --eval 'addpath (fullfile ([pwd filesep "src"]));'
 
+style:
+	find ./src \( -name "*.cc" -or -name "*.h" -or -name "*.m" \) -exec sed -i 's/[[:space:]]*$$//' {} \;
+	find ./src \( -name "*.cc" -or -name "*.h" \) -exec astyle --style=gnu -s2 -n {} \;
+
 doc:
 
 clean:

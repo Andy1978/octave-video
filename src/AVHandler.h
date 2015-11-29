@@ -29,18 +29,20 @@
 #include <errno.h>
 extern "C" {
 #if defined (HAVE_FFMPEG_AVFORMAT_H)
- #include <ffmpeg/avformat.h>
+#include <ffmpeg/avformat.h>
 #elif defined(HAVE_LIBAVFORMAT_AVFORMAT_H)
- #include <libavformat/avformat.h>
+#include <libavformat/avformat.h>
 #else
- #error "Missing ffmpeg headers"
+#error "Missing ffmpeg headers"
 #endif
 }
 #include <iostream>
 
-class AVHandler {
- public:
-  AVHandler() {     
+class AVHandler
+{
+public:
+  AVHandler()
+  {
     av_output = NULL;
     av_input = NULL;
     vstream = NULL;
@@ -50,7 +52,7 @@ class AVHandler {
     video_outbuf = NULL;
     filename = "";
     frame_nr = 0;
-    
+
     bitrate = 400000;
     framerate = 25;
     gop_size = 10;
@@ -64,7 +66,7 @@ class AVHandler {
 
     lock_parameters = false;
   }
-  
+
   ~AVHandler(void);
 
   int setup_write();
@@ -72,144 +74,178 @@ class AVHandler {
   int setup_read();
 
   void draw_background(unsigned char r, unsigned char g, unsigned char b);
- 
+
   // write rgbframe to file
   int write_frame();
 
   // read frame nr from file into rgbframe
   int read_frame(unsigned int nr);
-  
+
   static void print_file_formats();
 
   static void print_codecs();
 
   // The following routines can be used before `setup_write'
 
-  void set_filename(const std::string &filename) {
+  void set_filename(const std::string &filename)
+  {
     this->filename = filename;
   }
 
-  std::string get_filename() const {
+  std::string get_filename() const
+  {
     return filename;
   }
 
-  void set_codec(const std::string &codec) {
+  void set_codec(const std::string &codec)
+  {
     codec_name = codec;
   }
 
-  std::string get_codec() const {
+  std::string get_codec() const
+  {
     return codec_name;
   }
 
-  std::string get_audio_codec() const {
+  std::string get_audio_codec() const
+  {
     if (!astream) return "";
 
     AVCodec *codec;
     codec = avcodec_find_decoder(astream->codec->codec_id);
-    if (!codec) {
+    if (!codec)
+      {
         return "";
-    }
+      }
     return std::string(codec->name);
   }
 
-  unsigned int get_audio_samplerate() const {
+  unsigned int get_audio_samplerate() const
+  {
     if (!astream) return 0;
 
     return astream->codec->sample_rate;
   }
 
-  unsigned int get_audio_channels() const {
+  unsigned int get_audio_channels() const
+  {
     if (!astream) return 0;
 
     return astream->codec->channels;
   }
 
-  void set_bitrate(const unsigned int br) {
+  void set_bitrate(const unsigned int br)
+  {
     bitrate = br;
   }
 
-  unsigned int get_bitrate() const {
+  unsigned int get_bitrate() const
+  {
     return bitrate;
   }
 
-  void set_framerate(double fr) {
+  void set_framerate(double fr)
+  {
     framerate = fr;
   }
 
-  void set_gop_size(int gop) {
+  void set_gop_size(int gop)
+  {
     gop_size = gop;
   }
 
-  double get_framerate() const {
+  double get_framerate() const
+  {
     return framerate;
   }
 
-  void set_width(unsigned int width) {
+  void set_width(unsigned int width)
+  {
     this->width = width;
   }
 
-  unsigned int get_width() const {
+  unsigned int get_width() const
+  {
     return width;
   }
 
-  void set_height(unsigned int height) {
+  void set_height(unsigned int height)
+  {
     this->height = height;
   }
 
-  unsigned int get_height() const {
+  unsigned int get_height() const
+  {
     return height;
   }
 
-  unsigned int get_total_frames() const {
-    if (vstream) {
-      return (unsigned int) vstream->nb_frames;
-    } else {
-      return 0;
-    }
+  unsigned int get_total_frames() const
+  {
+    if (vstream)
+      {
+        return (unsigned int) vstream->nb_frames;
+      }
+    else
+      {
+        return 0;
+      }
   }
 
-  unsigned int get_filesize() const {
-    if (av_input) {
-      return avio_size(av_input->pb);
-    } else {
-      return 0;
-    }
+  unsigned int get_filesize() const
+  {
+    if (av_input)
+      {
+        return avio_size(av_input->pb);
+      }
+    else
+      {
+        return 0;
+      }
   }
 
-  void set_title(const std::string &t) {
+  void set_title(const std::string &t)
+  {
     title = t;
   }
 
-  std::string get_title() const {
+  std::string get_title() const
+  {
     return title;
   }
 
-  void set_author(const std::string &a) {
+  void set_author(const std::string &a)
+  {
     author = a;
   }
 
-  std::string get_author() const {
+  std::string get_author() const
+  {
     return author;
   }
 
-  void set_comment(const std::string &c) {
+  void set_comment(const std::string &c)
+  {
     comment = c;
   }
 
-  std::string get_comment() const {
+  std::string get_comment() const
+  {
     return comment;
   }
 
-  AVFrame *get_rgbframe() {
+  AVFrame *get_rgbframe()
+  {
     return rgbframe;
   }
 
-  static void set_log(std::ostream *log) {
-    AVHandler::out = log;  }
+  static void set_log(std::ostream *log)
+  {
+    AVHandler::out = log;
+  }
 
- private:
+private:
   static std::ostream *out;
-  
+
   AVFormatContext *av_output;
   AVFormatContext *av_input;
   AVStream *vstream;
@@ -217,11 +253,11 @@ class AVHandler {
 
   AVFrame *frame;
   AVFrame *rgbframe;
-  
+
   uint8_t *video_outbuf;
-  
+
   std::string filename;
-  
+
   int frame_nr;
 
   unsigned int bitrate;
@@ -236,9 +272,9 @@ class AVHandler {
   std::string comment;
 
   bool lock_parameters;
-  
+
   int add_video_stream();
-  
+
   int init_video_codecs();
 
   AVFrame *create_frame(PixelFormat fmt);

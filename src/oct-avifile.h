@@ -27,29 +27,45 @@
 
 #include "AVHandler.h"
 
-class Avifile: public octave_base_value {
+class Avifile: public octave_base_value
+{
 
- public:
+public:
   AVHandler *av;
 
-  Avifile(void) { *this = Avifile("default.avi"); }
+  Avifile(void)
+  {
+    *this = Avifile("default.avi");
+  }
 
   Avifile(std::string fn);
 
-  octave_base_value *clone(void) const { return new Avifile(*this); }
-  octave_base_value *empty_clone(void) const { return new Avifile(); }
+  octave_base_value *clone(void) const
+  {
+    return new Avifile(*this);
+  }
+  octave_base_value *empty_clone(void) const
+  {
+    return new Avifile();
+  }
 
   ~Avifile(void);
 
   void print(std::ostream& os, bool pr_as_read_syntax) const;
-  
+
   void addframe(const NDArray &f);
-  
-  bool is_defined(void) const { return true; }
-  
-  bool is_constant(void) const { return true; }
-  
- private:  
+
+  bool is_defined(void) const
+  {
+    return true;
+  }
+
+  bool is_constant(void) const
+  {
+    return true;
+  }
+
+private:
   Avifile(const Avifile& m);
 
   std::string filename;

@@ -27,7 +27,7 @@
 #include "oct-avifile.h"
 
 DEFUN_DLD(addframe, args, nargout,
-"-*- texinfo -*-\n\
+          "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {} addframe (@var{avi}, @var{image})\n\
 Add a frame to an AVI file.\n\
 \n\
@@ -37,37 +37,42 @@ of class @code{double} and scaled to be in [0-1].\n\
 \n\
 @seealso{avifile, aviread, aviinfo}")
 {
-    octave_value_list retval;
+  octave_value_list retval;
 
-    if (args.length() != 2) {
-        print_usage();
-        return retval;
+  if (args.length() != 2)
+    {
+      print_usage();
+      return retval;
     }
 
-    if (args(0).type_id() != Avifile::static_type_id()) {
-        print_usage();
-        return retval;
-    }
-    
-    NDArray f = args(1).array_value();
-    if (error_state) {
-        error("addframe: frame should be a matrix");
-        return retval;
+  if (args(0).type_id() != Avifile::static_type_id())
+    {
+      print_usage();
+      return retval;
     }
 
-    // Check if input image is in [0-1]
-    if (f.any_element_is_negative() || (1-f).any_element_is_negative()) {
-        error("addframe: input frame should be in [0-1]");
-        return retval;
+  NDArray f = args(1).array_value();
+  if (error_state)
+    {
+      error("addframe: frame should be a matrix");
+      return retval;
     }
 
-    Avifile *m = (Avifile*)args(0).internal_rep();
-    m->addframe(f);
-    if (error_state) {
-        octave_stdout << "addframe: error adding frame to avifile" << std::endl;
+  // Check if input image is in [0-1]
+  if (f.any_element_is_negative() || (1-f).any_element_is_negative())
+    {
+      error("addframe: input frame should be in [0-1]");
+      return retval;
     }
 
-    return retval;
+  Avifile *m = (Avifile*)args(0).internal_rep();
+  m->addframe(f);
+  if (error_state)
+    {
+      octave_stdout << "addframe: error adding frame to avifile" << std::endl;
+    }
+
+  return retval;
 }
 
 /*
@@ -77,7 +82,7 @@ of class @code{double} and scaled to be in [0-1].\n\
 %!  addframe(m, zeros(10,15))
 %!  addframe(m, ones(10,15))
 %!  addframe(m, rand(10,15))
-%!  clear m 
+%!  clear m
 %!  assert(exist(fn,"file"))
 %!  r=aviinfo(fn);
 %!  assert(r.Filename,fn);

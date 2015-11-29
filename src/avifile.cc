@@ -27,16 +27,20 @@
 #include "oct-avifile.h"
 
 template <typename Num>
-void setp(Num &p, Num v) {
-    if (!error_state) {
-        p = v;
-    } else {
-        error_state = 0;
+void setp(Num &p, Num v)
+{
+  if (!error_state)
+    {
+      p = v;
+    }
+  else
+    {
+      error_state = 0;
     }
 }
 
 DEFUN_DLD(avifile, args, nargout,
-"-*- texinfo -*-\n\
+          "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{f} =} avifile (@var{filename}, [@var{parameter}, @var{value}, @dots{}])\n\
 @deftypefnx {Loadable Function} avifile (\"codecs\")\n\
 Create an AVI-format video file.\n\
@@ -63,69 +67,97 @@ To see a list of the available codecs, do @code{avifile(\"codecs\")}.\n\
 \n\
 @seealso{addframe, aviinfo, aviread}")
 {
-    octave_value_list retval;
+  octave_value_list retval;
 
-    if ( (args.length() == 1) && (args(0).string_value() == "codecs") ) {
-        AVHandler::print_codecs();
-        return retval;
+  if ( (args.length() == 1) && (args(0).string_value() == "codecs") )
+    {
+      AVHandler::print_codecs();
+      return retval;
     }
 
-    if ((args.length() == 0) || (args.length() % 2 != 1)) {
-        print_usage();
-        return retval;
+  if ((args.length() == 0) || (args.length() % 2 != 1))
+    {
+      print_usage();
+      return retval;
     }
 
-    std::string filename = args(0).string_value();
-    if (error_state) {
-        print_usage();
-        return retval;
+  std::string filename = args(0).string_value();
+  if (error_state)
+    {
+      print_usage();
+      return retval;
     }
 
-    // Parse parameters
-    std::string codec = "mpeg4";
-    unsigned int bitrate = 400000;
-    int gop_size = 10;
-    double fps = 25;
-    std::string title = "";
-    std::string author = "";
-    std::string comment = "Created using Octave-Avifile";
+  // Parse parameters
+  std::string codec = "mpeg4";
+  unsigned int bitrate = 400000;
+  int gop_size = 10;
+  double fps = 25;
+  std::string title = "";
+  std::string author = "";
+  std::string comment = "Created using Octave-Avifile";
 
-    for (octave_idx_type i = 1; i < args.length(); i++) {
-        std::string p = args(i).string_value();
-        octave_value v = args(i+1);
-        if (!error_state) {
-            if ((p == "codec") || (p == "compression")) { setp(codec, v.string_value()); }
-            else if (p == "bitrate") { setp(bitrate, (unsigned int)v.int_value()); }
-            else if (p == "gop") { setp(gop_size, v.int_value()); }
-            else if (p == "fps") { setp(fps, v.double_value()); }
-            else if (p == "title") { setp(title, v.string_value()); }
-            else if (p == "author") { setp(author, v.string_value()); }
-            else if (p == "comment") { setp(comment, v.string_value()); }
-            else {
-                error("avifile: unknown parameter \"%s\"", p.c_str());
-                return retval;
+  for (octave_idx_type i = 1; i < args.length(); i++)
+    {
+      std::string p = args(i).string_value();
+      octave_value v = args(i+1);
+      if (!error_state)
+        {
+          if ((p == "codec") || (p == "compression"))
+            {
+              setp(codec, v.string_value());
+            }
+          else if (p == "bitrate")
+            {
+              setp(bitrate, (unsigned int)v.int_value());
+            }
+          else if (p == "gop")
+            {
+              setp(gop_size, v.int_value());
+            }
+          else if (p == "fps")
+            {
+              setp(fps, v.double_value());
+            }
+          else if (p == "title")
+            {
+              setp(title, v.string_value());
+            }
+          else if (p == "author")
+            {
+              setp(author, v.string_value());
+            }
+          else if (p == "comment")
+            {
+              setp(comment, v.string_value());
+            }
+          else
+            {
+              error("avifile: unknown parameter \"%s\"", p.c_str());
+              return retval;
             }
         }
-        i++;
+      i++;
     }
 
-    Avifile *m = new Avifile(filename);
-    if (error_state) {
-        return retval;
+  Avifile *m = new Avifile(filename);
+  if (error_state)
+    {
+      return retval;
     }
-    m->av->set_codec(codec);
-    m->av->set_bitrate(bitrate);
-    m->av->set_gop_size(gop_size);
-    m->av->set_framerate(fps);
+  m->av->set_codec(codec);
+  m->av->set_bitrate(bitrate);
+  m->av->set_gop_size(gop_size);
+  m->av->set_framerate(fps);
 
-    // Setting title, author and comment doesn't work with libav > 0.7
-    // see FIXME in AVHandler.cc:135
-    m->av->set_title(title);
-    m->av->set_author(author);
-    m->av->set_comment(comment);
+  // Setting title, author and comment doesn't work with libav > 0.7
+  // see FIXME in AVHandler.cc:135
+  m->av->set_title(title);
+  m->av->set_author(author);
+  m->av->set_comment(comment);
 
-    retval.append(octave_value(m));
-    return retval;
+  retval.append(octave_value(m));
+  return retval;
 }
 
 /*

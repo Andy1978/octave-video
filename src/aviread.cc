@@ -27,59 +27,66 @@
 #include "AVHandler.h"
 
 DEFUN_DLD(aviread, args, ,
-"-*- texinfo -*-\n\
+          "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{image} =} aviread (@var{filename}, @var{N})\n\
 Load frame @var{N} from the AVI file @var{filename}.\n\
 @end deftypefn\n\
 \n\
 @seealso{avifile, aviinfo, addframe}")
 {
-    octave_value_list retval;
+  octave_value_list retval;
 
-    if (args.length() != 2) {
-        print_usage();
-        return retval;
-    }
-   
-    std::string filename = args(0).string_value();
-    if (error_state) {
-        print_usage();
-        return retval;
+  if (args.length() != 2)
+    {
+      print_usage();
+      return retval;
     }
 
-    unsigned int framenr = (unsigned int)args(1).scalar_value();
-    if (error_state) {
-        print_usage();
+  std::string filename = args(0).string_value();
+  if (error_state)
+    {
+      print_usage();
+      return retval;
     }
 
-    AVHandler av = AVHandler();
-    av.set_filename(filename);
-    av.set_log(&octave_stdout);
-
-    if (av.setup_read() != 0) {
-        error("aviread: AVHandler setup failed");
-        return retval;
+  unsigned int framenr = (unsigned int)args(1).scalar_value();
+  if (error_state)
+    {
+      print_usage();
     }
 
-    if (av.read_frame(framenr) != 0) {
-        error("aviread: cannot read frame %d", framenr);
-        return retval;
+  AVHandler av = AVHandler();
+  av.set_filename(filename);
+  av.set_log(&octave_stdout);
+
+  if (av.setup_read() != 0)
+    {
+      error("aviread: AVHandler setup failed");
+      return retval;
     }
 
-    AVFrame *frame = av.get_rgbframe();
+  if (av.read_frame(framenr) != 0)
+    {
+      error("aviread: cannot read frame %d", framenr);
+      return retval;
+    }
 
-    dim_vector d = dim_vector(av.get_height(), av.get_width(), 3);
-    NDArray image = NDArray(d, 0);
-    for (unsigned int y = 0; y < av.get_height(); y++) {
-        for (unsigned int x = 0; x < av.get_width(); x++) {
+  AVFrame *frame = av.get_rgbframe();
+
+  dim_vector d = dim_vector(av.get_height(), av.get_width(), 3);
+  NDArray image = NDArray(d, 0);
+  for (unsigned int y = 0; y < av.get_height(); y++)
+    {
+      for (unsigned int x = 0; x < av.get_width(); x++)
+        {
           image(y, x, 0) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 2]/255;
           image(y, x, 1) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 1]/255;
           image(y, x, 2) = (double)frame->data[0][y * frame->linesize[0] + 3*x + 0]/255;
         }
     }
 
-    retval.append(octave_value(image));
-    return retval;
+  retval.append(octave_value(image));
+  return retval;
 }
 
 /*
@@ -95,23 +102,23 @@ Load frame @var{N} from the AVI file @var{filename}.\n\
 %! # Display the picture
 %! figure(1)
 %! imshow(I);
-%! 
+%!
 %! # Write it to the AVI and close the AVI
 %! addframe(x, I);
 %! addframe(x, I);
 %! clear x
-%! 
+%!
 %! # Read the first frame from the AVI
 %! I = aviread("test.avi", 1);
 %!
 %! # Display the frame read
-%! figure(2) 
+%! figure(2)
 %! imshow(I);
 */
 
 /*
 %!test
-%! fn = tmpnam; 
+%! fn = tmpnam;
 %! x = avifile(fn);
 %!
 %! # Generate some picture
@@ -133,7 +140,7 @@ Load frame @var{N} from the AVI file @var{filename}.\n\
 
 /*
 %!xtest
-%! fn = tmpnam; 
+%! fn = tmpnam;
 %! x = avifile(fn);
 %! I = ones(256,256);
 %! addframe(x, I);

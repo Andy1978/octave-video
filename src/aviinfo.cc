@@ -95,3 +95,29 @@ Return the properties of an AVI file.\n\
     retval.append(octave_value(m));
     return retval;
 }
+
+/*
+%!test
+%!  fn = "test_aviinfo.avi";
+%!  m = avifile (fn, "codec", "mpeg4",
+%!                   "title", "title tag",
+%!                   "author", "author tag",
+%!                   "comment", "comment tag");
+%!  addframe (m, rand (150, 200, 3));
+%!  clear m
+%!  assert (exist (fn, "file"))
+%!
+%!  s = aviinfo (fn);
+%!  assert (s.Filename, fn);
+%!  assert (s.NumFrames, 1);
+%!  assert (s.Width, 200);
+%!  assert (s.Height, 150);
+%!  assert (s.VideoCompression, "mpeg4");
+%!  assert (s.Title, "title tag");
+%!  assert (s.Comment, "comment tag");
+%!
+%!  # FIMXE: author still doesn't work, see AVHandler.cc:134
+%!  # assert (s.Author, "author tag");
+%!
+%!  unlink (fn)
+*/

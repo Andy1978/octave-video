@@ -130,13 +130,14 @@ AVHandler::setup_write() {
 
     snprintf(av_output->filename, sizeof(av_output->filename), "%s", filename.c_str());
     
-// note from Andy:
-// I think we nees to use metadata here:
-// see for example this patch https://launchpadlibrarian.net/71985647/libav_0.7_support.patch
-// FIXME:    snprintf(av_output->title, sizeof(av_output->title), "%s", title.c_str());
-// FIXME:    snprintf(av_output->author, sizeof(av_output->author), "%s", author.c_str());
-// FIXME:    snprintf(av_output->comment, sizeof(av_output->comment), "%s", comment.c_str());
-    
+    int err = av_dict_set(&av_output->metadata, "title", title.c_str (), 0);
+    // FIMXE: Not from Andy
+    // title and comment is written. This can be checked with
+    // ffmpeg -i test_avifile2.avi -f ffmetadata metadata
+    // but author is still missing
+    err = av_dict_set(&av_output->metadata, "author", author.c_str (), 0);
+    err = av_dict_set(&av_output->metadata, "comment", comment.c_str (), 0);
+        
 #ifndef URL_WRONLY
 #define URL_WRONLY AVIO_FLAG_WRITE
 #endif
@@ -207,15 +208,25 @@ AVHandler::setup_read() {
         return -1;
     }
 
-    /// XXX TODO XXX Verify that this calculation is correct
+    // FIXME: Verify that this calculation is correct
     AVRational av_fr = vstream->r_frame_rate;
     framerate = (double)av_fr.num / (double)av_fr.den;
     width = vstream->codec->width;
     height = vstream->codec->height;
 
-// FIXME:    title = av_input->title;
-// FIXME:    author = av_input->author;
-// FIXME:    comment = av_input->comment;
+    AVDictionaryEntry *entry = NULL;
+
+    entry = av_dict_get(av_input->metadata, "title", NULL, AV_DICT_IGNORE_SUFFIX);
+    if (entry)
+     title = entry->value;
+
+    entry = av_dict_get(av_input->metadata, "author", NULL, AV_DICT_IGNORE_SUFFIX);
+    if (entry)
+     author = entry->value;
+
+    entry = av_dict_get(av_input->metadata, "comment", NULL, AV_DICT_IGNORE_SUFFIX);
+    if (entry)
+     comment = entry->value;
 
     rgbframe = create_frame(PIX_FMT_RGB24);
     if (!rgbframe) return -1;
@@ -485,6 +496,9 @@ AVHandler::create_frame(PixelFormat fmt) {
     
     avpicture_fill((AVPicture *)frame, frame_buf, fmt,
                    vstream->codec->width, vstream->codec->height);
+    frame->format = fmt;
+    frame->width = vstream->codec->width;
+    frame->height = vstream->codec->height;
     
     return frame;
 }

@@ -170,7 +170,7 @@ AVHandler::setup_read() {
         return -1;
     }
 
-    for (int i=0; i < av_input->nb_streams; i++) {
+    for (unsigned int i=0; i < av_input->nb_streams; i++) {
         if (av_input->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
             vstream = av_input->streams[i];
             break;
@@ -181,7 +181,7 @@ AVHandler::setup_read() {
         return -1;
     }
 
-    for (int i=0; i < av_input->nb_streams; i++) {
+    for (unsigned int i=0; i < av_input->nb_streams; i++) {
         if (av_input->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
             astream = av_input->streams[i];
             break;
@@ -305,6 +305,8 @@ AVHandler::read_frame(unsigned int nr) {
         (*out) << "AVHandler: Error seeking to " << target_timestamp << std::endl;
         return -1;
     }
+    
+    // FIMXE: Note from Andy: This has no effect. Should this be ->skip_frame ();?
     cc->skip_frame;
 
     // Flush stream buffers after seek

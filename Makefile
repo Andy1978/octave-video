@@ -36,7 +36,7 @@ help:
 $(RELEASE_DIR): .hg/dirstate
 	@echo "Creating package version $(VERSION) release ..."
 	-rm -rf $@
-	hg archive --exclude ".hg*" --exclude Makefile --type files $@
+	hg archive --exclude ".hg*" --exclude "devel" --exclude Makefile --type files $@
 	chmod -R a+rX,u+w,go-w $@
 
 $(RELEASE_TARBALL): $(RELEASE_DIR)

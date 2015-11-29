@@ -1,4 +1,6 @@
 Summary of important user-visible changes for video 1.2.0:
 -------------------------------------------------------------------
 
+ ** Builds with Octave 4.0.0 and ffmpeg >= 1.0
+
  ** Package is no longer automatically loaded.

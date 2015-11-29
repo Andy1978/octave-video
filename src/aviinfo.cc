@@ -123,5 +123,5 @@ Return the properties of an AVI file.\n\
 %!  # FIMXE: author still doesn't work, see AVHandler.cc:134
 %!  # assert (s.Author, "author tag");
 %!
-%!  unlink (fn)
+%!  unlink (fn);
 */

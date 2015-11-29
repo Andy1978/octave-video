@@ -238,7 +238,7 @@ AVHandler::setup_read()
     }
 
   // FIXME: Verify that this calculation is correct
-  AVRational av_fr = vstream->r_frame_rate;
+  AVRational av_fr = vstream->avg_frame_rate;
   framerate = (double)av_fr.num / (double)av_fr.den;
   width = vstream->codec->width;
   height = vstream->codec->height;
@@ -493,6 +493,11 @@ AVHandler::add_video_stream()
   cc->height = height;
 
   // XXX TODO XXX Make sure this calculation is correct //
+
+  // without this libav complains with
+  // "Using AVStream.codec.time_base as a timebase hint to the muxer is deprecated. Set AVStream.time_base instead."
+  vstream->time_base = (AVRational){1, framerate};
+
   cc->time_base.num = 1;
   cc->time_base.den = (int)(framerate);
   cc->pix_fmt = PIX_FMT_YUV420P;

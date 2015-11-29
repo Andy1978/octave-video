@@ -4,3 +4,8 @@
   The metadata can be exported with
   ffmpeg -i test_avifile2.avi -f ffmetadata metadata.txt
   Or use VLC to display metadata.
+
+* addframe.cc: Encoder did not produce proper pts, making some up.
+
+* Problem when creating video with only one frame:
+  aviread.cc: AVHandler: Error reading packet after timestamp 0

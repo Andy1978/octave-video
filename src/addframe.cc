@@ -116,5 +116,5 @@ of class @code{double} and scaled to be in [0-1].\n\
 %!  endfor
 %!  clear m
 %!  assert(exist(fn,"file"))
-%! 	unlink (fn)
+%! 	unlink (fn);
 */

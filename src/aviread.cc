@@ -145,6 +145,8 @@ Load frame @var{N} from the AVI file @var{filename}.\n\
 %! I = ones(256,256);
 %! addframe(x, I);
 %! clear x
-%! #FIXME: This fails if there is only 1 frame
+%! # FIXME: This fails if there is only 1 frame (fine with >1 frames) with
+%! # AVHandler: Error reading packet after timestamp 0
 %! I = aviread(fn, 1);
 */
+

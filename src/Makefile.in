@@ -19,12 +19,8 @@ ${OCTFILES}: %.oct: %.cc AVHandler.o oct-avifile.o
 	$(MKOCTFILE) -Wall -v @DEFS@ $< $(filter %.o, $^) @LIBS@ @CPPFLAGS@
 
 clean:
-	rm -f *.o *~ *.orig octave-workspace
+	rm -f *.o *.oct octave-workspace
 
-realclean: clean
-	rm -f *.oct avctest
-	
-distclean: realclean
+maintainer-clean: clean
 	rm -rf autom4te.cache
 	rm -f Makefile config.status config.log config.h configure
-	rm -f *.avi

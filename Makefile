@@ -88,4 +88,5 @@ clean:
 	cd src && $(MAKE) $@
 
 maintainer-clean: clean
+	cd src && $(MAKE) $@
 

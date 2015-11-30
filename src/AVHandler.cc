@@ -130,9 +130,9 @@ AVHandler::setup_write()
 
   // use AVI encoding
   av_output->oformat = avifmt;
-  av_output->oformat->audio_codec = CODEC_ID_NONE;
+  av_output->oformat->audio_codec = AV_CODEC_ID_NONE;
 
-  if (avifmt->video_codec != CODEC_ID_NONE)
+  if (avifmt->video_codec != AV_CODEC_ID_NONE)
     {
       if (add_video_stream() != 0) return -1;
     }
@@ -171,7 +171,13 @@ AVHandler::setup_write()
   rgbframe = create_frame(PIX_FMT_RGB24);
   if (!frame || !rgbframe) return -1;
 
-  avformat_write_header(av_output, NULL);
+  if (avformat_write_header(av_output, NULL) < 0)
+    {
+      (*out) << "AVHandler: Error writing headers" << std::endl;
+      return -1;
+    }
+
+  av_dict_free(&vstream->metadata);
 
   return 0;
 }
@@ -299,18 +305,19 @@ AVHandler::write_frame()
                 c->height, frame->data, frame->linesize);
     }
 
-  int out_size = avcodec_encode_video(c, video_outbuf,
-                                      VIDEO_OUTBUF_SIZE,
-                                      frame);
-  if (out_size > 0)
+  AVPacket pkt;
+  int ret, got_pkt;
+  av_init_packet(&pkt);
+  pkt.data = video_outbuf;
+  pkt.size = VIDEO_OUTBUF_SIZE;
+  if (avcodec_encode_video2(c, &pkt, frame, &got_pkt) < 0)
     {
-      AVPacket pkt;
-      av_init_packet(&pkt);
+      (*out) << "AVHandler: error encoding video frame" << std::endl;
+      return -1;
+    }
 
-      pkt.stream_index = vstream->index;
-      pkt.data = video_outbuf;
-      pkt.size = out_size;
-
+  if (got_pkt)
+    {
       if (c->coded_frame)
         pkt.pts = c->coded_frame->pts;
       if (c->coded_frame && c->coded_frame->key_frame)
@@ -326,7 +333,7 @@ AVHandler::write_frame()
     }
 
   frame_nr++;
-  return out_size;
+  return got_pkt ? pkt.size : 0;
 }
 
 int
@@ -358,8 +365,8 @@ AVHandler::read_frame(unsigned int nr)
       return -1;
     }
 
-  // FIMXE: Note from Andy: This has no effect. Should this be ->skip_frame ();?
-  cc->skip_frame;
+  cc->skip_frame = AVDISCARD_NONKEY;
+  frame_nr = nr;
 
   // Flush stream buffers after seek
   avcodec_flush_buffers(cc);
@@ -418,9 +425,8 @@ AVHandler::read_frame(unsigned int nr)
           current_timestamp = (uint64_t)(vstream->cur_dts * AV_TIME_BASE * (long double)stream_time_base);
         }
     }
-// http://ffmpeg.org/pipermail/ffmpeg-cvslog/2011-April/035933.html
-// FIXME maybe use: cc->skip_frame;
-//    cc->hurry_up = 0;
+
+  cc->skip_frame = AVDISCARD_NONE;
 
   SwsContext *sc = sws_getContext(cc->width, cc->height, cc->pix_fmt,
                                   cc->width, cc->height, PIX_FMT_BGR24,
@@ -496,7 +502,10 @@ AVHandler::add_video_stream()
 
   // without this libav complains with
   // "Using AVStream.codec.time_base as a timebase hint to the muxer is deprecated. Set AVStream.time_base instead."
-  vstream->time_base = (AVRational){1, framerate};
+  vstream->time_base = (AVRational)
+  {
+    1, framerate
+  };
 
   cc->time_base.num = 1;
   cc->time_base.den = (int)(framerate);

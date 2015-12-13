@@ -1,8 +1,8 @@
 Name: video
-Version: 1.2.0
-Date: 2015-11-29
+Version: 1.2.1
+Date: 2015-12-13
 Author: Stefan van der Walt <stefan@sun.ac.za> and Roman Stanchak
-Maintainer: Octave-Forge community <octave-dev@lists.sourceforge.net>
+Maintainer: Andreas Weber <octave@tech-chat.de>
 Title: Video functions
 Description: A wrapper for ffmpeg's libavformat and libavcodec, implementing
  addframe, avifile, aviinfo, and aviread.

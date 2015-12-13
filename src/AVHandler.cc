@@ -148,13 +148,32 @@ AVHandler::setup_write()
 
   snprintf(av_output->filename, sizeof(av_output->filename), "%s", filename.c_str());
 
-  int err = av_dict_set(&av_output->metadata, "title", title.c_str (), 0);
-  // FIMXE: Not from Andy
-  // title and comment is written. This can be checked with
+  char errbuf[128];
+  // FIMXE: Note from Andy
+  // title and comment is written to file. This can be checked with
   // ffmpeg -i test_avifile2.avi -f ffmetadata metadata
-  // but author is still missing
+  // but author is still missing.
+
+  int err = av_dict_set(&av_output->metadata, "title", title.c_str (), 0);
+  if (err)
+    {
+      av_strerror(err, errbuf, sizeof(errbuf));
+      (*out) << "AVHandler::setup_write: Error \"" << errbuf << "\" when trying to write title" << std::endl;
+    }
+
   err = av_dict_set(&av_output->metadata, "author", author.c_str (), 0);
+  if (err)
+    {
+      av_strerror(err, errbuf, sizeof(errbuf));
+      (*out) << "AVHandler::setup_write: Error \"" << errbuf << "\" when trying to write author" << std::endl;
+    }
+
   err = av_dict_set(&av_output->metadata, "comment", comment.c_str (), 0);
+  if (err)
+    {
+      av_strerror(err, errbuf, sizeof(errbuf));
+      (*out) << "AVHandler::setup_write: Error \"" << errbuf << "\" when trying to write comment" << std::endl;
+    }
 
 #ifndef URL_WRONLY
 #define URL_WRONLY AVIO_FLAG_WRITE
@@ -306,7 +325,7 @@ AVHandler::write_frame()
     }
 
   AVPacket pkt;
-  int ret, got_pkt;
+  int got_pkt;
   av_init_packet(&pkt);
   pkt.data = video_outbuf;
   pkt.size = VIDEO_OUTBUF_SIZE;
@@ -378,7 +397,7 @@ AVHandler::read_frame(unsigned int nr)
       stream_time_base = (double)vstream->time_base.num / vstream->time_base.den;
     }
 
-  frame = avcodec_alloc_frame();
+  frame = av_frame_alloc ();
 
   uint64_t current_timestamp = 0;
   AVPacket packet;
@@ -504,7 +523,7 @@ AVHandler::add_video_stream()
   // "Using AVStream.codec.time_base as a timebase hint to the muxer is deprecated. Set AVStream.time_base instead."
   vstream->time_base = (AVRational)
   {
-    1, framerate
+    100, int(framerate * 100)
   };
 
   cc->time_base.num = 1;
@@ -552,7 +571,7 @@ AVHandler::create_frame(PixelFormat fmt)
   AVFrame *frame;
   uint8_t *frame_buf;
 
-  frame = avcodec_alloc_frame();
+  frame = av_frame_alloc();
   if (!frame)
     {
       (*out) << "AVHandler: cannot allocate frame" << std::endl;

@@ -69,9 +69,9 @@ private:
   Avifile(const Avifile& m);
 
   std::string filename;
-  unsigned int frames;
-  unsigned int frame_rows;
-  unsigned int frame_columns;
+  octave_idx_type frames;
+  octave_idx_type frame_rows;
+  octave_idx_type frame_columns;
 
   DECLARE_OV_TYPEID_FUNCTIONS_AND_DATA
 };

@@ -116,9 +116,9 @@ Avifile::addframe(const NDArray &f)
       return;
     }
 
-  for (unsigned int y = 0; y < frame_rows; y++)
+  for (octave_idx_type y = 0; y < frame_rows; y++)
     {
-      for (unsigned int x = 0; x < frame_columns; x++)
+      for (octave_idx_type x = 0; x < frame_columns; x++)
         {
           if (bands == 3)
             {

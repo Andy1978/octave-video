@@ -1,12 +1,15 @@
 Dependencies
 ------------
-This package _should_ always work with the latest version of ffmpeg. It is
-known to at least work with ffmpeg SVN revision 15410.
+This package is tested with libav from Debian stable (Jessie).
 
-You can download ffmpeg from
+To install the dependencies
+$ sudo apt-get install libavutil-dev libavformat-dev libswscale-dev libavcodec-dev
+should be sufficient.
+
+If you want to build ffmpeg from source you can can download it from
 http://ffmpeg.mplayerhq.hu
 
-Note that you'll need to configure it with --enable-swscale and --enable-gpl,
+Note that you'll need to configure ffmpeg with --enable-swscale and --enable-gpl,
 to enable the software scaler library (used for yuv/rgb conversions).
 
 Usage Notes

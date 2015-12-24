@@ -9,3 +9,5 @@
 
 * Problem when creating video with only one frame:
   aviread.cc: AVHandler: Error reading packet after timestamp 0
+
+* Try to merge https://savannah.gnu.org/patch/?7988

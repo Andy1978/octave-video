@@ -16,7 +16,7 @@ TAR       ?= tar
 
 TOLOWER = $(SED) -e 'y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/'
 
-.PHONY: help dist html release install all check run doc clean maintainer-clean
+.PHONY: help dist html release install all check run doc debug clean maintainer-clean
 
 help:
 	@echo "Targets:"
@@ -28,6 +28,7 @@ help:
 	@echo "   all              - Build all oct files"
 	@echo "   check            - Execute package tests (w/o install)"
 	@echo "   run              - Run Octave with development in PATH (no install)"
+	@echo "   debug            - Build with debug flags, run and attach gdb (w/o install)"
 	@echo "   doc              - Build Texinfo package manual"
 	@echo
 	@echo "   clean            - Remove releases, html documentation, and oct files"
@@ -73,13 +74,20 @@ all:
 	cd src && $(MAKE) $@
 
 check: all
-	$(OCTAVE) --silent \
+	$(OCTAVE) --no-gui --silent \
 	  --eval 'addpath (fullfile ([pwd filesep "src"]));' \
 	  --eval 'runtests ("src");'
 
 run: all
 	$(OCTAVE) --silent --persist \
 	  --eval 'addpath (fullfile ([pwd filesep "src"]));'
+
+debug: clean
+	cd src/ && ./configure
+	$(MAKE) -C src/ debug
+	$(OCTAVE) --no-gui --silent --persist \
+	  --eval 'addpath (fullfile ([pwd filesep "src"]));' \
+	  --eval 'system (sprintf ("xfce4-terminal --command \"gdb -p %d\"", getpid ()), "async");'
 
 style:
 	find ./src \( -name "*.cc" -or -name "*.h" -or -name "*.m" \) -exec sed -i 's/[[:space:]]*$$//' {} \;

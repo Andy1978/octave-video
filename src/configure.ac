@@ -25,7 +25,7 @@ if test "x$PKG_CONFIG" = "x"; then
 AC_CHECK_LIB([avutil], [av_mallocz], [],[])
 AC_CHECK_LIB([avformat], [av_write_frame], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libavformat from FFmpeg])])
-AC_CHECK_LIB([avcodec], [avcodec_alloc_frame], [],
+AC_CHECK_LIB([avcodec], [av_frame_alloc], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libavcodec from FFmpeg])])
 AC_CHECK_LIB([swscale], [sws_scale], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libswscale from FFmpeg])])

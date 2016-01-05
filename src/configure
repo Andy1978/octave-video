@@ -3058,9 +3058,9 @@ else
   as_fn_error $? "$PACKAGE_NAME requires libavformat from FFmpeg" "$LINENO" 5
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for avcodec_alloc_frame in -lavcodec" >&5
-$as_echo_n "checking for avcodec_alloc_frame in -lavcodec... " >&6; }
-if ${ac_cv_lib_avcodec_avcodec_alloc_frame+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for av_frame_alloc in -lavcodec" >&5
+$as_echo_n "checking for av_frame_alloc in -lavcodec... " >&6; }
+if ${ac_cv_lib_avcodec_av_frame_alloc+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -3074,27 +3074,27 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char avcodec_alloc_frame ();
+char av_frame_alloc ();
 int
 main ()
 {
-return avcodec_alloc_frame ();
+return av_frame_alloc ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_avcodec_avcodec_alloc_frame=yes
+  ac_cv_lib_avcodec_av_frame_alloc=yes
 else
-  ac_cv_lib_avcodec_avcodec_alloc_frame=no
+  ac_cv_lib_avcodec_av_frame_alloc=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_avcodec_avcodec_alloc_frame" >&5
-$as_echo "$ac_cv_lib_avcodec_avcodec_alloc_frame" >&6; }
-if test "x$ac_cv_lib_avcodec_avcodec_alloc_frame" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_avcodec_av_frame_alloc" >&5
+$as_echo "$ac_cv_lib_avcodec_av_frame_alloc" >&6; }
+if test "x$ac_cv_lib_avcodec_av_frame_alloc" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LIBAVCODEC 1
 _ACEOF

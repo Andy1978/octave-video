@@ -187,7 +187,7 @@ AVHandler::setup_write()
   if (init_video_codecs() != 0) return -1;
 
   frame = create_frame(vstream->codec->pix_fmt);
-  rgbframe = create_frame(PIX_FMT_RGB24);
+  rgbframe = create_frame(AV_PIX_FMT_RGB24);
   if (!frame || !rgbframe) return -1;
 
   if (avformat_write_header(av_output, NULL) < 0)
@@ -282,7 +282,7 @@ AVHandler::setup_read()
   if (entry)
     comment = entry->value;
 
-  rgbframe = create_frame(PIX_FMT_RGB24);
+  rgbframe = create_frame(AV_PIX_FMT_RGB24);
   if (!rgbframe) return -1;
 
   return 0;
@@ -317,7 +317,7 @@ AVHandler::write_frame()
 
   if (frame && rgbframe)
     {
-      SwsContext *sc = sws_getContext(c->width, c->height, PIX_FMT_BGR24,
+      SwsContext *sc = sws_getContext(c->width, c->height, AV_PIX_FMT_BGR24,
                                       c->width, c->height, c->pix_fmt,
                                       SWS_BICUBIC, 0, 0, 0);
       sws_scale(sc, rgbframe->data, rgbframe->linesize, 0,
@@ -448,7 +448,7 @@ AVHandler::read_frame(unsigned int nr)
   cc->skip_frame = AVDISCARD_NONE;
 
   SwsContext *sc = sws_getContext(cc->width, cc->height, cc->pix_fmt,
-                                  cc->width, cc->height, PIX_FMT_BGR24,
+                                  cc->width, cc->height, AV_PIX_FMT_BGR24,
                                   SWS_BICUBIC, 0, 0, 0);
   sws_scale(sc, frame->data, frame->linesize, 0,
             cc->height, rgbframe->data, rgbframe->linesize);
@@ -528,7 +528,7 @@ AVHandler::add_video_stream()
 
   cc->time_base.num = 1;
   cc->time_base.den = (int)(framerate);
-  cc->pix_fmt = PIX_FMT_YUV420P;
+  cc->pix_fmt = AV_PIX_FMT_YUV420P;
 
   cc->gop_size = gop_size;
 
@@ -566,7 +566,7 @@ AVHandler::init_video_codecs()
 }
 
 AVFrame*
-AVHandler::create_frame(PixelFormat fmt)
+AVHandler::create_frame(AVPixelFormat fmt)
 {
   AVFrame *frame;
   uint8_t *frame_buf;

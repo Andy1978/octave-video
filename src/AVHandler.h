@@ -277,7 +277,7 @@ private:
 
   int init_video_codecs();
 
-  AVFrame *create_frame(PixelFormat fmt);
+  AVFrame *create_frame(AVPixelFormat fmt);
 
 };
 

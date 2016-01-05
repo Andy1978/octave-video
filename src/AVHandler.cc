@@ -137,20 +137,11 @@ AVHandler::setup_write()
       if (add_video_stream() != 0) return -1;
     }
 
-#ifdef HAVE_AV_SET_PARAMETERS
-  /* av_set_parameters is mandatory */
-  if (av_set_parameters(av_output, NULL) < 0)
-    {
-      (*out) << "AVHandler: Error setting output format parameters" << std::endl;
-      return -1;
-    }
-#endif
-
   snprintf(av_output->filename, sizeof(av_output->filename), "%s", filename.c_str());
 
   char errbuf[128];
   // FIMXE: Note from Andy
-  // title and comment is written to file. This can be checked with
+  // title and comment are written to file. This can be checked with
   // ffmpeg -i test_avifile2.avi -f ffmetadata metadata
   // but author is still missing.
 
@@ -484,11 +475,7 @@ AVHandler::print_codecs()
   for (codec = av_codec_next(0); codec != NULL; codec = av_codec_next(codec))
     {
       if ((codec->type == AVMEDIA_TYPE_VIDEO) &&
-#ifdef HAVE_AV_CODEC_IS_ENCODER
           (av_codec_is_encoder(codec)))
-#else
-          (codec->encode))
-#endif
         {
           (*out) << codec->name << " ";
         }

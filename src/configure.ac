@@ -27,7 +27,7 @@ AC_CHECK_LIB([avcodec], [av_frame_alloc], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libavcodec from FFmpeg])])
 AC_CHECK_LIB([swscale], [sws_scale], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libswscale from FFmpeg])])
-
+             
 # Checks for header files.
 
 AC_CHECK_HEADERS([ffmpeg/avformat.h], [], [AC_CHECK_HEADERS([libavformat/avformat.h], [],
@@ -35,9 +35,6 @@ AC_CHECK_HEADERS([ffmpeg/avformat.h], [], [AC_CHECK_HEADERS([libavformat/avforma
 
 AC_CHECK_HEADERS([ffmpeg/avcodec.h], [], [AC_CHECK_HEADERS([libavcodec/avcodec.h], [],
   AC_MSG_ERROR([FFMpeg header avcodec.h not found]))])
-
-AC_CHECK_DECL(AVSEEK_FLAG_BACKWARD, [],
-              AC_MSG_ERROR([need a newer version of FFMpeg]), [
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL

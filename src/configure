@@ -1660,52 +1660,6 @@ $as_echo "$ac_res" >&6; }
 
 } # ac_fn_cxx_check_header_compile
 
-# ac_fn_cxx_check_decl LINENO SYMBOL VAR INCLUDES
-# -----------------------------------------------
-# Tests whether SYMBOL is declared in INCLUDES, setting cache variable VAR
-# accordingly.
-ac_fn_cxx_check_decl ()
-{
-  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
-  as_decl_name=`echo $2|sed 's/ *(.*//'`
-  as_decl_use=`echo $2|sed -e 's/(/((/' -e 's/)/) 0&/' -e 's/,/) 0& (/g'`
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $as_decl_name is declared" >&5
-$as_echo_n "checking whether $as_decl_name is declared... " >&6; }
-if eval \${$3+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-$4
-int
-main ()
-{
-#ifndef $as_decl_name
-#ifdef __cplusplus
-  (void) $as_decl_use;
-#else
-  (void) $as_decl_name;
-#endif
-#endif
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_compile "$LINENO"; then :
-  eval "$3=yes"
-else
-  eval "$3=no"
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-eval ac_res=\$$3
-	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
-$as_echo "$ac_res" >&6; }
-  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
-
-} # ac_fn_cxx_check_decl
-
 # ac_fn_cxx_check_type LINENO TYPE VAR INCLUDES
 # ---------------------------------------------
 # Tests whether TYPE exists after having included INCLUDES, setting cache
@@ -1813,73 +1767,6 @@ $as_echo "$ac_res" >&6; }
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
 } # ac_fn_c_find_uintX_t
-
-# ac_fn_cxx_check_func LINENO FUNC VAR
-# ------------------------------------
-# Tests whether FUNC exists, setting the cache variable VAR accordingly
-ac_fn_cxx_check_func ()
-{
-  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
-$as_echo_n "checking for $2... " >&6; }
-if eval \${$3+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-/* Define $2 to an innocuous variant, in case <limits.h> declares $2.
-   For example, HP-UX 11i <limits.h> declares gettimeofday.  */
-#define $2 innocuous_$2
-
-/* System header to define __stub macros and hopefully few prototypes,
-    which can conflict with char $2 (); below.
-    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
-    <limits.h> exists even on freestanding compilers.  */
-
-#ifdef __STDC__
-# include <limits.h>
-#else
-# include <assert.h>
-#endif
-
-#undef $2
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char $2 ();
-/* The GNU C library defines this for functions which it implements
-    to always fail with ENOSYS.  Some functions are actually named
-    something starting with __ and the normal name is an alias.  */
-#if defined __stub_$2 || defined __stub___$2
-choke me
-#endif
-
-int
-main ()
-{
-return $2 ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  eval "$3=yes"
-else
-  eval "$3=no"
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-fi
-eval ac_res=\$$3
-	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
-$as_echo "$ac_res" >&6; }
-  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
-
-} # ac_fn_cxx_check_func
 cat >config.log <<_ACEOF
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
@@ -2236,7 +2123,6 @@ ac_config_headers="$ac_config_headers config.h"
 
 
 # Checks for programs.
-#PKG_PROG_PKG_CONFIG
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -2803,7 +2689,6 @@ fi
 
 # Checks for libraries.
 
-#if test "x$PKG_CONFIG" = "x"; then
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for av_mallocz in -lavutil" >&5
 $as_echo_n "checking for av_mallocz in -lavutil... " >&6; }
@@ -2991,28 +2876,6 @@ else
   as_fn_error $? "$PACKAGE_NAME requires libswscale from FFmpeg" "$LINENO" 5
 fi
 
-#else
-#PKG_CHECK_MODULES(avutil, [libavutil],
-# [
-#   CPPFLAGS="$CPPFLAGS $avutil_CFLAGS"
-#   LIBS="$LIBS $avutil_LIBS"
-# ],[])
-#PKG_CHECK_MODULES(avformat, [libavformat],
-# [
-#   CPPFLAGS="$CPPFLAGS $avformat_CFLAGS"
-#   LIBS="$LIBS $avformat_LIBS"
-# ], [AC_MSG_ERROR([$PACKAGE_NAME requires libavformat from FFmpeg])])
-#PKG_CHECK_MODULES(avcodec, [libavcodec],
-# [
-#   CPPFLAGS="$CPPFLAGS $avcodec_CFLAGS"
-#   LIBS="$LIBS $avcodec_LIBS"
-# ], [AC_MSG_ERROR([$PACKAGE_NAME requires libavcodec from FFmpeg])])
-#PKG_CHECK_MODULES(swscale, [libswscale],
-# [
-#   CPPFLAGS="$CPPFLAGS $swscale_CFLAGS"
-#   LIBS="$LIBS $swscale_LIBS"
-# ], [AC_MSG_ERROR([$PACKAGE_NAME requires libswscale from FFmpeg])])
-#fi
 
 # Checks for header files.
 
@@ -3465,20 +3328,6 @@ fi
 done
 
 
-ac_fn_cxx_check_decl "$LINENO" "AVSEEK_FLAG_BACKWARD" "ac_cv_have_decl_AVSEEK_FLAG_BACKWARD" "
-#if defined(HAVE_FFMPEG_AVFORMAT_H)
-#include <ffmpeg/avformat.h>
-#elif defined(HAVE_LIBAVFORMAT_AVFORMAT_H)
-#include <libavformat/avformat.h>
-#endif
-"
-if test "x$ac_cv_have_decl_AVSEEK_FLAG_BACKWARD" = xyes; then :
-
-else
-  as_fn_error $? "need a newer version of FFMpeg" "$LINENO" 5
-fi
-
-
 # Checks for typedefs, structures, and compiler characteristics.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for stdbool.h that conforms to C99" >&5
 $as_echo_n "checking for stdbool.h that conforms to C99... " >&6; }
@@ -3698,19 +3547,6 @@ $as_echo "#define malloc rpl_malloc" >>confdefs.h
 
 fi
 
-
-
-for ac_func in av_set_parameters av_codec_is_encoder
-do :
-  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
-ac_fn_cxx_check_func "$LINENO" "$ac_func" "$as_ac_var"
-if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
-  cat >>confdefs.h <<_ACEOF
-#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
-_ACEOF
-
-fi
-done
 
 
 

@@ -49,7 +49,7 @@ Avifile::Avifile(const Avifile& m)
 }
 
 void
-Avifile::print(std::ostream& os, bool pr_as_read_syntax = false) const
+Avifile::print(std::ostream& os, bool pr_as_read_syntax)
 {
   os << "AVI movie [" << filename << "][" << av->get_codec() << "]: "
      << frames << " frame" << (frames != 1 ? "s" : "") << ", "

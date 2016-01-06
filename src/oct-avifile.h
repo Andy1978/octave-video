@@ -51,7 +51,7 @@ public:
 
   ~Avifile(void);
 
-  void print(std::ostream& os, bool pr_as_read_syntax) const;
+  void print(std::ostream& os, bool pr_as_read_syntax = false);
 
   void addframe(const NDArray &f);
 

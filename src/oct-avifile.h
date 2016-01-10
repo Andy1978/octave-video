@@ -33,12 +33,7 @@ class Avifile: public octave_base_value
 public:
   AVHandler *av;
 
-  Avifile(void)
-  {
-    *this = Avifile("default.avi");
-  }
-
-  Avifile(std::string fn);
+  Avifile(std::string fn = "default.avi");
 
   octave_base_value *clone(void) const
   {

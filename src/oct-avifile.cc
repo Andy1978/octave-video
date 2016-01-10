@@ -31,7 +31,6 @@ DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(Avifile, "avifile", "avifile");
 Avifile::Avifile(std::string fn) : octave_base_value(),
   filename(fn), frames(0), frame_rows(0), frame_columns(0)
 {
-
   av = new AVHandler();
   av->set_filename(fn);
   av->set_log(&octave_stdout);
@@ -39,12 +38,6 @@ Avifile::Avifile(std::string fn) : octave_base_value(),
 
 Avifile::Avifile(const Avifile& m)
 {
-  filename = m.filename;
-  frames = m.frames;
-  frame_rows = m.frame_rows;
-  frame_columns = m.frame_columns;
-  av = m.av;
-
   octave_stdout << "avifile: copy constructor shouldn't be called" << std::endl;
 }
 

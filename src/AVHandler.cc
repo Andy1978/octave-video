@@ -547,7 +547,7 @@ AVHandler::init_video_codecs()
     }
 
   // XXX FIXME XXX What is the best size for video_outbuf?
-  video_outbuf = (uint8_t *)malloc(VIDEO_OUTBUF_SIZE);
+  video_outbuf = (uint8_t *)av_malloc(VIDEO_OUTBUF_SIZE);
 
   return 0;
 }

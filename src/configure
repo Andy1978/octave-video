@@ -2690,6 +2690,53 @@ fi
 # Checks for libraries.
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for sws_scale in -lswscale" >&5
+$as_echo_n "checking for sws_scale in -lswscale... " >&6; }
+if ${ac_cv_lib_swscale_sws_scale+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lswscale  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char sws_scale ();
+int
+main ()
+{
+return sws_scale ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_lib_swscale_sws_scale=yes
+else
+  ac_cv_lib_swscale_sws_scale=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_swscale_sws_scale" >&5
+$as_echo "$ac_cv_lib_swscale_sws_scale" >&6; }
+if test "x$ac_cv_lib_swscale_sws_scale" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBSWSCALE 1
+_ACEOF
+
+  LIBS="-lswscale $LIBS"
+
+else
+  as_fn_error $? "$PACKAGE_NAME requires libswscale from FFmpeg" "$LINENO" 5
+fi
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for av_mallocz in -lavutil" >&5
 $as_echo_n "checking for av_mallocz in -lavutil... " >&6; }
 if ${ac_cv_lib_avutil_av_mallocz+:} false; then :
@@ -2733,53 +2780,8 @@ _ACEOF
 
   LIBS="-lavutil $LIBS"
 
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for av_write_frame in -lavformat" >&5
-$as_echo_n "checking for av_write_frame in -lavformat... " >&6; }
-if ${ac_cv_lib_avformat_av_write_frame+:} false; then :
-  $as_echo_n "(cached) " >&6
 else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lavformat  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char av_write_frame ();
-int
-main ()
-{
-return av_write_frame ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_avformat_av_write_frame=yes
-else
-  ac_cv_lib_avformat_av_write_frame=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_avformat_av_write_frame" >&5
-$as_echo "$ac_cv_lib_avformat_av_write_frame" >&6; }
-if test "x$ac_cv_lib_avformat_av_write_frame" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBAVFORMAT 1
-_ACEOF
-
-  LIBS="-lavformat $LIBS"
-
-else
-  as_fn_error $? "$PACKAGE_NAME requires libavformat from FFmpeg" "$LINENO" 5
+  as_fn_error $? "$PACKAGE_NAME requires libavutil from FFmpeg" "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for av_frame_alloc in -lavcodec" >&5
@@ -2829,13 +2831,13 @@ else
   as_fn_error $? "$PACKAGE_NAME requires libavcodec from FFmpeg" "$LINENO" 5
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for sws_scale in -lswscale" >&5
-$as_echo_n "checking for sws_scale in -lswscale... " >&6; }
-if ${ac_cv_lib_swscale_sws_scale+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for av_write_frame in -lavformat" >&5
+$as_echo_n "checking for av_write_frame in -lavformat... " >&6; }
+if ${ac_cv_lib_avformat_av_write_frame+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lswscale  $LIBS"
+LIBS="-lavformat  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -2845,35 +2847,35 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char sws_scale ();
+char av_write_frame ();
 int
 main ()
 {
-return sws_scale ();
+return av_write_frame ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_swscale_sws_scale=yes
+  ac_cv_lib_avformat_av_write_frame=yes
 else
-  ac_cv_lib_swscale_sws_scale=no
+  ac_cv_lib_avformat_av_write_frame=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_swscale_sws_scale" >&5
-$as_echo "$ac_cv_lib_swscale_sws_scale" >&6; }
-if test "x$ac_cv_lib_swscale_sws_scale" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_avformat_av_write_frame" >&5
+$as_echo "$ac_cv_lib_avformat_av_write_frame" >&6; }
+if test "x$ac_cv_lib_avformat_av_write_frame" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBSWSCALE 1
+#define HAVE_LIBAVFORMAT 1
 _ACEOF
 
-  LIBS="-lswscale $LIBS"
+  LIBS="-lavformat $LIBS"
 
 else
-  as_fn_error $? "$PACKAGE_NAME requires libswscale from FFmpeg" "$LINENO" 5
+  as_fn_error $? "$PACKAGE_NAME requires libavformat from FFmpeg" "$LINENO" 5
 fi
 
 
@@ -3443,110 +3445,6 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 ;;
   esac
-
-
-# Checks for library functions.
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for error_at_line" >&5
-$as_echo_n "checking for error_at_line... " >&6; }
-if ${ac_cv_lib_error_at_line+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <error.h>
-int
-main ()
-{
-error_at_line (0, 0, "", 0, "an error occurred");
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_error_at_line=yes
-else
-  ac_cv_lib_error_at_line=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_error_at_line" >&5
-$as_echo "$ac_cv_lib_error_at_line" >&6; }
-if test $ac_cv_lib_error_at_line = no; then
-  case " $LIBOBJS " in
-  *" error.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS error.$ac_objext"
- ;;
-esac
-
-fi
-
-for ac_header in stdlib.h
-do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "stdlib.h" "ac_cv_header_stdlib_h" "$ac_includes_default"
-if test "x$ac_cv_header_stdlib_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_STDLIB_H 1
-_ACEOF
-
-fi
-
-done
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for GNU libc compatible malloc" >&5
-$as_echo_n "checking for GNU libc compatible malloc... " >&6; }
-if ${ac_cv_func_malloc_0_nonnull+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test "$cross_compiling" = yes; then :
-  ac_cv_func_malloc_0_nonnull=no
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#if defined STDC_HEADERS || defined HAVE_STDLIB_H
-# include <stdlib.h>
-#else
-char *malloc ();
-#endif
-
-int
-main ()
-{
-return ! malloc (0);
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_run "$LINENO"; then :
-  ac_cv_func_malloc_0_nonnull=yes
-else
-  ac_cv_func_malloc_0_nonnull=no
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_malloc_0_nonnull" >&5
-$as_echo "$ac_cv_func_malloc_0_nonnull" >&6; }
-if test $ac_cv_func_malloc_0_nonnull = yes; then :
-
-$as_echo "#define HAVE_MALLOC 1" >>confdefs.h
-
-else
-  $as_echo "#define HAVE_MALLOC 0" >>confdefs.h
-
-   case " $LIBOBJS " in
-  *" malloc.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS malloc.$ac_objext"
- ;;
-esac
-
-
-$as_echo "#define malloc rpl_malloc" >>confdefs.h
-
-fi
-
 
 
 

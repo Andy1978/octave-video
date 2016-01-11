@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([Octave-Forge video package], [1.2.1+])
+AC_INIT([Octave-Forge video package], [1.2.2+])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
@@ -20,14 +20,15 @@ fi
 
 # Checks for libraries.
 
-AC_CHECK_LIB([avutil], [av_mallocz], [],[])
-AC_CHECK_LIB([avformat], [av_write_frame], [],
-             [AC_MSG_ERROR([$PACKAGE_NAME requires libavformat from FFmpeg])])
-AC_CHECK_LIB([avcodec], [av_frame_alloc], [],
-             [AC_MSG_ERROR([$PACKAGE_NAME requires libavcodec from FFmpeg])])
 AC_CHECK_LIB([swscale], [sws_scale], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libswscale from FFmpeg])])
-             
+AC_CHECK_LIB([avutil], [av_mallocz], [],
+             [AC_MSG_ERROR([$PACKAGE_NAME requires libavutil from FFmpeg])])
+AC_CHECK_LIB([avcodec], [av_frame_alloc], [],
+             [AC_MSG_ERROR([$PACKAGE_NAME requires libavcodec from FFmpeg])])
+AC_CHECK_LIB([avformat], [av_write_frame], [],
+             [AC_MSG_ERROR([$PACKAGE_NAME requires libavformat from FFmpeg])])
+
 # Checks for header files.
 
 AC_CHECK_HEADERS([ffmpeg/avformat.h], [], [AC_CHECK_HEADERS([libavformat/avformat.h], [],
@@ -40,10 +41,6 @@ AC_CHECK_HEADERS([ffmpeg/avcodec.h], [], [AC_CHECK_HEADERS([libavcodec/avcodec.h
 AC_CHECK_HEADER_STDBOOL
 AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
-
-# Checks for library functions.
-AC_FUNC_ERROR_AT_LINE
-AC_FUNC_MALLOC
 
 AC_SUBST(CPPFLAGS)
 

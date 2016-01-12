@@ -2690,13 +2690,13 @@ fi
 # Checks for libraries.
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for sws_scale in -lswscale" >&5
-$as_echo_n "checking for sws_scale in -lswscale... " >&6; }
-if ${ac_cv_lib_swscale_sws_scale+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lpthread" >&5
+$as_echo_n "checking for pthread_create in -lpthread... " >&6; }
+if ${ac_cv_lib_pthread_pthread_create+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lswscale  $LIBS"
+LIBS="-lpthread  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -2706,35 +2706,35 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char sws_scale ();
+char pthread_create ();
 int
 main ()
 {
-return sws_scale ();
+return pthread_create ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_swscale_sws_scale=yes
+  ac_cv_lib_pthread_pthread_create=yes
 else
-  ac_cv_lib_swscale_sws_scale=no
+  ac_cv_lib_pthread_pthread_create=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_swscale_sws_scale" >&5
-$as_echo "$ac_cv_lib_swscale_sws_scale" >&6; }
-if test "x$ac_cv_lib_swscale_sws_scale" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pthread_pthread_create" >&5
+$as_echo "$ac_cv_lib_pthread_pthread_create" >&6; }
+if test "x$ac_cv_lib_pthread_pthread_create" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBSWSCALE 1
+#define HAVE_LIBPTHREAD 1
 _ACEOF
 
-  LIBS="-lswscale $LIBS"
+  LIBS="-lpthread $LIBS"
 
 else
-  as_fn_error $? "$PACKAGE_NAME requires libswscale from FFmpeg" "$LINENO" 5
+  as_fn_error $? "$PACKAGE_NAME requires pthread" "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for av_mallocz in -lavutil" >&5
@@ -2782,6 +2782,100 @@ _ACEOF
 
 else
   as_fn_error $? "$PACKAGE_NAME requires libavutil from FFmpeg" "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for avresample_close in -lavresample" >&5
+$as_echo_n "checking for avresample_close in -lavresample... " >&6; }
+if ${ac_cv_lib_avresample_avresample_close+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lavresample  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char avresample_close ();
+int
+main ()
+{
+return avresample_close ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_lib_avresample_avresample_close=yes
+else
+  ac_cv_lib_avresample_avresample_close=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_avresample_avresample_close" >&5
+$as_echo "$ac_cv_lib_avresample_avresample_close" >&6; }
+if test "x$ac_cv_lib_avresample_avresample_close" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBAVRESAMPLE 1
+_ACEOF
+
+  LIBS="-lavresample $LIBS"
+
+else
+  as_fn_error $? "$PACKAGE_NAME requires libavresample from FFmpeg" "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for sws_scale in -lswscale" >&5
+$as_echo_n "checking for sws_scale in -lswscale... " >&6; }
+if ${ac_cv_lib_swscale_sws_scale+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lswscale  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char sws_scale ();
+int
+main ()
+{
+return sws_scale ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_lib_swscale_sws_scale=yes
+else
+  ac_cv_lib_swscale_sws_scale=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_swscale_sws_scale" >&5
+$as_echo "$ac_cv_lib_swscale_sws_scale" >&6; }
+if test "x$ac_cv_lib_swscale_sws_scale" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBSWSCALE 1
+_ACEOF
+
+  LIBS="-lswscale $LIBS"
+
+else
+  as_fn_error $? "$PACKAGE_NAME requires libswscale from FFmpeg" "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for av_frame_alloc in -lavcodec" >&5

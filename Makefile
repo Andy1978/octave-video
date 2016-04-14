@@ -1,3 +1,13 @@
+## Copyright 2015-2016 Andreas Weber
+## Copyright 2015-2016 Mike Miller
+## Copyright 2015-2016 Carnë Draug
+## Copyright 2015-2016 Oliver Heimlich
+##
+## Copying and distribution of this file, with or without modification,
+## are permitted in any medium without royalty provided the copyright
+## notice and this notice are preserved.  This file is offered as-is,
+## without any warranty.
+
 ## Makefile to simplify Octave Forge package maintenance tasks
 
 PACKAGE = $(shell $(SED) -n -e 's/^Name: *\(\w\+\)/\1/p' DESCRIPTION | $(TOLOWER))

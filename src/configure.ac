@@ -24,8 +24,11 @@ AC_CHECK_LIB([pthread], [pthread_create], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires pthread])])
 AC_CHECK_LIB([avutil], [av_mallocz], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libavutil from FFmpeg])])
-AC_CHECK_LIB([avresample], [avresample_close], [],
-             [AC_MSG_ERROR([$PACKAGE_NAME requires libavresample from FFmpeg])])
+
+## FIMXE: Check if needed on CentOS 7
+#AC_CHECK_LIB([avresample], [avresample_close], [],
+#             [AC_MSG_ERROR([$PACKAGE_NAME requires libavresample from FFmpeg])])
+
 AC_CHECK_LIB([swscale], [sws_scale], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libswscale from FFmpeg])])
 AC_CHECK_LIB([avcodec], [av_frame_alloc], [],

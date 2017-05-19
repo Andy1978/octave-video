@@ -28,18 +28,14 @@
 
 #include <octave/file-stat.h>
 #include <octave/oct-time.h>
-#include <ctime>
 
 #include "AVHandler.h"
 
 std::string get_filedate(const std::string &fn)
 {
-  time_t file_mod = file_stat(fn).mtime().unix_time();
+  octave::sys::time file_mod = file_stat(fn).mtime();
 
-  char *timestr = new char[30];
-  strftime(timestr, 30, "%d-%b-%Y %H:%M:%S", localtime(&file_mod));
-
-  return std::string(timestr);
+  return octave::sys::localtime(file_mod).strftime("%d-%b-%Y %H:%M:%S");
 }
 
 DEFUN_DLD(aviinfo, args, ,

@@ -31,11 +31,17 @@
 
 #include "AVHandler.h"
 
-std::string get_filedate(const std::string &fn)
+std::string get_filedate (const std::string &fn)
 {
-  octave::sys::time file_mod = file_stat(fn).mtime();
+  // once a new Octave version doesn't support the deprecated
+  // octave_time and octave_localtime anymore, change to
+  // octave::sys::time and octave::sys::localtime, respectively (and
+  // remove -Wno-deprecated-delarations from src/Makefile.in; remember
+  // to adjust 'Depends' to Octave >= 4.2 in DESCRIPTION)
 
-  return octave::sys::localtime(file_mod).strftime("%d-%b-%Y %H:%M:%S");
+  octave_time file_mod = file_stat (fn).mtime ();
+
+  return octave_localtime (file_mod).strftime ("%d-%b-%Y %H:%M:%S");
 }
 
 DEFUN_DLD(aviinfo, args, ,

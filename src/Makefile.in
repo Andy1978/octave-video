@@ -2,7 +2,7 @@ OCTFILES = avifile.oct aviread.oct aviinfo.oct addframe.oct
 AVOBJS = AVHandler.o oct-avifile.o
 
 MKOCTFILE ?= mkoctfile
-MKOCTFLAGS ?= -Wall -v
+MKOCTFLAGS ?= -Wall -v -Wno-deprecated-declarations
 
 .PHONY: all clean realclean distclean
 

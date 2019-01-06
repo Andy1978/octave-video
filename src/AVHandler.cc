@@ -246,6 +246,9 @@ AVHandler::setup_read()
   if (codec->capabilities & CODEC_CAP_TRUNCATED)
     vstream->codec->flags |= CODEC_FLAG_TRUNCATED;
 
+  //if (codec->capabilities & CODEC_CAP_DELAY)
+  //  (*out) << "AVHandler: CODEC_CAP_DELAY is set" << std::endl;
+
   if (avcodec_open2(vstream->codec, codec, NULL) < 0)
     {
       (*out) << "AVHandler: Cannot open codec " << codec_name << std::endl;
@@ -393,8 +396,12 @@ AVHandler::read_frame(unsigned int nr)
   uint64_t current_timestamp = 0;
   AVPacket packet;
 
+  //(*out) << "target_timestamp = " << target_timestamp << std::endl;
+
   while (current_timestamp <= target_timestamp)
     {
+
+      //(*out) << "current_timestamp = " << current_timestamp << std::endl;
 
       // Read until we find a packet from the video stream
       packet.stream_index = -1;
@@ -428,6 +435,25 @@ AVHandler::read_frame(unsigned int nr)
           av_free(frame);
           frame = NULL;
           return -1;
+        }
+
+      // see https://libav.org/documentation/doxygen/master/group__lavc__core.html#ga3f55f5bcfbb12e06c7cb1195028855e6
+      if (avcodec_find_decoder(vstream->codec->codec_id)->capabilities & CODEC_CAP_DELAY)
+        {
+          AVPacket emptyPacket;
+          av_init_packet(&emptyPacket);
+          emptyPacket.data = NULL;
+          emptyPacket.size = 0;
+          emptyPacket.stream_index = packet.stream_index;
+
+          if (avcodec_decode_video2(cc, frame, &frameFinished, &emptyPacket) < 0)
+            {
+              (*out) << "AVHandler: Error decoding video stream" << std::endl;
+              av_free_packet(&packet);
+              av_free(frame);
+              frame = NULL;
+              return -1;
+            }
         }
 
       if (frameFinished)

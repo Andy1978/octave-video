@@ -39,9 +39,9 @@ std::string get_filedate (const std::string &fn)
   // remove -Wno-deprecated-delarations from src/Makefile.in; remember
   // to adjust 'Depends' to Octave >= 4.2 in DESCRIPTION)
 
-  octave_time file_mod = file_stat (fn).mtime ();
+  octave::sys::time file_mod = octave::sys::file_stat (fn).mtime ();
 
-  return octave_localtime (file_mod).strftime ("%d-%b-%Y %H:%M:%S");
+  return octave::sys::localtime (file_mod).strftime ("%d-%b-%Y %H:%M:%S");
 }
 
 DEFUN_DLD(aviinfo, args, ,

@@ -1,8 +1,7 @@
-OCTFILES = avifile.oct aviread.oct aviinfo.oct addframe.oct
-AVOBJS = AVHandler.o oct-avifile.o
+OCTFILES = cap_ffmpeg_impl.oct
 
 MKOCTFILE ?= mkoctfile
-MKOCTFLAGS ?= -Wall -v -Wno-deprecated-declarations
+MKOCTFLAGS ?= -Wall -v
 
 .PHONY: all clean realclean distclean
 
@@ -11,12 +10,7 @@ all: ${OCTFILES}
 debug : MKOCTFLAGS += -ggdb -O0
 debug : all
 
-oct-avifile.o: AVHandler.o
-
-${AVOBJS}: %.o: %.cc
-	$(MKOCTFILE) $(MKOCTFLAGS) -c @DEFS@ $< -o $@ @CPPFLAGS@
-
-${OCTFILES}: %.oct: %.cc AVHandler.o oct-avifile.o
+${OCTFILES}: %.oct: %.cc
 	$(MKOCTFILE) $(MKOCTFLAGS) @DEFS@ $< $(filter %.o, $^) @LIBS@ @CPPFLAGS@
 
 clean:

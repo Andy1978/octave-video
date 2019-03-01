@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([Octave-Forge video package], [1.2.2+])
-AC_CONFIG_HEADERS([config.h])
+AC_INIT([Octave-Forge video package], [1.3.0+])
+#AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX

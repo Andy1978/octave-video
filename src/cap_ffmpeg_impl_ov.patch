@@ -1,5 +1,5 @@
 --- cap_ffmpeg_impl.hpp	2019-03-02 17:37:08.132065054 +0100
-+++ cap_ffmpeg_impl_ov.hpp	2019-03-02 17:42:58.465314470 +0100
++++ cap_ffmpeg_impl_ov.hpp	2019-03-02 22:05:44.813549588 +0100
 @@ -40,14 +40,24 @@
  //
  //M*/
@@ -33,7 +33,7 @@
  #endif
  }
  
-+static bool type_loaded = false;
++static bool capture_type_loaded = false;
  
 -struct CvCapture_FFMPEG
 +class CvCapture_FFMPEG: public octave_base_value
@@ -44,7 +44,7 @@
      bool open( const char* filename );
      void close();
  
-@@ -528,10 +542,47 @@
+@@ -528,10 +542,27 @@
  #if USE_AV_INTERRUPT_CALLBACK
      AVInterruptCallbackMetadata interrupt_metadata;
  #endif
@@ -66,33 +66,13 @@
 +CvCapture_FFMPEG::CvCapture_FFMPEG ()
 +  : octave_base_value () { init (); };
 +
-+CvCapture_FFMPEG* get_handler_from_ov (octave_value ov)
-+{
-+  if (!type_loaded)
-+    {
-+      CvCapture_FFMPEG::register_type();
-+      type_loaded = true;
-+    }
-+
-+  if (ov.type_id() != CvCapture_FFMPEG::static_type_id())
-+    {
-+      error("get_handler_from_ov: Not a valid CvCapture_FFMPEG");
-+      return 0;
-+    }
-+
-+  CvCapture_FFMPEG* p = 0;
-+  const octave_base_value& rep = ov.get_rep();
-+  p = &((CvCapture_FFMPEG &)rep);
-+  return p;
-+}
-+
  void CvCapture_FFMPEG::init()
  {
 +    av_register_all();
      ic = 0;
      video_stream = -1;
      video_st = 0;
-@@ -891,6 +942,13 @@
+@@ -891,6 +922,13 @@
      int err = av_open_input_file(&ic, _filename, NULL, 0, NULL);
  #endif
  
@@ -106,7 +86,7 @@
      if (err < 0)
      {
          CV_WARN("Error opening file");
-@@ -1098,7 +1156,7 @@
+@@ -1098,7 +1136,7 @@
                  buffer_width, buffer_height,
                  video_st->codec->pix_fmt,
                  buffer_width, buffer_height,
@@ -115,15 +95,16 @@
                  SWS_BICUBIC,
                  NULL, NULL, NULL
                  );
-@@ -1153,6 +1211,7 @@
+@@ -1159,6 +1197,8 @@
+     AVCodecID codec_id = AV_CODEC_ID_NONE;
+     const char* codec_fourcc = NULL;
  
- double CvCapture_FFMPEG::getProperty( int property_id ) const
- {
 +#if 0
-     if( !video_st ) return 0;
- 
-     double codec_tag = 0;
-@@ -1203,7 +1262,7 @@
++
+     switch( property_id )
+     {
+     case CV_FFMPEG_CAP_PROP_POS_MSEC:
+@@ -1203,7 +1243,7 @@
      default:
          break;
      }
@@ -132,7 +113,7 @@
      return 0;
  }
  
-@@ -1344,7 +1403,7 @@
+@@ -1344,7 +1384,7 @@
  bool CvCapture_FFMPEG::setProperty( int property_id, double value )
  {
      if( !video_st ) return false;
@@ -141,7 +122,7 @@
      switch( property_id )
      {
      case CV_FFMPEG_CAP_PROP_POS_MSEC:
-@@ -1372,7 +1431,7 @@
+@@ -1372,14 +1412,19 @@
      default:
          return false;
      }
@@ -150,3 +131,49 @@
      return true;
  }
  
+ 
+ ///////////////// FFMPEG CvVideoWriter implementation //////////////////////////
+-struct CvVideoWriter_FFMPEG
++static bool writer_type_loaded = false;
++
++class CvVideoWriter_FFMPEG: public octave_base_value
+ {
++  public:
++    CvVideoWriter_FFMPEG ();
++
+     bool open( const char* filename, int fourcc,
+                double fps, int width, int height, bool isColor );
+     void close();
+@@ -1403,8 +1448,24 @@
+     int               frame_idx;
+     bool              ok;
+     struct SwsContext *img_convert_ctx;
++
++    bool is_constant (void) const
++    {
++      return true;
++    }
++    bool is_defined (void) const
++    {
++      return true;
++    }
++
++    DECLARE_OV_TYPEID_FUNCTIONS_AND_DATA
+ };
+ 
++DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(CvVideoWriter_FFMPEG, "CvVideoWriter_FFMPEG", "CvVideoWriter_FFMPEG");
++
++CvVideoWriter_FFMPEG::CvVideoWriter_FFMPEG ()
++  : octave_base_value () { init (); };
++
+ static const char * icvFFMPEGErrStr(int err)
+ {
+ #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(53, 2, 0)
+@@ -1465,6 +1526,7 @@
+ 
+ void CvVideoWriter_FFMPEG::init()
+ {
++    av_register_all();
+     fmt = 0;
+     oc = 0;
+     outbuf = 0;

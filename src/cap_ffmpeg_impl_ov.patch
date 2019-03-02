@@ -1,0 +1,139 @@
+--- cap_ffmpeg_impl.hpp	2018-02-23 09:38:33.000000000 +0100
++++ cap_ffmpeg_impl_ov.hpp	2019-03-02 07:44:02.037733117 +0100
+@@ -40,14 +40,20 @@
+ //
+ //M*/
+ 
+-#include "cap_ffmpeg_api.hpp"
+-#if !(defined(_WIN32) || defined(WINCE))
+-# include <pthread.h>
+-#endif
++/* ATTENTION:
++ * 
++ * This file was generated from opencv-3.4.1/modules/videoio/src/cap_ffmpeg_impl.hpp 
++ * while applying the patched in cap_ffmpeg_impl_ov.patch
++ */
++
+ #include <assert.h>
+ #include <algorithm>
+ #include <limits>
+ 
++#include <string>
++#include <octave/oct.h>
++#undef USE_AV_INTERRUPT_CALLBACK
++
+ #define CALC_FFMPEG_VERSION(a,b,c) ( a<<16 | b<<8 | c )
+ 
+ #if defined _MSC_VER && _MSC_VER >= 1200
+@@ -429,9 +435,13 @@
+ #endif
+ }
+ 
++static bool type_loaded = false;
+ 
+-struct CvCapture_FFMPEG
++class CvCapture_FFMPEG: public octave_base_value
+ {
++  public:
++    CvCapture_FFMPEG ();
++
+     bool open( const char* filename );
+     void close();
+ 
+@@ -485,10 +495,47 @@
+ #if USE_AV_INTERRUPT_CALLBACK
+     AVInterruptCallbackMetadata interrupt_metadata;
+ #endif
++
++  bool is_constant (void) const
++  {
++    return true;
++  }
++  bool is_defined (void) const
++  {
++    return true;
++  }
++
++  DECLARE_OV_TYPEID_FUNCTIONS_AND_DATA
+ };
+ 
++DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(CvCapture_FFMPEG, "CvCapture_FFMPEG", "CvCapture_FFMPEG");
++
++CvCapture_FFMPEG::CvCapture_FFMPEG ()
++  : octave_base_value () { init (); };
++
++CvCapture_FFMPEG* get_handler_from_ov (octave_value ov)
++{
++  if (!type_loaded)
++    {
++      CvCapture_FFMPEG::register_type();
++      type_loaded = true;
++    }
++
++  if (ov.type_id() != CvCapture_FFMPEG::static_type_id())
++    {
++      error("get_handler_from_ov: Not a valid CvCapture_FFMPEG");
++      return 0;
++    }
++
++  CvCapture_FFMPEG* p = 0;
++  const octave_base_value& rep = ov.get_rep();
++  p = &((CvCapture_FFMPEG &)rep);
++  return p;
++}
++
+ void CvCapture_FFMPEG::init()
+ {
++    av_register_all();
+     ic = 0;
+     video_stream = -1;
+     video_st = 0;
+@@ -829,6 +876,13 @@
+     int err = av_open_input_file(&ic, _filename, NULL, 0, NULL);
+ #endif
+ 
++//fprintf(stderr, "err = %i %s %i %i\n", err, icvFFMPEGErrStr(err), LIBAVUTIL_BUILD, CALC_FFMPEG_VERSION(52, 111, 0));
++
++char buf[50];
++av_strerror (err, buf, 50);
++fprintf (stderr, "%s\n", buf);
++
++
+     if (err < 0)
+     {
+         CV_WARN("Error opening file");
+@@ -1086,6 +1140,7 @@
+ 
+ double CvCapture_FFMPEG::getProperty( int property_id ) const
+ {
++#if 0
+     if( !video_st ) return 0;
+ 
+     switch( property_id )
+@@ -1117,7 +1172,7 @@
+     default:
+         break;
+     }
+-
++#endif
+     return 0;
+ }
+ 
+@@ -1258,7 +1313,7 @@
+ bool CvCapture_FFMPEG::setProperty( int property_id, double value )
+ {
+     if( !video_st ) return false;
+-
++#if 0
+     switch( property_id )
+     {
+     case CV_FFMPEG_CAP_PROP_POS_MSEC:
+@@ -1286,7 +1341,7 @@
+     default:
+         return false;
+     }
+-
++#endif
+     return true;
+ }
+ 

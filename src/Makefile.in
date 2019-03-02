@@ -1,16 +1,14 @@
-OCTFILES = cap_ffmpeg_impl.oct
-
 MKOCTFILE ?= mkoctfile
 MKOCTFLAGS ?= -Wall -v
 
 .PHONY: all clean realclean distclean
 
-all: ${OCTFILES}
+all: cap_ffmpeg_wrapper.oct
 
 debug : MKOCTFLAGS += -ggdb -O0
 debug : all
 
-${OCTFILES}: %.oct: %.cc
+cap_ffmpeg_wrapper.oct: cap_ffmpeg_wrapper.cc cap_ffmpeg_impl_ov.hpp
 	$(MKOCTFILE) $(MKOCTFLAGS) @DEFS@ $< $(filter %.o, $^) @LIBS@ @CPPFLAGS@
 
 clean:
@@ -22,3 +20,13 @@ distclean: clean
 realclean: distclean
 	rm -rf autom4te.cache
 	rm -f config.status config.log config.h configure aclocal.m4
+	rm -f cap_ffmpeg_impl_ov.hpp
+
+### patches
+
+cap_ffmpeg_impl_ov.hpp: cap_ffmpeg_impl_ov.patch cap_ffmpeg_impl.hpp
+	patch -i $< -o $@
+
+update_patch:
+	diff -u cap_ffmpeg_impl.hpp cap_ffmpeg_impl_ov.hpp > cap_ffmpeg_impl_ov.patch
+

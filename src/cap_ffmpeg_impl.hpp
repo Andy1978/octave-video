@@ -40,12 +40,13 @@
 //
 //M*/
 
+#include "cap_ffmpeg_api.hpp"
+#if !(defined(_WIN32) || defined(WINCE))
+# include <pthread.h>
+#endif
 #include <assert.h>
 #include <algorithm>
 #include <limits>
-#include <string>
-
-#include <octave/oct.h>
 
 #define CALC_FFMPEG_VERSION(a,b,c) ( a<<16 | b<<8 | c )
 
@@ -162,6 +163,132 @@ extern "C" {
 #endif
 #endif
 
+
+#ifndef USE_AV_INTERRUPT_CALLBACK
+#if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(53, 21, 0)
+#define USE_AV_INTERRUPT_CALLBACK 1
+#else
+#define USE_AV_INTERRUPT_CALLBACK 0
+#endif
+#endif
+
+#if USE_AV_INTERRUPT_CALLBACK
+#define LIBAVFORMAT_INTERRUPT_OPEN_TIMEOUT_MS 30000
+#define LIBAVFORMAT_INTERRUPT_READ_TIMEOUT_MS 30000
+
+#ifdef _WIN32
+// http://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows
+
+static
+inline LARGE_INTEGER get_filetime_offset()
+{
+    SYSTEMTIME s;
+    FILETIME f;
+    LARGE_INTEGER t;
+
+    s.wYear = 1970;
+    s.wMonth = 1;
+    s.wDay = 1;
+    s.wHour = 0;
+    s.wMinute = 0;
+    s.wSecond = 0;
+    s.wMilliseconds = 0;
+    SystemTimeToFileTime(&s, &f);
+    t.QuadPart = f.dwHighDateTime;
+    t.QuadPart <<= 32;
+    t.QuadPart |= f.dwLowDateTime;
+    return t;
+}
+
+static
+inline void get_monotonic_time(timespec *tv)
+{
+    LARGE_INTEGER           t;
+    FILETIME				f;
+    double                  microseconds;
+    static LARGE_INTEGER    offset;
+    static double           frequencyToMicroseconds;
+    static int              initialized = 0;
+    static BOOL             usePerformanceCounter = 0;
+
+    if (!initialized)
+    {
+        LARGE_INTEGER performanceFrequency;
+        initialized = 1;
+        usePerformanceCounter = QueryPerformanceFrequency(&performanceFrequency);
+        if (usePerformanceCounter)
+        {
+            QueryPerformanceCounter(&offset);
+            frequencyToMicroseconds = (double)performanceFrequency.QuadPart / 1000000.;
+        }
+        else
+        {
+            offset = get_filetime_offset();
+            frequencyToMicroseconds = 10.;
+        }
+    }
+
+    if (usePerformanceCounter)
+    {
+        QueryPerformanceCounter(&t);
+    } else {
+        GetSystemTimeAsFileTime(&f);
+        t.QuadPart = f.dwHighDateTime;
+        t.QuadPart <<= 32;
+        t.QuadPart |= f.dwLowDateTime;
+    }
+
+    t.QuadPart -= offset.QuadPart;
+    microseconds = (double)t.QuadPart / frequencyToMicroseconds;
+    t.QuadPart = microseconds;
+    tv->tv_sec = t.QuadPart / 1000000;
+    tv->tv_nsec = (t.QuadPart % 1000000) * 1000;
+}
+#else
+static
+inline void get_monotonic_time(timespec *time)
+{
+#if defined(__APPLE__) && defined(__MACH__)
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    time->tv_sec = mts.tv_sec;
+    time->tv_nsec = mts.tv_nsec;
+#else
+    clock_gettime(CLOCK_MONOTONIC, time);
+#endif
+}
+#endif
+
+static
+inline timespec get_monotonic_time_diff(timespec start, timespec end)
+{
+    timespec temp;
+    if (end.tv_nsec - start.tv_nsec < 0)
+    {
+        temp.tv_sec = end.tv_sec - start.tv_sec - 1;
+        temp.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
+    }
+    else
+    {
+        temp.tv_sec = end.tv_sec - start.tv_sec;
+        temp.tv_nsec = end.tv_nsec - start.tv_nsec;
+    }
+    return temp;
+}
+
+static
+inline double get_monotonic_time_diff_ms(timespec time1, timespec time2)
+{
+    timespec delta = get_monotonic_time_diff(time1, time2);
+    double milliseconds = delta.tv_sec * 1000 + (double)delta.tv_nsec / 1000000.0;
+
+    return milliseconds;
+}
+#endif // USE_AV_INTERRUPT_CALLBACK
+
 static int get_number_of_cpus(void)
 {
 #if LIBAVFORMAT_BUILD < CALC_FFMPEG_VERSION(52, 111, 0)
@@ -200,58 +327,6 @@ static int get_number_of_cpus(void)
 #endif
 }
 
-static const char * icvFFMPEGErrStr(int err)
-{
-#if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(53, 2, 0)
-    switch(err) {
-    case AVERROR_BSF_NOT_FOUND:
-        return "Bitstream filter not found";
-    case AVERROR_DECODER_NOT_FOUND:
-        return "Decoder not found";
-    case AVERROR_DEMUXER_NOT_FOUND:
-        return "Demuxer not found";
-    case AVERROR_ENCODER_NOT_FOUND:
-        return "Encoder not found";
-    case AVERROR_EOF:
-        return "End of file";
-    case AVERROR_EXIT:
-        return "Immediate exit was requested; the called function should not be restarted";
-    case AVERROR_FILTER_NOT_FOUND:
-        return "Filter not found";
-    case AVERROR_INVALIDDATA:
-        return "Invalid data found when processing input";
-    case AVERROR_MUXER_NOT_FOUND:
-        return "Muxer not found";
-    case AVERROR_OPTION_NOT_FOUND:
-        return "Option not found";
-    case AVERROR_PATCHWELCOME:
-        return "Not yet implemented in FFmpeg, patches welcome";
-    case AVERROR_PROTOCOL_NOT_FOUND:
-        return "Protocol not found";
-    case AVERROR_STREAM_NOT_FOUND:
-        return "Stream not found";
-    default:
-        break;
-    }
-#else
-    switch(err) {
-    case AVERROR_NUMEXPECTED:
-        return "Incorrect filename syntax";
-    case AVERROR_INVALIDDATA:
-        return "Invalid data in header";
-    case AVERROR_NOFMT:
-        return "Unknown format";
-    case AVERROR_IO:
-        return "I/O error occurred";
-    case AVERROR_NOMEM:
-        return "Memory allocation error";
-    default:
-        break;
-    }
-#endif
-
-    return "Unspecified error";
-}
 
 struct Image_FFMPEG
 {
@@ -261,6 +336,42 @@ struct Image_FFMPEG
     int height;
     int cn;
 };
+
+
+#if USE_AV_INTERRUPT_CALLBACK
+struct AVInterruptCallbackMetadata
+{
+    timespec value;
+    unsigned int timeout_after_ms;
+    int timeout;
+};
+
+static
+inline void _opencv_ffmpeg_free(void** ptr)
+{
+    if(*ptr) free(*ptr);
+    *ptr = 0;
+}
+
+static
+inline int _opencv_ffmpeg_interrupt_callback(void *ptr)
+{
+    AVInterruptCallbackMetadata* metadata = (AVInterruptCallbackMetadata*)ptr;
+    assert(metadata);
+
+    if (metadata->timeout_after_ms == 0)
+    {
+        return 0; // timeout is disabled
+    }
+
+    timespec now;
+    get_monotonic_time(&now);
+
+    metadata->timeout = get_monotonic_time_diff_ms(metadata->value, now) > metadata->timeout_after_ms;
+
+    return metadata->timeout ? -1 : 0;
+}
+#endif
 
 static
 inline void _opencv_ffmpeg_av_packet_unref(AVPacket *pkt)
@@ -318,13 +429,9 @@ static AVRational _opencv_ffmpeg_get_sample_aspect_ratio(AVStream *stream)
 #endif
 }
 
-static bool type_loaded = false;
 
-class CvCapture_FFMPEG: public octave_base_value
+struct CvCapture_FFMPEG
 {
-  public:
-    CvCapture_FFMPEG ();
-
     bool open( const char* filename );
     void close();
 
@@ -375,48 +482,13 @@ class CvCapture_FFMPEG: public octave_base_value
 #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(52, 111, 0)
     AVDictionary *dict;
 #endif
-
-  bool is_constant (void) const
-  {
-    return true;
-  }
-  bool is_defined (void) const
-  {
-    return true;
-  }
-
-  DECLARE_OV_TYPEID_FUNCTIONS_AND_DATA
+#if USE_AV_INTERRUPT_CALLBACK
+    AVInterruptCallbackMetadata interrupt_metadata;
+#endif
 };
-
-DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(CvCapture_FFMPEG, "CvCapture_FFMPEG", "CvCapture_FFMPEG");
-
-CvCapture_FFMPEG::CvCapture_FFMPEG ()
-  : octave_base_value () { init (); };
-
-CvCapture_FFMPEG* get_handler_from_ov (octave_value ov)
-{
-  static bool type_loaded = false;
-  if (!type_loaded)
-    {
-      CvCapture_FFMPEG::register_type();
-      type_loaded = true;
-    }
-
-  if (ov.type_id() != CvCapture_FFMPEG::static_type_id())
-    {
-      error("get_handler_from_ov: Not a valid CvCapture_FFMPEG");
-      return 0;
-    }
-
-  CvCapture_FFMPEG* p = 0;
-  const octave_base_value& rep = ov.get_rep();
-  p = &((CvCapture_FFMPEG &)rep);
-  return p;
-}
 
 void CvCapture_FFMPEG::init()
 {
-  av_register_all();
     ic = 0;
     video_stream = -1;
     video_st = 0;
@@ -516,14 +588,223 @@ void CvCapture_FFMPEG::close()
 #define AVSEEK_FLAG_ANY 1
 #endif
 
-#include <iostream>
+class ImplMutex
+{
+public:
+    ImplMutex() { init(); }
+    ~ImplMutex() { destroy(); }
+
+    void init();
+    void destroy();
+
+    void lock();
+    bool trylock();
+    void unlock();
+
+    struct Impl;
+protected:
+    Impl* impl;
+
+private:
+    ImplMutex(const ImplMutex&);
+    ImplMutex& operator = (const ImplMutex& m);
+};
+
+#if defined _WIN32 || defined WINCE
+
+struct ImplMutex::Impl
+{
+    void init()
+    {
+#if (_WIN32_WINNT >= 0x0600)
+        ::InitializeCriticalSectionEx(&cs, 1000, 0);
+#else
+        ::InitializeCriticalSection(&cs);
+#endif
+        refcount = 1;
+    }
+    void destroy() { DeleteCriticalSection(&cs); }
+
+    void lock() { EnterCriticalSection(&cs); }
+    bool trylock() { return TryEnterCriticalSection(&cs) != 0; }
+    void unlock() { LeaveCriticalSection(&cs); }
+
+    CRITICAL_SECTION cs;
+    int refcount;
+};
+
+#ifndef __GNUC__
+static int _interlockedExchangeAdd(int* addr, int delta)
+{
+#if defined _MSC_VER && _MSC_VER >= 1500
+    return (int)_InterlockedExchangeAdd((long volatile*)addr, delta);
+#else
+    return (int)InterlockedExchangeAdd((long volatile*)addr, delta);
+#endif
+}
+#endif // __GNUC__
+
+#elif defined __APPLE__
+
+#include <libkern/OSAtomic.h>
+
+struct ImplMutex::Impl
+{
+    void init() { sl = OS_SPINLOCK_INIT; refcount = 1; }
+    void destroy() { }
+
+    void lock() { OSSpinLockLock(&sl); }
+    bool trylock() { return OSSpinLockTry(&sl); }
+    void unlock() { OSSpinLockUnlock(&sl); }
+
+    OSSpinLock sl;
+    int refcount;
+};
+
+#elif defined __linux__ && !defined __ANDROID__
+
+struct ImplMutex::Impl
+{
+    void init() { pthread_spin_init(&sl, 0); refcount = 1; }
+    void destroy() { pthread_spin_destroy(&sl); }
+
+    void lock() { pthread_spin_lock(&sl); }
+    bool trylock() { return pthread_spin_trylock(&sl) == 0; }
+    void unlock() { pthread_spin_unlock(&sl); }
+
+    pthread_spinlock_t sl;
+    int refcount;
+};
+
+#else
+
+struct ImplMutex::Impl
+{
+    void init() { pthread_mutex_init(&sl, 0); refcount = 1; }
+    void destroy() { pthread_mutex_destroy(&sl); }
+
+    void lock() { pthread_mutex_lock(&sl); }
+    bool trylock() { return pthread_mutex_trylock(&sl) == 0; }
+    void unlock() { pthread_mutex_unlock(&sl); }
+
+    pthread_mutex_t sl;
+    int refcount;
+};
+
+#endif
+
+void ImplMutex::init()
+{
+    impl = new Impl();
+    impl->init();
+}
+void ImplMutex::destroy()
+{
+    impl->destroy();
+    delete(impl);
+    impl = NULL;
+}
+void ImplMutex::lock() { impl->lock(); }
+void ImplMutex::unlock() { impl->unlock(); }
+bool ImplMutex::trylock() { return impl->trylock(); }
+
+static int LockCallBack(void **mutex, AVLockOp op)
+{
+    ImplMutex* localMutex = reinterpret_cast<ImplMutex*>(*mutex);
+    switch (op)
+    {
+        case AV_LOCK_CREATE:
+            localMutex = reinterpret_cast<ImplMutex*>(malloc(sizeof(ImplMutex)));
+            localMutex->init();
+            *mutex = localMutex;
+            if (!*mutex)
+                return 1;
+        break;
+
+        case AV_LOCK_OBTAIN:
+            localMutex->lock();
+        break;
+
+        case AV_LOCK_RELEASE:
+            localMutex->unlock();
+        break;
+
+        case AV_LOCK_DESTROY:
+            localMutex->destroy();
+            free(localMutex);
+            localMutex = NULL;
+            *mutex = NULL;
+        break;
+    }
+    return 0;
+}
+
+static ImplMutex _mutex;
+static bool _initialized = false;
+
+class AutoLock
+{
+public:
+    AutoLock(ImplMutex& m) : mutex(&m) { mutex->lock(); }
+    ~AutoLock() { mutex->unlock(); }
+protected:
+    ImplMutex* mutex;
+private:
+    AutoLock(const AutoLock&); // disabled
+    AutoLock& operator = (const AutoLock&); // disabled
+};
+
+
+class InternalFFMpegRegister
+{
+public:
+    InternalFFMpegRegister()
+    {
+        AutoLock lock(_mutex);
+        if (!_initialized)
+        {
+    #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(53, 13, 0)
+            avformat_network_init();
+    #endif
+
+            /* register all codecs, demux and protocols */
+            av_register_all();
+
+            /* register a callback function for synchronization */
+            av_lockmgr_register(&LockCallBack);
+
+            av_log_set_level(AV_LOG_ERROR);
+
+            _initialized = true;
+        }
+    }
+
+    ~InternalFFMpegRegister()
+    {
+        _initialized = false;
+        av_lockmgr_register(NULL);
+    }
+};
+
+static InternalFFMpegRegister _init;
 
 bool CvCapture_FFMPEG::open( const char* _filename )
 {
+    AutoLock lock(_mutex);
     unsigned i;
     bool valid = false;
 
     close();
+
+#if USE_AV_INTERRUPT_CALLBACK
+    /* interrupt callback */
+    interrupt_metadata.timeout_after_ms = LIBAVFORMAT_INTERRUPT_OPEN_TIMEOUT_MS;
+    get_monotonic_time(&interrupt_metadata.value);
+
+    ic = avformat_alloc_context();
+    ic->interrupt_callback.callback = _opencv_ffmpeg_interrupt_callback;
+    ic->interrupt_callback.opaque = &interrupt_metadata;
+#endif
 
 #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(52, 111, 0)
 #ifndef NO_GETENV
@@ -543,18 +824,10 @@ bool CvCapture_FFMPEG::open( const char* _filename )
 #else
     av_dict_set(&dict, "rtsp_transport", "tcp", 0);
 #endif
-    //int err = avformat_open_input(&ic, _filename, NULL, &dict);
     int err = avformat_open_input(&ic, _filename, NULL, &dict);
 #else
     int err = av_open_input_file(&ic, _filename, NULL, 0, NULL);
 #endif
-
-fprintf(stderr, "err = %i %s %i %i\n", err, icvFFMPEGErrStr(err), LIBAVUTIL_BUILD, CALC_FFMPEG_VERSION(52, 111, 0));
-
-char buf[50];
-av_strerror (err, buf, 50);
-fprintf (stderr, "%s\n", buf);
-
 
     if (err < 0)
     {
@@ -633,49 +906,20 @@ fprintf (stderr, "%s\n", buf);
 
 exit_func:
 
+#if USE_AV_INTERRUPT_CALLBACK
+    // deactivate interrupt callback
+    interrupt_metadata.timeout_after_ms = 0;
+#endif
+
     if( !valid )
         close();
 
     return valid;
 }
 
-// PKG_ADD: autoload ("__cap_open__", which ("cap_ffmpeg_impl.oct"));
-// PKG_DEL: autoload ("__cap_open__", which ("cap_ffmpeg_impl.oct"), "remove");
-DEFUN_DLD(__cap_open__, args, nargout,
-          "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {@var{h} =} __cap_open__ (@var{filename})\n\
-Creates an instance of CvCapture_FFMPEG.\n\
-@seealso{getsnapshot}\n\
-@end deftypefn")
-{
-  octave_value_list retval;
-  int nargin = args.length ();
-
-  if (nargin != 1)
-    {
-      print_usage();
-      return retval;
-    }
-
-  //if (!type_loaded)
-  //  {
-  //    CvCapture_FFMPEG::register_type();
-  //    type_loaded = true;
-  //  }
-  std::string filename = args(0).string_value ();
-  if (! error_state)
-    {
-      CvCapture_FFMPEG *h = new CvCapture_FFMPEG ();
-      h->open (filename.c_str ());
-      retval.append (octave_value (h));
-    }
-  return retval;
-}
 
 bool CvCapture_FFMPEG::grabFrame()
 {
-  printf ("fooobar grabFrame\n");
-
     bool valid = false;
     int got_picture;
 
@@ -690,11 +934,25 @@ bool CvCapture_FFMPEG::grabFrame()
 
     picture_pts = AV_NOPTS_VALUE_;
 
+#if USE_AV_INTERRUPT_CALLBACK
+    // activate interrupt callback
+    get_monotonic_time(&interrupt_metadata.value);
+    interrupt_metadata.timeout_after_ms = LIBAVFORMAT_INTERRUPT_READ_TIMEOUT_MS;
+#endif
+
     // get the next frame
     while (!valid)
     {
 
         _opencv_ffmpeg_av_packet_unref (&packet);
+
+#if USE_AV_INTERRUPT_CALLBACK
+        if (interrupt_metadata.timeout)
+        {
+            valid = false;
+            break;
+        }
+#endif
 
         int ret = av_read_frame(ic, &packet);
         if (ret == AVERROR(EAGAIN)) continue;
@@ -744,33 +1002,15 @@ bool CvCapture_FFMPEG::grabFrame()
     if( valid && first_frame_number < 0 )
         first_frame_number = dts_to_frame_number(picture_pts);
 
+#if USE_AV_INTERRUPT_CALLBACK
+    // deactivate interrupt callback
+    interrupt_metadata.timeout_after_ms = 0;
+#endif
+
     // return if we have a new picture or not
     return valid;
 }
 
-// PKG_ADD: autoload ("__cap_grab_frame__", which ("cap_ffmpeg_impl.oct"));
-// PKG_DEL: autoload ("__cap_grab_frame__", which ("cap_ffmpeg_impl.oct"), "remove");
-DEFUN_DLD(__cap_grab_frame__, args, nargout,
-          "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {@var{f} =} __cap_grab_frame__ (@var{h}, [@var{preview}])\n\
-Get a snapshot from v4l2_handler @var{h}\n\
-@end deftypefn")
-{
-  octave_value_list retval;
-  int nargin = args.length ();
-
-  //~ if (nargin < 1 || nargin>2)
-    //~ {
-      //~ print_usage ();
-      //~ return retval;
-    //~ }
-
-  CvCapture_FFMPEG* p = get_handler_from_ov (args(0));
-  if (p)
-    return (octave_value (p->grabFrame ()));
-
-  return retval;
-}
 
 bool CvCapture_FFMPEG::retrieveFrame(int, unsigned char** data, int* step, int* width, int* height, int* cn)
 {
@@ -843,72 +1083,40 @@ bool CvCapture_FFMPEG::retrieveFrame(int, unsigned char** data, int* step, int* 
     return true;
 }
 
-// PKG_ADD: autoload ("__cap_retrieve_frame__", which ("cap_ffmpeg_impl.oct"));
-// PKG_DEL: autoload ("__cap_retrieve_frame__", which ("cap_ffmpeg_impl.oct"), "remove");
-DEFUN_DLD(__cap_retrieve_frame__, args, nargout,
-          "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {@var{f} =} __cap_retrieve_frame__ (@var{h}, [@var{preview}])\n\
-\n\
-@end deftypefn")
-{
-  octave_value_list retval;
-  int nargin = args.length ();
-
-  //~ if (nargin < 1 || nargin>2)
-    //~ {
-      //~ print_usage ();
-      //~ return retval;
-    //~ }
-
-  CvCapture_FFMPEG* p = get_handler_from_ov (args(0));
-  if (p)
-    {
-      unsigned char* data;
-      int step;
-      int width = 0;
-      int height = 0;
-      int cn;
-      bool ret = p->retrieveFrame(0, &data, &step, &width, &height, &cn);
-
-      printf ("ret = %i, width = %i, height = %i\n", ret, width, height);
-
-    }
-  return retval;
-}
 
 double CvCapture_FFMPEG::getProperty( int property_id ) const
 {
-    //~ if( !video_st ) return 0;
+    if( !video_st ) return 0;
 
-    //~ switch( property_id )
-    //~ {
-    //~ case CV_FFMPEG_CAP_PROP_POS_MSEC:
-        //~ return 1000.0*(double)frame_number/get_fps();
-    //~ case CV_FFMPEG_CAP_PROP_POS_FRAMES:
-        //~ return (double)frame_number;
-    //~ case CV_FFMPEG_CAP_PROP_POS_AVI_RATIO:
-        //~ return r2d(ic->streams[video_stream]->time_base);
-    //~ case CV_FFMPEG_CAP_PROP_FRAME_COUNT:
-        //~ return (double)get_total_frames();
-    //~ case CV_FFMPEG_CAP_PROP_FRAME_WIDTH:
-        //~ return (double)frame.width;
-    //~ case CV_FFMPEG_CAP_PROP_FRAME_HEIGHT:
-        //~ return (double)frame.height;
-    //~ case CV_FFMPEG_CAP_PROP_FPS:
-        //~ return get_fps();
-    //~ case CV_FFMPEG_CAP_PROP_FOURCC:
-//~ #if LIBAVFORMAT_BUILD > 4628
-        //~ return (double)video_st->codec->codec_tag;
-//~ #else
-        //~ return (double)video_st->codec.codec_tag;
-//~ #endif
-    //~ case CV_FFMPEG_CAP_PROP_SAR_NUM:
-        //~ return _opencv_ffmpeg_get_sample_aspect_ratio(ic->streams[video_stream]).num;
-    //~ case CV_FFMPEG_CAP_PROP_SAR_DEN:
-        //~ return _opencv_ffmpeg_get_sample_aspect_ratio(ic->streams[video_stream]).den;
-    //~ default:
-        //~ break;
-    //~ }
+    switch( property_id )
+    {
+    case CV_FFMPEG_CAP_PROP_POS_MSEC:
+        return 1000.0*(double)frame_number/get_fps();
+    case CV_FFMPEG_CAP_PROP_POS_FRAMES:
+        return (double)frame_number;
+    case CV_FFMPEG_CAP_PROP_POS_AVI_RATIO:
+        return r2d(ic->streams[video_stream]->time_base);
+    case CV_FFMPEG_CAP_PROP_FRAME_COUNT:
+        return (double)get_total_frames();
+    case CV_FFMPEG_CAP_PROP_FRAME_WIDTH:
+        return (double)frame.width;
+    case CV_FFMPEG_CAP_PROP_FRAME_HEIGHT:
+        return (double)frame.height;
+    case CV_FFMPEG_CAP_PROP_FPS:
+        return get_fps();
+    case CV_FFMPEG_CAP_PROP_FOURCC:
+#if LIBAVFORMAT_BUILD > 4628
+        return (double)video_st->codec->codec_tag;
+#else
+        return (double)video_st->codec.codec_tag;
+#endif
+    case CV_FFMPEG_CAP_PROP_SAR_NUM:
+        return _opencv_ffmpeg_get_sample_aspect_ratio(ic->streams[video_stream]).num;
+    case CV_FFMPEG_CAP_PROP_SAR_DEN:
+        return _opencv_ffmpeg_get_sample_aspect_ratio(ic->streams[video_stream]).den;
+    default:
+        break;
+    }
 
     return 0;
 }
@@ -1049,35 +1257,35 @@ void CvCapture_FFMPEG::seek(double sec)
 
 bool CvCapture_FFMPEG::setProperty( int property_id, double value )
 {
-    //~ if( !video_st ) return false;
+    if( !video_st ) return false;
 
-    //~ switch( property_id )
-    //~ {
-    //~ case CV_FFMPEG_CAP_PROP_POS_MSEC:
-    //~ case CV_FFMPEG_CAP_PROP_POS_FRAMES:
-    //~ case CV_FFMPEG_CAP_PROP_POS_AVI_RATIO:
-        //~ {
-            //~ switch( property_id )
-            //~ {
-            //~ case CV_FFMPEG_CAP_PROP_POS_FRAMES:
-                //~ seek((int64_t)value);
-                //~ break;
+    switch( property_id )
+    {
+    case CV_FFMPEG_CAP_PROP_POS_MSEC:
+    case CV_FFMPEG_CAP_PROP_POS_FRAMES:
+    case CV_FFMPEG_CAP_PROP_POS_AVI_RATIO:
+        {
+            switch( property_id )
+            {
+            case CV_FFMPEG_CAP_PROP_POS_FRAMES:
+                seek((int64_t)value);
+                break;
 
-            //~ case CV_FFMPEG_CAP_PROP_POS_MSEC:
-                //~ seek(value/1000.0);
-                //~ break;
+            case CV_FFMPEG_CAP_PROP_POS_MSEC:
+                seek(value/1000.0);
+                break;
 
-            //~ case CV_FFMPEG_CAP_PROP_POS_AVI_RATIO:
-                //~ seek((int64_t)(value*ic->duration));
-                //~ break;
-            //~ }
+            case CV_FFMPEG_CAP_PROP_POS_AVI_RATIO:
+                seek((int64_t)(value*ic->duration));
+                break;
+            }
 
-            //~ picture_pts=(int64_t)value;
-        //~ }
-        //~ break;
-    //~ default:
-        //~ return false;
-    //~ }
+            picture_pts=(int64_t)value;
+        }
+        break;
+    default:
+        return false;
+    }
 
     return true;
 }
@@ -1110,6 +1318,59 @@ struct CvVideoWriter_FFMPEG
     bool              ok;
     struct SwsContext *img_convert_ctx;
 };
+
+static const char * icvFFMPEGErrStr(int err)
+{
+#if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(53, 2, 0)
+    switch(err) {
+    case AVERROR_BSF_NOT_FOUND:
+        return "Bitstream filter not found";
+    case AVERROR_DECODER_NOT_FOUND:
+        return "Decoder not found";
+    case AVERROR_DEMUXER_NOT_FOUND:
+        return "Demuxer not found";
+    case AVERROR_ENCODER_NOT_FOUND:
+        return "Encoder not found";
+    case AVERROR_EOF:
+        return "End of file";
+    case AVERROR_EXIT:
+        return "Immediate exit was requested; the called function should not be restarted";
+    case AVERROR_FILTER_NOT_FOUND:
+        return "Filter not found";
+    case AVERROR_INVALIDDATA:
+        return "Invalid data found when processing input";
+    case AVERROR_MUXER_NOT_FOUND:
+        return "Muxer not found";
+    case AVERROR_OPTION_NOT_FOUND:
+        return "Option not found";
+    case AVERROR_PATCHWELCOME:
+        return "Not yet implemented in FFmpeg, patches welcome";
+    case AVERROR_PROTOCOL_NOT_FOUND:
+        return "Protocol not found";
+    case AVERROR_STREAM_NOT_FOUND:
+        return "Stream not found";
+    default:
+        break;
+    }
+#else
+    switch(err) {
+    case AVERROR_NUMEXPECTED:
+        return "Incorrect filename syntax";
+    case AVERROR_INVALIDDATA:
+        return "Invalid data in header";
+    case AVERROR_NOFMT:
+        return "Unknown format";
+    case AVERROR_IO:
+        return "I/O error occurred";
+    case AVERROR_NOMEM:
+        return "Memory allocation error";
+    default:
+        break;
+    }
+#endif
+
+    return "Unspecified error";
+}
 
 /* function internal to FFMPEG (libavformat/riff.c) to lookup codec id by fourcc tag*/
 extern "C" {
@@ -2326,6 +2587,10 @@ private:
     AVFormatContext* ctx_;
     int video_stream_id_;
     AVPacket pkt_;
+
+#if USE_AV_INTERRUPT_CALLBACK
+    AVInterruptCallbackMetadata interrupt_metadata;
+#endif
 };
 
 bool InputMediaStream_FFMPEG::open(const char* fileName, int* codec, int* chroma_format, int* width, int* height)
@@ -2335,6 +2600,16 @@ bool InputMediaStream_FFMPEG::open(const char* fileName, int* codec, int* chroma
     ctx_ = 0;
     video_stream_id_ = -1;
     memset(&pkt_, 0, sizeof(AVPacket));
+
+#if USE_AV_INTERRUPT_CALLBACK
+    /* interrupt callback */
+    interrupt_metadata.timeout_after_ms = LIBAVFORMAT_INTERRUPT_OPEN_TIMEOUT_MS;
+    get_monotonic_time(&interrupt_metadata.value);
+
+    ctx_ = avformat_alloc_context();
+    ctx_->interrupt_callback.callback = _opencv_ffmpeg_interrupt_callback;
+    ctx_->interrupt_callback.opaque = &interrupt_metadata;
+#endif
 
     #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(53, 13, 0)
         avformat_network_init();
@@ -2424,6 +2699,11 @@ bool InputMediaStream_FFMPEG::open(const char* fileName, int* codec, int* chroma
 
     av_init_packet(&pkt_);
 
+#if USE_AV_INTERRUPT_CALLBACK
+    // deactivate interrupt callback
+    interrupt_metadata.timeout_after_ms = 0;
+#endif
+
     return true;
 }
 
@@ -2447,6 +2727,12 @@ bool InputMediaStream_FFMPEG::read(unsigned char** data, int* size, int* endOfFi
 {
     bool result = false;
 
+#if USE_AV_INTERRUPT_CALLBACK
+    // activate interrupt callback
+    get_monotonic_time(&interrupt_metadata.value);
+    interrupt_metadata.timeout_after_ms = LIBAVFORMAT_INTERRUPT_READ_TIMEOUT_MS;
+#endif
+
     // free last packet if exist
     if (pkt_.data)
         _opencv_ffmpeg_av_packet_unref(&pkt_);
@@ -2454,6 +2740,13 @@ bool InputMediaStream_FFMPEG::read(unsigned char** data, int* size, int* endOfFi
     // get the next frame
     for (;;)
     {
+#if USE_AV_INTERRUPT_CALLBACK
+        if(interrupt_metadata.timeout)
+        {
+            break;
+        }
+#endif
+
         int ret = av_read_frame(ctx_, &pkt_);
 
         if (ret == AVERROR(EAGAIN))
@@ -2475,6 +2768,11 @@ bool InputMediaStream_FFMPEG::read(unsigned char** data, int* size, int* endOfFi
         result = true;
         break;
     }
+
+#if USE_AV_INTERRUPT_CALLBACK
+    // deactivate interrupt callback
+    interrupt_metadata.timeout_after_ms = 0;
+#endif
 
     if (result)
     {

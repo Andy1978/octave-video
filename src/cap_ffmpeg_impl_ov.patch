@@ -1,6 +1,6 @@
---- cap_ffmpeg_impl.hpp	2019-03-02 07:48:12.279019537 +0100
-+++ cap_ffmpeg_impl_ov.hpp	2019-03-02 08:48:28.003446567 +0100
-@@ -40,14 +40,20 @@
+--- cap_ffmpeg_impl.hpp	2019-03-02 17:37:08.132065054 +0100
++++ cap_ffmpeg_impl_ov.hpp	2019-03-02 17:42:58.465314470 +0100
+@@ -40,14 +40,24 @@
  //
  //M*/
  
@@ -10,8 +10,12 @@
 -#endif
 +/* ATTENTION:
 + * 
-+ * This file was generated from opencv-3.4.1/modules/videoio/src/cap_ffmpeg_impl.hpp 
-+ * while applying the patched in cap_ffmpeg_impl_ov.patch
++ * This file was generated from
++ * 
++ * https://github.com/opencv/opencv/blob/master/modules/videoio/src/cap_ffmpeg_impl.hpp
++ * commit 9702987209a9a17ee2d0626c535d2b7bbc6ba1bc
++ * 
++ * and applying the patches in cap_ffmpeg_impl_ov.patch
 + */
 +
  #include <assert.h>
@@ -22,10 +26,10 @@
 +#include <octave/oct.h>
 +#undef USE_AV_INTERRUPT_CALLBACK
 +
- #define CALC_FFMPEG_VERSION(a,b,c) ( a<<16 | b<<8 | c )
- 
- #if defined _MSC_VER && _MSC_VER >= 1200
-@@ -429,9 +435,13 @@
+ #ifndef __OPENCV_BUILD
+ #define CV_FOURCC(c1, c2, c3, c4) (((c1) & 255) + (((c2) & 255) << 8) + (((c3) & 255) << 16) + (((c4) & 255) << 24))
+ #endif
+@@ -472,9 +482,13 @@
  #endif
  }
  
@@ -40,7 +44,7 @@
      bool open( const char* filename );
      void close();
  
-@@ -485,10 +495,47 @@
+@@ -528,10 +542,47 @@
  #if USE_AV_INTERRUPT_CALLBACK
      AVInterruptCallbackMetadata interrupt_metadata;
  #endif
@@ -88,7 +92,7 @@
      ic = 0;
      video_stream = -1;
      video_st = 0;
-@@ -829,6 +876,13 @@
+@@ -891,6 +942,13 @@
      int err = av_open_input_file(&ic, _filename, NULL, 0, NULL);
  #endif
  
@@ -102,7 +106,7 @@
      if (err < 0)
      {
          CV_WARN("Error opening file");
-@@ -1031,7 +1085,7 @@
+@@ -1098,7 +1156,7 @@
                  buffer_width, buffer_height,
                  video_st->codec->pix_fmt,
                  buffer_width, buffer_height,
@@ -111,15 +115,15 @@
                  SWS_BICUBIC,
                  NULL, NULL, NULL
                  );
-@@ -1086,6 +1140,7 @@
+@@ -1153,6 +1211,7 @@
  
  double CvCapture_FFMPEG::getProperty( int property_id ) const
  {
 +#if 0
      if( !video_st ) return 0;
  
-     switch( property_id )
-@@ -1117,7 +1172,7 @@
+     double codec_tag = 0;
+@@ -1203,7 +1262,7 @@
      default:
          break;
      }
@@ -128,7 +132,7 @@
      return 0;
  }
  
-@@ -1258,7 +1313,7 @@
+@@ -1344,7 +1403,7 @@
  bool CvCapture_FFMPEG::setProperty( int property_id, double value )
  {
      if( !video_st ) return false;
@@ -137,7 +141,7 @@
      switch( property_id )
      {
      case CV_FFMPEG_CAP_PROP_POS_MSEC:
-@@ -1286,7 +1341,7 @@
+@@ -1372,7 +1431,7 @@
      default:
          return false;
      }

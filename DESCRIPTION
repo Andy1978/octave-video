@@ -1,12 +1,12 @@
 Name: video
-Version: 1.3.0
-Date: 2019-03-01
-Author: Stefan van der Walt <stefan@sun.ac.za> and Roman Stanchak
-Maintainer: Andreas Weber <octave@tech-chat.de>
+Version: 2.0.0
+Date: 2019-03-02
+Author: Andreas Weber <octave@josoansi.de> and the OpenCV developers
+Maintainer: Andreas Weber <octave@josoansi.de>
 Title: Video functions
 Description: A wrapper for ffmpeg's libavformat and libavcodec, implementing
  addframe, avifile, aviinfo and aviread.
 Depends: octave (>= 4.4.0)
 BuildRequires: libavutil-dev libavformat-dev libswscale-dev libavcodec-dev
-License: FreeBSD
+License: 3-clause BSD (https://www.opencv.org/license.html)
 Url: https://octave.sourceforge.io/

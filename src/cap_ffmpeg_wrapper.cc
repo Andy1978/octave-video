@@ -78,13 +78,34 @@ DEFUN_DLD(__cap_retrieve_frame__, args, nargout,
   if (p)
     {
       unsigned char* data;
-      int step;
       int width = 0;
       int height = 0;
-      int cn;
-      bool ret = p->retrieveFrame(0, &data, &step, &width, &height, &cn);
+      int step;         // AVFrame::linesize, size in bytes of each picture line
+      int cn;           // number of colors and should always be 3 here
 
-      printf ("ret = %i, width = %i, height = %i\n", ret, width, height);
+      bool ret = p->retrieveFrame (0, &data, &step, &width, &height, &cn);
+
+      assert (cn == 3);
+      assert (step == width * 3);
+
+      printf ("ret = %i, width = %i, height = %i, step = %i, cn = %i\n", ret, width, height, step, cn);
+
+      if (ret)
+        {
+          dim_vector dv (3, width, height);
+          uint8NDArray img (dv);
+
+          // Achtung: step und cn noch nicht berücksichtigt
+          unsigned char *p = reinterpret_cast<unsigned char*>(img.fortran_vec());
+          memcpy(p, data, img.numel ());
+
+          Array<octave_idx_type> perm (dim_vector (3, 1));
+          perm(0) = 2;
+          perm(1) = 1;
+          perm(2) = 0;
+
+          retval(0) = octave_value(img.permute (perm));
+        }
 
     }
   return retval;

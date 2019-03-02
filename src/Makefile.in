@@ -28,5 +28,5 @@ cap_ffmpeg_impl_ov.hpp: cap_ffmpeg_impl_ov.patch cap_ffmpeg_impl.hpp
 	patch -i $< -o $@
 
 update_patch:
-	diff -u cap_ffmpeg_impl.hpp cap_ffmpeg_impl_ov.hpp > cap_ffmpeg_impl_ov.patch
+	diff -u cap_ffmpeg_impl.hpp cap_ffmpeg_impl_ov.hpp > cap_ffmpeg_impl_ov.patch || true
 

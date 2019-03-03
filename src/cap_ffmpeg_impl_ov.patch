@@ -1,5 +1,5 @@
 --- cap_ffmpeg_impl.hpp	2019-03-02 17:37:08.132065054 +0100
-+++ cap_ffmpeg_impl_ov.hpp	2019-03-02 22:05:44.813549588 +0100
++++ cap_ffmpeg_impl_ov.hpp	2019-03-03 20:34:30.140494395 +0100
 @@ -40,14 +40,24 @@
  //
  //M*/
@@ -9,12 +9,12 @@
 -# include <pthread.h>
 -#endif
 +/* ATTENTION:
-+ * 
++ *
 + * This file was generated from
-+ * 
++ *
 + * https://github.com/opencv/opencv/blob/master/modules/videoio/src/cap_ffmpeg_impl.hpp
 + * commit 9702987209a9a17ee2d0626c535d2b7bbc6ba1bc
-+ * 
++ *
 + * and applying the patches in cap_ffmpeg_impl_ov.patch
 + */
 +
@@ -177,3 +177,95 @@
      fmt = 0;
      oc = 0;
      outbuf = 0;
+@@ -2039,54 +2101,63 @@
+         return false;
+     }
+ 
++    if (fourcc)
++    {
++
+     /* Lookup codec_id for given fourcc */
+ #if LIBAVCODEC_VERSION_INT<((51<<16)+(49<<8)+0)
+-    if( (codec_id = codec_get_bmp_id( fourcc )) == CV_CODEC(CODEC_ID_NONE) )
+-        return false;
++      if( (codec_id = codec_get_bmp_id( fourcc )) == CV_CODEC(CODEC_ID_NONE) )
++          return false;
+ #else
+-    if( (codec_id = av_codec_get_id(fmt->codec_tag, fourcc)) == CV_CODEC(CODEC_ID_NONE) )
+-    {
+-        const struct AVCodecTag * fallback_tags[] = {
++      if( (codec_id = av_codec_get_id(fmt->codec_tag, fourcc)) == CV_CODEC(CODEC_ID_NONE) )
++      {
++          const struct AVCodecTag * fallback_tags[] = {
+ #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(54, 1, 0)
+ // APIchanges:
+ // 2012-01-31 - dd6d3b0 - lavf 54.01.0
+ //   Add avformat_get_riff_video_tags() and avformat_get_riff_audio_tags().
+-                avformat_get_riff_video_tags(),
++                  avformat_get_riff_video_tags(),
+ #endif
+ #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(55, 25, 100) && defined LIBAVFORMAT_VERSION_MICRO && LIBAVFORMAT_VERSION_MICRO >= 100
+ // APIchanges: ffmpeg only
+ // 2014-01-19 - 1a193c4 - lavf 55.25.100 - avformat.h
+ //   Add avformat_get_mov_video_tags() and avformat_get_mov_audio_tags().
+-                avformat_get_mov_video_tags(),
++                  avformat_get_mov_video_tags(),
+ #endif
+-                codec_bmp_tags, // fallback for avformat < 54.1
+-                NULL };
+-        if( (codec_id = av_codec_get_id(fallback_tags, fourcc)) == CV_CODEC(CODEC_ID_NONE) )
++                  codec_bmp_tags, // fallback for avformat < 54.1
++                  NULL };
++          if( (codec_id = av_codec_get_id(fallback_tags, fourcc)) == CV_CODEC(CODEC_ID_NONE) )
++          {
++              fflush(stdout);
++              fprintf(stderr, "OpenCV: FFMPEG: tag 0x%08x/'%c%c%c%c' is not found (format '%s / %s')'\n",
++                      fourcc, CV_TAG_TO_PRINTABLE_CHAR4(fourcc),
++                      fmt->name, fmt->long_name);
++              return false;
++          }
++        }
++
++        // validate tag
++        if (cv_ff_codec_tag_list_match(fmt->codec_tag, codec_id, fourcc) == false)
+         {
+             fflush(stdout);
+-            fprintf(stderr, "OpenCV: FFMPEG: tag 0x%08x/'%c%c%c%c' is not found (format '%s / %s')'\n",
++            fprintf(stderr, "OpenCV: FFMPEG: tag 0x%08x/'%c%c%c%c' is not supported with codec id %d and format '%s / %s'\n",
+                     fourcc, CV_TAG_TO_PRINTABLE_CHAR4(fourcc),
+-                    fmt->name, fmt->long_name);
+-            return false;
++                    codec_id, fmt->name, fmt->long_name);
++            int supported_tag;
++            if( (supported_tag = av_codec_get_tag(fmt->codec_tag, codec_id)) != 0 )
++            {
++                fprintf(stderr, "OpenCV: FFMPEG: fallback to use tag 0x%08x/'%c%c%c%c'\n",
++                        supported_tag, CV_TAG_TO_PRINTABLE_CHAR4(supported_tag));
++                fourcc = supported_tag;
++            }
+         }
+     }
+-
+-
+-    // validate tag
+-    if (cv_ff_codec_tag_list_match(fmt->codec_tag, codec_id, fourcc) == false)
++    else // fourcc == 0
+     {
+-        fflush(stdout);
+-        fprintf(stderr, "OpenCV: FFMPEG: tag 0x%08x/'%c%c%c%c' is not supported with codec id %d and format '%s / %s'\n",
+-                fourcc, CV_TAG_TO_PRINTABLE_CHAR4(fourcc),
+-                codec_id, fmt->name, fmt->long_name);
+-        int supported_tag;
+-        if( (supported_tag = av_codec_get_tag(fmt->codec_tag, codec_id)) != 0 )
+-        {
+-            fprintf(stderr, "OpenCV: FFMPEG: fallback to use tag 0x%08x/'%c%c%c%c'\n",
+-                    supported_tag, CV_TAG_TO_PRINTABLE_CHAR4(supported_tag));
+-            fourcc = supported_tag;
+-        }
++      // use default codec
++      codec_id = fmt->video_codec;
+     }
++
+ #endif
+ 
+     // alloc memory for context

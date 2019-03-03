@@ -179,7 +179,42 @@ undocumented internal function\n\
   //  }
   std::string filename = args(0).string_value ();
 
-  int fourcc   = 0x00000021;
+  // Ich habe momentan keine Ahnung, wie es zu der 0x21 als fourcc kommt
+  // /home/andy/Downloads/libav-12.3/libavformat/isom.c:37
+  // https://stackoverflow.com/questions/34024041/writing-x264-from-opencv-3-with-ffmpeg-on-linux
+
+#if 0
+  // das hier wäre ein workaround:
+  AVOutputFormat* foo = av_guess_format	(NULL, "foo.mp4", NULL);
+  printf ("default video_codec = %i = %#x\n", foo->video_codec, foo->video_codec);
+
+  unsigned int tag = av_codec_get_tag (foo->codec_tag, AV_CODEC_ID_H264);
+  printf ("tag = %i = %#x\n", tag, tag);
+
+  // vom tag über riff zum codec_id:
+  tag = MKTAG('H', '2', '6', '4');
+  const struct AVCodecTag *table[] = { avformat_get_riff_video_tags(), 0 };
+  enum AVCodecID id = av_codec_get_id (table, tag);
+  printf ("id = %i = %#x, AV_CODEC_ID_H264 = %#x\n", id, id, AV_CODEC_ID_H264);
+
+  // und zum tag zurück, Achtung, das ergibt nicht mehr 0x21
+  tag = av_codec_get_tag (table, AV_CODEC_ID_H264);
+  printf ("tag = %i = %#x = %c%c%c%c\n", tag, tag, CV_TAG_TO_PRINTABLE_CHAR4(tag));
+
+#endif
+
+  // welche API wäre denn von Octave aus gewünscht?
+  // Ich denke direkt AVCodecID angeben wäre sinnvoller, als die fourcc
+
+  /*
+   * codecs anzeigen:
+   * andy@Ryzen5Babe:~/Downloads/libav-12.3$ grep -r show_codecs
+   * cmdutils_common_opts.h:    { "codecs"     , OPT_EXIT, {.func_arg = show_codecs   },    "show available codecs" },
+   * cmdutils.h:int show_codecs(void *optctx, const char *opt, const char *arg);
+   * cmdutils.c:int show_codecs(void *optctx, const char *opt, const char *arg)
+   */
+
+  int fourcc   = 0;
   double fps   = 30.0;
   int width    = 100;
   int height   = 50;
@@ -188,6 +223,19 @@ undocumented internal function\n\
   if (! error_state)
     {
       CvVideoWriter_FFMPEG *h = new CvVideoWriter_FFMPEG ();
+
+      // https://docs.opencv.org/3.4.1/dd/d9e/classcv_1_1VideoWriter.html#ac3478f6257454209fa99249cc03a5c59
+      // fourcc	4-character code of codec used to compress the frames. For example,
+      // VideoWriter::fourcc('P','I','M','1') is a MPEG-1 codec,
+      // VideoWriter::fourcc('M','J','P','G') is a motion-jpeg codec etc.
+      // List of codes can be obtained at Video Codecs by FOURCC page.
+      // FFMPEG backend with MP4 container natively uses other values as fourcc code: see http://mp4ra.org/#/codecs,
+      // so you may receive a warning message from OpenCV about fourcc code conversion.
+
+      // fps	Framerate of the created video stream.
+      // isColor	If it is not zero, the encoder will expect and encode color frames,
+      // otherwise it will work with grayscale frames (the flag is currently supported on Windows only).
+
       bool ret = h->open (filename.c_str (), fourcc, fps, width, height, isColor);
       printf ("open returned %i\n", ret);
       retval.append (octave_value (h));

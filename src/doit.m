@@ -29,6 +29,7 @@ img = __cap_retrieve_frame__ (x);
 ##########
 
 w = __writer_open__ ("foo.mp4");
+#w = __writer_open__ ("foo.mkv");
 
 for k=1:100
   x = uint8 (randi (255, 50, 100, 3));

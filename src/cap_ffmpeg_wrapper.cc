@@ -159,29 +159,48 @@ CvVideoWriter_FFMPEG* get_writer_from_ov (octave_value ov)
 // PKG_DEL: autoload ("__writer_open__", which ("cap_ffmpeg_wrapper.oct"), "remove");
 DEFUN_DLD(__writer_open__, args, nargout,
           "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {@var{h} =} __writer_open__ (@var{filename})\n\
+@deftypefn {Loadable Function} {@var{h} =} __writer_open__ (@var{filename}, @var{fourcc})\n\
 undocumented internal function\n\
 @end deftypefn")
 {
   octave_value_list retval;
   int nargin = args.length ();
 
-  if (nargin != 1)
+  if (nargin != 2)
     {
       print_usage();
       return retval;
     }
 
-  //if (!type_loaded)
-  //  {
-  //    CvVideoWriter_FFMPEG::register_type();
-  //    type_loaded = true;
-  //  }
+  if (! writer_type_loaded)
+    {
+      CvVideoWriter_FFMPEG::register_type();
+      writer_type_loaded = true;
+      av_register_all();
+    }
+
   std::string filename = args(0).string_value ();
 
-  // Ich habe momentan keine Ahnung, wie es zu der 0x21 als fourcc kommt
-  // /home/andy/Downloads/libav-12.3/libavformat/isom.c:37
-  // https://stackoverflow.com/questions/34024041/writing-x264-from-opencv-3-with-ffmpeg-on-linux
+  // codec tag, in OpenCV "fourcc" is used interchangeably
+  // empty fourcc selects default codec_id for guessed container
+  unsigned int tag;
+  std::string fourcc   = args(1).string_value ();
+
+  if (fourcc.size () == 0)
+    {
+      // get tag for default codec for guessed container from filename
+      AVOutputFormat* foo = av_guess_format	(NULL, filename.c_str (), NULL);
+      tag = av_codec_get_tag (foo->codec_tag, foo->video_codec);
+    }
+  else if (fourcc.size () == 4)
+    {
+      tag = MKTAG(fourcc[0], fourcc[1], fourcc[2], fourcc[3]);
+    }
+  else
+    error ("fourcc has to be empty or 4 chars long");
+  
+  
+  //printf ("tag = %i = %#x = %c%c%c%c\n", tag, tag, CV_TAG_TO_PRINTABLE_CHAR4(tag));
 
 #if 0
   // das hier wäre ein workaround:
@@ -214,7 +233,6 @@ undocumented internal function\n\
    * cmdutils.c:int show_codecs(void *optctx, const char *opt, const char *arg)
    */
 
-  int fourcc   = 0;
   double fps   = 30.0;
   int width    = 100;
   int height   = 50;
@@ -236,7 +254,7 @@ undocumented internal function\n\
       // isColor	If it is not zero, the encoder will expect and encode color frames,
       // otherwise it will work with grayscale frames (the flag is currently supported on Windows only).
 
-      bool ret = h->open (filename.c_str (), fourcc, fps, width, height, isColor);
+      bool ret = h->open (filename.c_str (), tag, fps, width, height, isColor);
       printf ("open returned %i\n", ret);
       retval.append (octave_value (h));
     }

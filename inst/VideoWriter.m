@@ -21,14 +21,9 @@
 ## Create object @var{p} of the VideoWriter class.
 ## @end deftypefn
 
-## -*- texinfo -*-
-## @deftypefn  {} {} open ()
-## Open file for writing. All properties will become read-only.
-## @end deftypefn
-
 classdef VideoWriter < handle
 
-  properties (SetAccess = private, GetAccess = public)
+  properties (SetAccess = public, GetAccess = public)
 
     ColorChannels          = 3;
     Colormap               = [];
@@ -70,6 +65,11 @@ classdef VideoWriter < handle
       ## and the default video codec is used or you can set FourCC
       ## to force a specific codec.
 
+      ## List formats: "ffmpeg -formats"
+      ## ffmpeg -h muxer=matroska
+      ## ffmpeg -codecs
+      ## https://superuser.com/questions/300897/what-is-a-codec-e-g-divx-and-how-does-it-differ-from-a-file-format-e-g-mp/300997#300997
+
       if (numel (varargin) > 0)
         v.FourCC = varargin{1};
       endif
@@ -79,23 +79,47 @@ classdef VideoWriter < handle
     function disp (v)
 
       printf(" class VideoWriter:\n");
-      printf("    ColorChannels = %i\n", v.ColorChannels);
-      printf("    Duration      = %f\n", v.Duration);
-      printf("    FileFormat    = %s\n", v.FileFormat);
-      printf("    Filename      = %s\n", v.Filename);
-      printf("    FourCC        = %s\n", v.FourCC);
+      printf("    ColorChannels          = %i\n", v.ColorChannels);
+      printf("    CompressionRatio       = %i\n", v.CompressionRatio);
+      printf("    Duration               = %f\n", v.Duration);
+      printf("    FileFormat             = %s\n", v.FileFormat);
+      printf("    Filename               = %s\n", v.Filename);
+      printf("    FrameCount             = %i\n", v.FrameCount);
+      printf("    FrameRate              = %i\n", v.FrameRate);
+      printf("    Height                 = %i\n", v.Height);
+      printf("    Width                  = %i\n", v.Width);
+      printf("    LosslessCompression    = %s\n", v.LosslessCompression);
+      printf("    Path                   = %s\n", v.Path);
+      printf("    Quality                = %i\n", v.Quality);
+      printf("    VideoBitsPerPixel      = %i\n", v.VideoBitsPerPixel);
+      printf("    VideoCompressionMethod = %s\n", v.VideoCompressionMethod);
+      printf("    VideoFormat            = %s\n", v.VideoFormat);
+      printf("    FourCC                 = %s\n", v.FourCC);
 
     endfunction
 
     function open (v)
 
-      ## This implementation doesn't make anything meaningful here.
-      ## The problem is that CvVideoWriter_FFMPEG::open needs width and height
-      ## and there are possible unknown until the first call to writeVideo
+      ## This implementation just opens a dummy file to check if the file
+      ## can be created. The real video output is created on the first call
+      ## of writeVideo.
+
+      fn = fullfile (v.Path, v.Filename);
+      [fid, msg] = fopen (fn, "w");
+      if (fid < 0)
+        error ("VideoWriter open failed: '%s'", msg);
+      endif
+
+      s = fputs (fid, "dummy\n");
+      fclose (fid);
 
     endfunction
 
     function close (v)
+
+      if (v.opened)
+        __writer_close__ (v.h);
+      endif
 
     endfunction
 

@@ -184,12 +184,25 @@ undocumented internal function\n\
   // codec tag, in OpenCV "fourcc" is used interchangeably
   // empty fourcc selects default codec_id for guessed container
   unsigned int tag;
-  std::string fourcc   = args(1).string_value ();
+  std::string fourcc = args(1).string_value ();
 
   if (fourcc.size () == 0)
     {
       // get tag for default codec for guessed container from filename
       AVOutputFormat* foo = av_guess_format	(NULL, filename.c_str (), NULL);
+
+      // list supported codecs for guessed format
+      if (foo->codec_tag)
+        {
+          const AVCodecTag * ptags = foo->codec_tag[0];
+          while (ptags->id != AV_CODEC_ID_NONE)
+          {
+              unsigned int tag = ptags->tag;
+              printf("fourcc tag 0x%08x/'%c%c%c%c' codec_id %04X\n", tag, CV_TAG_TO_PRINTABLE_CHAR4(tag), ptags->id);
+              ptags++;
+          }
+        }
+
       tag = av_codec_get_tag (foo->codec_tag, foo->video_codec);
     }
   else if (fourcc.size () == 4)
@@ -198,8 +211,44 @@ undocumented internal function\n\
     }
   else
     error ("fourcc has to be empty or 4 chars long");
-  
-  
+
+  // list codecs
+  //~ AVCodec * codec = av_codec_next(NULL);
+  //~ while(codec != NULL)
+  //~ {
+      //~ fprintf(stderr, "%s\n", codec->long_name);
+      //~ codec = av_codec_next(codec);
+  //~ }
+
+  // list formats
+  //~ AVOutputFormat * oformat = av_oformat_next(NULL);
+  //~ while(oformat != NULL)
+  //~ {
+      //~ printf ("%s; %s; %s; %s\n", oformat->name, oformat->long_name, oformat->mime_type, oformat->extensions);
+
+      //~ cv_ff_codec_tag_dump (oformat->codec_tag);
+
+      //~ oformat = av_oformat_next(oformat);
+  //~ }
+
+  //~ AVOutputFormat * oformat = av_oformat_next(NULL);
+  //~ while(oformat != NULL)
+  //~ {
+      //~ fprintf(stderr, "%s\n", oformat->long_name);
+      //~ if (oformat->codec_tag != NULL)
+      //~ {
+          //~ int i = 0;
+
+          //~ CV_CODEC_ID cid = CV_CODEC(CODEC_ID_MPEG1VIDEO);
+          //~ while (cid != CV_CODEC(CODEC_ID_NONE))
+          //~ {
+              //~ cid = av_codec_get_id(oformat->codec_tag, i++);
+              //~ fprintf(stderr, "    %d\n", cid);
+          //~ }
+      //~ }
+      //~ oformat = av_oformat_next(oformat);
+  //~ }
+
   //printf ("tag = %i = %#x = %c%c%c%c\n", tag, tag, CV_TAG_TO_PRINTABLE_CHAR4(tag));
 
 #if 0
@@ -324,6 +373,8 @@ undocumented internal function\n\
   CvVideoWriter_FFMPEG* p = get_writer_from_ov (args(0));
   if (p)
     p->close ();
+
+  printf ("__writer_close__\n");
 
   return retval;
 }

@@ -8,5 +8,5 @@ Description: A wrapper for ffmpeg's libavformat and libavcodec, implementing
  addframe, avifile, aviinfo and aviread.
 Depends: octave (>= 4.4.0)
 BuildRequires: libavutil-dev libavformat-dev libswscale-dev libavcodec-dev
-License: 3-clause BSD (https://www.opencv.org/license.html)
+License: GPLv3 and 3-clause BSD (https://www.opencv.org/license.html)
 Url: https://octave.sourceforge.io/

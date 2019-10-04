@@ -60,7 +60,7 @@ Creates an instance of CvCapture_FFMPEG.\n\
 DEFUN_DLD(__cap_grab_frame__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{f} =} __cap_grab_frame__ (@var{h}, [@var{preview}])\n\
-Get a snapshot from v4l2_handler @var{h}\n\
+\n\
 @end deftypefn")
 {
   octave_value_list retval;
@@ -110,7 +110,7 @@ DEFUN_DLD(__cap_retrieve_frame__, args, nargout,
       assert (cn == 3);
       assert (step == width * 3);
 
-      printf ("ret = %i, width = %i, height = %i, step = %i, cn = %i\n", ret, width, height, step, cn);
+      //printf ("ret = %i, width = %i, height = %i, step = %i, cn = %i\n", ret, width, height, step, cn);
 
       if (ret)
         {
@@ -159,14 +159,14 @@ CvVideoWriter_FFMPEG* get_writer_from_ov (octave_value ov)
 // PKG_DEL: autoload ("__writer_open__", which ("cap_ffmpeg_wrapper.oct"), "remove");
 DEFUN_DLD(__writer_open__, args, nargout,
           "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {@var{h} =} __writer_open__ (@var{filename}, @var{fourcc})\n\
+@deftypefn {Loadable Function} {@var{h} =} __writer_open__ (@var{filename}, @var{fourcc}, @var{fps}, @var{width}, @var{height}, @var{isColor})\n\
 undocumented internal function\n\
 @end deftypefn")
 {
   octave_value_list retval;
   int nargin = args.length ();
 
-  if (nargin != 2)
+  if (nargin != 6)
     {
       print_usage();
       return retval;
@@ -186,6 +186,12 @@ undocumented internal function\n\
   unsigned int tag;
   std::string fourcc = args(1).string_value ();
 
+  // FIXME no error handling yet
+  double fps   = args(2).double_value ();
+  int width    = args(3).int_value ();
+  int height   = args(4).int_value ();
+  bool isColor = args(5).bool_value ();
+
   if (fourcc.size () == 0)
     {
       // get tag for default codec for guessed container from filename
@@ -198,7 +204,7 @@ undocumented internal function\n\
           while (ptags->id != AV_CODEC_ID_NONE)
           {
               unsigned int tag = ptags->tag;
-              printf("fourcc tag 0x%08x/'%c%c%c%c' codec_id %04X\n", tag, CV_TAG_TO_PRINTABLE_CHAR4(tag), ptags->id);
+              //printf("fourcc tag 0x%08x/'%c%c%c%c' codec_id %04X\n", tag, CV_TAG_TO_PRINTABLE_CHAR4(tag), ptags->id);
               ptags++;
           }
         }
@@ -252,7 +258,7 @@ undocumented internal function\n\
   //printf ("tag = %i = %#x = %c%c%c%c\n", tag, tag, CV_TAG_TO_PRINTABLE_CHAR4(tag));
 
 #if 0
-  // das hier wäre ein workaround:
+  // that would be a workaround:
   AVOutputFormat* foo = av_guess_format	(NULL, "foo.mp4", NULL);
   printf ("default video_codec = %i = %#x\n", foo->video_codec, foo->video_codec);
 
@@ -282,11 +288,6 @@ undocumented internal function\n\
    * cmdutils.c:int show_codecs(void *optctx, const char *opt, const char *arg)
    */
 
-  double fps   = 30.0;
-  int width    = 100;
-  int height   = 50;
-  bool isColor = true;
-
   if (! error_state)
     {
       CvVideoWriter_FFMPEG *h = new CvVideoWriter_FFMPEG ();
@@ -303,8 +304,10 @@ undocumented internal function\n\
       // isColor	If it is not zero, the encoder will expect and encode color frames,
       // otherwise it will work with grayscale frames (the flag is currently supported on Windows only).
 
+      //printf ("h->open (%s, %i, %f, %u, %u, %u);\n", filename.c_str (), tag, fps, width, height, isColor);
+
       bool ret = h->open (filename.c_str (), tag, fps, width, height, isColor);
-      printf ("open returned %i\n", ret);
+      //printf ("open returned %i\n", ret);
       retval.append (octave_value (h));
     }
   return retval;
@@ -344,10 +347,22 @@ undocumented internal function\n\
       int step = width * cn;
       int origin = 0;
 
+      printf ("width=%i, height=%i, step=%i\n", width, height, step);
+
+      // permute, see also __cap_retrieve_frame__
+      // for opposite
+
+      Array<octave_idx_type> perm (dim_vector (3, 1));
+      perm(0) = 2;
+      perm(1) = 1;
+      perm(2) = 0;
+
+      f = f.permute (perm);
+
       unsigned char *t = reinterpret_cast<unsigned char*>(f.fortran_vec());
 
       bool ret = p->writeFrame (t, step, width, height, cn, origin);
-      printf ("ret = %i\n", ret);
+      //printf ("ret = %i\n", ret);
 
     }
   return retval;

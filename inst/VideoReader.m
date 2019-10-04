@@ -44,13 +44,25 @@ classdef VideoReader < handle
 
   endproperties
 
+  properties (Hidden, SetAccess = protected)
+
+    h      = [];
+
+  endproperties
+
   methods
 
     function v = VideoReader (filename, varargin)
 
+      [v.Path, Filename, ext] = fileparts (filename);
+      v.Name = [Filename ext];
+
       # varargin could be name/value property pairs
+      # FIXME: implement me
       filename
       varargin
+
+      v.h = __cap_open__ (fullfile (v.Path, v.Name));
 
     endfunction
 
@@ -62,7 +74,11 @@ classdef VideoReader < handle
 
     function frame = readFrame (v)
 
-      frame = rand (10, 10, 3);
+      __cap_grab_frame__ (v.h);
+      frame = __cap_retrieve_frame__ (v.h);
+
+      # default ist BGR24, flip
+      frame = flip (frame, 3);
 
     endfunction
 

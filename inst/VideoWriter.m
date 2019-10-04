@@ -33,8 +33,8 @@ classdef VideoWriter < handle
     Filename               = "";
     FrameCount             = 0;
     FrameRate              = 30;
-    Height                 = 480;
-    Width                  = 640;
+    Height                 = [];
+    Width                  = [];
     LosslessCompression    = false;
     Path                   = "./";
     Quality                = 75;
@@ -126,9 +126,20 @@ classdef VideoWriter < handle
     function writeVideo (v, frame)
 
       if (! v.opened)
-        v.h = __writer_open__ (fullfile (v.Path, v.Filename), v.FourCC)
+
+        ## if height/width isn't defined yet, use size of frame
+        if (isempty (v.Width) || isempty (v.Height))
+          v.Width = columns (frame);
+          v.Height = rows (frame);
+        endif
+
+        # FIXME: isColor is set always true here...
+        v.h = __writer_open__ (fullfile (v.Path, v.Filename), v.FourCC, v.FrameRate, v.Width, v.Height, true);
         v.opened = true;
       endif
+
+      # default ist BGR24, flip RGB -> BGR
+      frame = flip (frame, 3);
 
       __writer_write_frame__ (v.h, frame);
 

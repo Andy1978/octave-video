@@ -86,15 +86,6 @@
      if (err < 0)
      {
          CV_WARN("Error opening file");
-@@ -1098,7 +1136,7 @@
-                 buffer_width, buffer_height,
-                 video_st->codec->pix_fmt,
-                 buffer_width, buffer_height,
--                AV_PIX_FMT_BGR24,
-+                AV_PIX_FMT_RGB24,
-                 SWS_BICUBIC,
-                 NULL, NULL, NULL
-                 );
 @@ -1159,6 +1197,8 @@
      AVCodecID codec_id = AV_CODEC_ID_NONE;
      const char* codec_fourcc = NULL;

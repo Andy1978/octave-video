@@ -1,0 +1,18 @@
+
+Want to start hacking on the development branch?
+
+$ hg clone http://hg.code.sf.net/p/octave/video -r devel octave-video
+$ cd octave-video/src/
+$ ./bootstrap
+$ ./configure
+$ make
+
+Demo write frames:
+
+$ octave demo_write_sombrero_video.m
+
+then have a look at the generated sombrero.mp4
+
+Demo read frames:
+
+$ make -C ../samples/ && octave demo_read_frame.m

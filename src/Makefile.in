@@ -14,10 +14,10 @@ debug : all
 oct-avifile.o: AVHandler.o
 
 ${AVOBJS}: %.o: %.cc
-	$(MKOCTFILE) $(MKOCTFLAGS) -c @DEFS@ $< -o $@ @CPPFLAGS@
+	$(MKOCTFILE) $(MKOCTFLAGS) @FFMPEG_CFLAGS@ -c @DEFS@ $< -o $@ @CPPFLAGS@
 
 ${OCTFILES}: %.oct: %.cc AVHandler.o oct-avifile.o
-	$(MKOCTFILE) $(MKOCTFLAGS) @DEFS@ $< $(filter %.o, $^) @LIBS@ @CPPFLAGS@
+	$(MKOCTFILE) $(MKOCTFLAGS) @FFMPEG_CFLAGS@ @DEFS@ $< $(filter %.o, $^) @LIBS@ @CPPFLAGS@
 
 clean:
 	rm -f *.o *.oct octave-workspace

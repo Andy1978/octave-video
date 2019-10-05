@@ -25,6 +25,15 @@ AC_CHECK_LIB([pthread], [pthread_create], [],
 AC_CHECK_LIB([avutil], [av_mallocz], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libavutil from FFmpeg])])
 
+PKG_CHECK_MODULES([FFMPEG], [libswscale, libavformat, libavcodec], [],
+  [AC_MSG_ERROR([FFmpeg libswscale, libavformat or libavcodec not found])])
+
+#~ AC_CHECK_HEADERS([ffmpeg/avformat.h], [], [AC_CHECK_HEADERS([libavformat/avformat.h], [],
+  #~ AC_MSG_ERROR([FFMpeg header avformat.h not found]))])
+
+#~ AC_CHECK_HEADERS([ffmpeg/avcodec.h], [], [AC_CHECK_HEADERS([libavcodec/avcodec.h], [],
+  #~ AC_MSG_ERROR([FFMpeg header avcodec.h not found]))])
+
 ## FIMXE: Check if needed on CentOS 7
 #AC_CHECK_LIB([avresample], [avresample_close], [],
 #             [AC_MSG_ERROR([$PACKAGE_NAME requires libavresample from FFmpeg])])
@@ -35,14 +44,6 @@ AC_CHECK_LIB([avcodec], [av_frame_alloc], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libavcodec from FFmpeg])])
 AC_CHECK_LIB([avformat], [av_write_frame], [],
              [AC_MSG_ERROR([$PACKAGE_NAME requires libavformat from FFmpeg])])
-
-# Checks for header files.
-
-AC_CHECK_HEADERS([ffmpeg/avformat.h], [], [AC_CHECK_HEADERS([libavformat/avformat.h], [],
-  AC_MSG_ERROR([FFMpeg header avformat.h not found]))])
-
-AC_CHECK_HEADERS([ffmpeg/avcodec.h], [], [AC_CHECK_HEADERS([libavcodec/avcodec.h], [],
-  AC_MSG_ERROR([FFMpeg header avcodec.h not found]))])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
@@ -59,5 +60,6 @@ AC_MSG_NOTICE([
 $PACKAGE_NAME is now configured with
 
    FFMPEG LIBS:       $LIBS
+   FFMPEG CFLAGS:     $FFMPEG_CFLAGS
    DEFS:              $DEFS
 ])

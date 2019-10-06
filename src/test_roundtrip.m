@@ -58,7 +58,7 @@ for k=1:size (raw_video, 4)
 
   # this doesn't work well due to compression....
   rel_err = sum (abs(d(:)))/numel(d)/255;
-  assert (rel_err < 0.001)
+  assert (rel_err < 0.01)
   
   #printf ("min (d) = %i, max (d) = %i, rel.err = %.2f%%\n", min (d(:)), max (d(:)), rel_err*1e2);
 

@@ -10,14 +10,14 @@ autoload ("__writer_write_frame__", which ("cap_ffmpeg_wrapper.oct"));
 
 addpath ("../inst")
 
-x = zeros (200, 300, 1);
+x = zeros (200, 300, 3);
 x (:, 120, 1) = 255;
 
 h = __writer_open__ ("bar.mp4", "", 30, columns (x), rows (x), true);
  
 for k=1:60
 
-  # default ist BGR24, flip
+  # default ist BGR24, thus this gives a blue line
   __writer_write_frame__ (h, x);
 
 endfor

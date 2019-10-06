@@ -107,17 +107,20 @@ DEFUN_DLD(__cap_retrieve_frame__, args, nargout,
 
       bool ret = p->retrieveFrame (0, &data, &step, &width, &height, &cn);
 
-      assert (cn == 3);
-      assert (step == width * 3);
-
       //printf ("ret = %i, width = %i, height = %i, step = %i, cn = %i\n", ret, width, height, step, cn);
+
+      assert (cn == 3);
+
+      // step may be bigger because of padding
+      assert (step >= width * cn);
 
       if (ret)
         {
-          dim_vector dv (3, width, height);
+#if 0
+          // Attention: step and cn not handled yet
+          dim_vector dv (3, step/cn, height);
           uint8NDArray img (dv);
 
-          // Achtung: step und cn noch nicht berücksichtigt
           unsigned char *p = reinterpret_cast<unsigned char*>(img.fortran_vec());
           memcpy(p, data, img.numel ());
 
@@ -126,7 +129,22 @@ DEFUN_DLD(__cap_retrieve_frame__, args, nargout,
           perm(1) = 1;
           perm(2) = 0;
 
+          // FIXME: howto handle padding? Extract submatrix with "extract"?
           retval(0) = octave_value(img.permute (perm));
+#else
+
+          dim_vector dv (height, width, cn);
+          uint8NDArray img (dv);
+
+          for (unsigned int x = 0; x < width; ++x)
+            for (unsigned int y = 0; y < height; ++y)
+              for (unsigned int c = 0; c < cn; ++c)
+                img (y, x, c) = data[x * cn + y * step + c];
+
+
+          retval(0) = octave_value(img);
+
+#endif
         }
 
     }
@@ -347,7 +365,7 @@ undocumented internal function\n\
       int step = width * cn;
       int origin = 0;
 
-      printf ("width=%i, height=%i, step=%i\n", width, height, step);
+      //printf ("width=%i, height=%i, step=%i\n", width, height, step);
 
       // permute, see also __cap_retrieve_frame__
       // for opposite
@@ -389,7 +407,7 @@ undocumented internal function\n\
   if (p)
     p->close ();
 
-  printf ("__writer_close__\n");
+  //printf ("__writer_close__\n");
 
   return retval;
 }

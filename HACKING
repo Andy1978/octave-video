@@ -4,14 +4,8 @@ $ hg clone http://hg.code.sf.net/p/octave/video -r devel octave-video
 $ cd octave-video/src/
 $ ./bootstrap
 $ ./configure
-$ make
+$ cd ..
+$ make run
 
-Demo write frames:
-
-$ octave demo_write_sombrero_video.m
-
-then have a look at the generated sombrero.mp4
-
-Demo read frames:
-
-$ make -C ../samples/ && octave demo_read_frame.m
+octave:1>demo VideoWriter
+octave:2>demo VideoReader

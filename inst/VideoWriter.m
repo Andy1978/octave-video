@@ -154,3 +154,20 @@ classdef VideoWriter < handle
   endmethods
 
 endclassdef
+
+%!demo
+%! fn = fullfile (tempdir(), "sombrero.mp4");
+%! w = VideoWriter (fn);
+%! open (w);
+%! z = sombrero ();
+%! hs = surf (z);
+%! axis manual
+%! nframes = 100;
+%! for ii = 1:nframes
+%!   set (hs, "zdata", z * sin (2*pi*ii/nframes));
+%!   drawnow
+%!   x = getframe (gcf).cdata;
+%!   writeVideo (w, uint8(x));
+%! endfor
+%! close (w)
+%! printf ("Now run '%s' in your favourite video player or try 'demo VideoReader'!\n", fn);

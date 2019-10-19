@@ -61,9 +61,10 @@ classdef VideoReader < handle
 
       # varargin could be name/value property pairs
       # FIXME: implement me
-      filename
-      varargin
+      #filename
+      #varargin
 
+      # FIXME: return fps, duration and so on, see end of __cap_open__
       v.h = __cap_open__ (fullfile (v.Path, v.Name));
 
     endfunction
@@ -76,11 +77,14 @@ classdef VideoReader < handle
 
     function frame = readFrame (v)
 
-      __cap_grab_frame__ (v.h);
-      frame = __cap_retrieve_frame__ (v.h);
-
-      # default ist BGR24, flip
-      frame = flip (frame, 3);
+      r = __cap_grab_frame__ (v.h);
+      if (r)
+        frame = __cap_retrieve_frame__ (v.h);
+        # default ist BGR24, flip
+        frame = flip (frame, 3);
+      else
+        frame = [];
+      endif
 
     endfunction
 
@@ -93,3 +97,21 @@ classdef VideoReader < handle
   endmethods
 
 endclassdef
+
+%!demo
+%! fn = "/tmp/sombrero.mp4";
+%! if (! exist (fn, "file"))
+%!   error ("'%s' isn't available. Please run 'demo VideoWriter' first to create it!", fn);
+%! endif
+%! x = VideoReader (fn);
+%! im = [];
+%! while (! isempty (img = readFrame (x)))
+%!   if (isempty (im))
+%!     im = image (img);
+%!     axis off;
+%!   else
+%!     set (im, "cdata", img);
+%!   endif
+%!   drawnow
+%!   pause (1/30);
+%! endwhile

@@ -18,6 +18,11 @@ RELEASE_TARBALL = $(PACKAGE)-$(VERSION).tar.gz
 HTML_DIR        = $(PACKAGE)-html
 HTML_TARBALL    = $(PACKAGE)-html.tar.gz
 
+M_SOURCES   = $(wildcard inst/*.m)
+CC_SOURCES  = src/cap_ffmpeg_wrapper.cc
+OCT_FILES   = $(patsubst %.cc,%.oct,$(CC_SOURCES))
+PKG_ADD     = $(shell grep -Pho '(?<=// PKG_ADD: ).*' $(CC_SOURCES) $(M_SOURCES))
+
 MD5SUM    ?= md5sum
 MKOCTFILE ?= mkoctfile
 OCTAVE    ?= octave
@@ -87,11 +92,14 @@ all:
 check: all
 	$(OCTAVE) --no-gui --silent \
 	  --eval 'addpath (fullfile ([pwd filesep "src"]));' \
+	  --eval '${PKG_ADD}' \
 	  --eval 'runtests ("src");'
 
 run: all
 	$(OCTAVE) --silent --persist \
-	  --eval 'addpath (fullfile ([pwd filesep "src"]));'
+	  --eval 'addpath (fullfile ([pwd filesep "src"]));' \
+	  --eval 'addpath (fullfile ([pwd filesep "inst"]));' \
+	  --eval '${PKG_ADD}'
 
 debug: clean
 	cd src/ && ./configure

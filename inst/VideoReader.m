@@ -21,6 +21,8 @@
 ## Create object @var{p} of the VideoReader class.
 ## @end deftypefn
 
+## ToDo: https://savannah.gnu.org/bugs/?func=detailitem&item_id=57020
+
 classdef VideoReader < handle
 
   properties (SetAccess = private, GetAccess = public)

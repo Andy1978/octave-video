@@ -1,4 +1,3 @@
-
 Want to start hacking on the development branch?
 
 $ hg clone http://hg.code.sf.net/p/octave/video -r devel octave-video

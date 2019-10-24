@@ -10,10 +10,10 @@ autoload ("__writer_write_frame__", which ("cap_ffmpeg_wrapper.oct"));
 
 ## Open Video, read frames, show them
 
-x = __cap_open__ ("../samples/vtest.avi");
+[x, opt] = __cap_open__ ("../samples/vtest.avi")
 
 im = [];
-for k=1:500
+for k=1:50
   __cap_grab_frame__ (x);
   img = __cap_retrieve_frame__ (x);
 

@@ -1,5 +1,5 @@
---- cap_ffmpeg_impl.hpp	2019-03-02 17:37:08.132065054 +0100
-+++ cap_ffmpeg_impl_ov.hpp	2019-03-04 06:57:41.775856910 +0100
+--- cap_ffmpeg_impl.hpp	2019-10-05 10:32:57.888980455 +0200
++++ cap_ffmpeg_impl_ov.hpp	2019-10-24 22:06:14.736483023 +0200
 @@ -40,14 +40,24 @@
  //
  //M*/
@@ -44,7 +44,7 @@
      bool open( const char* filename );
      void close();
  
-@@ -528,10 +542,27 @@
+@@ -528,10 +542,38 @@
  #if USE_AV_INTERRUPT_CALLBACK
      AVInterruptCallbackMetadata interrupt_metadata;
  #endif
@@ -59,6 +59,17 @@
 +  }
 +
 +  DECLARE_OV_TYPEID_FUNCTIONS_AND_DATA
++
++  void print (std::ostream & os, bool pr_as_read_syntax = false)
++  {
++    os << "CvCapture_FFMPEG:" << std::endl;
++    if (filename)
++      os << "  filename           = " << filename << std::endl;
++    os << "  get_total_frames() = " << get_total_frames() << std::endl;
++    os << "  get_duration_sec() = " << get_duration_sec() << std::endl;
++    os << "  get_fps()          = " << get_fps() << std::endl;
++    os << "  get_bitrate()      = " << get_bitrate() << std::endl;
++  }
  };
  
 +DEFINE_OV_TYPEID_FUNCTIONS_AND_DATA(CvCapture_FFMPEG, "CvCapture_FFMPEG", "CvCapture_FFMPEG");
@@ -72,21 +83,23 @@
      ic = 0;
      video_stream = -1;
      video_st = 0;
-@@ -891,6 +922,13 @@
+@@ -891,6 +933,15 @@
      int err = av_open_input_file(&ic, _filename, NULL, 0, NULL);
  #endif
  
 +//fprintf(stderr, "err = %i %s %i %i\n", err, icvFFMPEGErrStr(err), LIBAVUTIL_BUILD, CALC_FFMPEG_VERSION(52, 111, 0));
 +
++/*
++ * FIXME: communicate error message with GNU octave
 +char buf[50];
 +av_strerror (err, buf, 50);
 +fprintf (stderr, "%s\n", buf);
-+
++*/
 +
      if (err < 0)
      {
          CV_WARN("Error opening file");
-@@ -1159,6 +1197,8 @@
+@@ -1159,6 +1210,8 @@
      AVCodecID codec_id = AV_CODEC_ID_NONE;
      const char* codec_fourcc = NULL;
  
@@ -95,7 +108,7 @@
      switch( property_id )
      {
      case CV_FFMPEG_CAP_PROP_POS_MSEC:
-@@ -1203,7 +1243,7 @@
+@@ -1203,7 +1256,7 @@
      default:
          break;
      }
@@ -104,7 +117,7 @@
      return 0;
  }
  
-@@ -1344,7 +1384,7 @@
+@@ -1344,7 +1397,7 @@
  bool CvCapture_FFMPEG::setProperty( int property_id, double value )
  {
      if( !video_st ) return false;
@@ -113,7 +126,7 @@
      switch( property_id )
      {
      case CV_FFMPEG_CAP_PROP_POS_MSEC:
-@@ -1372,14 +1412,19 @@
+@@ -1372,14 +1425,19 @@
      default:
          return false;
      }
@@ -135,7 +148,7 @@
      bool open( const char* filename, int fourcc,
                 double fps, int width, int height, bool isColor );
      void close();
-@@ -1403,8 +1448,24 @@
+@@ -1403,8 +1461,24 @@
      int               frame_idx;
      bool              ok;
      struct SwsContext *img_convert_ctx;
@@ -160,7 +173,7 @@
  static const char * icvFFMPEGErrStr(int err)
  {
  #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(53, 2, 0)
-@@ -1465,6 +1526,7 @@
+@@ -1465,6 +1539,7 @@
  
  void CvVideoWriter_FFMPEG::init()
  {

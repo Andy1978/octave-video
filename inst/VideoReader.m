@@ -27,22 +27,23 @@ classdef VideoReader < handle
 
   properties (SetAccess = private, GetAccess = public)
 
-    Duration       = 123.4;    # [s]
+    Duration       = 0;        # [s]
     BitsPerPixel   = 24;       #
-    FrameRate      = 30;       # [1/s]
-    Height         = 100;      # [px]
-    Width          = 100;      # [px]
-    Name           = "foobar"; # filename
+    Bitrate        = 0;
+    FrameRate      = 0;        # [1/s]
+    Height         = 0;        # [px]
+    Width          = 0;        # [px]
+    Name           = "";       # filename
     Path           = "./";
-    NumberOfFrames = 111;
+    NumberOfFrames = 0;
     VideoFormat    = "RGB24";
 
   endproperties
 
   properties (SetAccess = public, GetAccess = public)
 
-    CurrentTime    = 23.4;    # [s]
-    Tag            = "world";
+    CurrentTime    = 0;    # [s]
+    Tag            = "";
 
   endproperties
 
@@ -61,17 +62,30 @@ classdef VideoReader < handle
 
       # varargin could be name/value property pairs
       # FIXME: implement me
-      #filename
-      #varargin
 
-      # FIXME: return fps, duration and so on, see end of __cap_open__
-      v.h = __cap_open__ (fullfile (v.Path, v.Name));
+      [v.h, opt] = __cap_open__ (fullfile (v.Path, v.Name));
+      v.Duration = opt.duration_sec;
+      v.FrameRate = opt.fps;
+      v.NumberOfFrames = opt.total_frames;
+      v.Bitrate = opt.bitrate;
+      v.Width = opt.width;
+      v.Height = opt.height;
 
     endfunction
 
     function disp (v)
 
-      disp ("this is VideoReader");
+      printf (" class VideoReader:\n");
+      printf ("    Duration       = %fs\n", v.Duration);
+      printf ("    BitsPerPixel   = %i\n", v.BitsPerPixel);
+      printf ("    Bitrate        = %i\n", v.Bitrate);
+      printf ("    FrameRate      = %.2ffps\n", v.FrameRate);
+      printf ("    Height         = %i\n", v.Height);
+      printf ("    Width          = %i\n", v.Width);
+      printf ("    Name           = %s\n", v.Name);
+      printf ("    Path           = %s\n", v.Path);
+      printf ("    NumberOfFrames = %i\n", v.NumberOfFrames);
+      printf ("    VideoFormat    = %s\n", v.VideoFormat);
 
     endfunction
 
@@ -90,6 +104,7 @@ classdef VideoReader < handle
 
     function r = hasFrame (v)
 
+      # FIXME: implement me!
       r = true;
 
     endfunction
@@ -99,7 +114,7 @@ classdef VideoReader < handle
 endclassdef
 
 %!demo
-%! fn = "/tmp/sombrero.mp4";
+%! fn = fullfile (tempdir(), "sombrero.mp4");
 %! if (! exist (fn, "file"))
 %!   error ("'%s' isn't available. Please run 'demo VideoWriter' first to create it!", fn);
 %! endif

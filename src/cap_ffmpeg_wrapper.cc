@@ -26,8 +26,9 @@ CvCapture_FFMPEG* get_cap_from_ov (octave_value ov)
 // PKG_DEL: autoload ("__cap_open__", "cap_ffmpeg_wrapper.oct", "remove");
 DEFUN_DLD(__cap_open__, args, nargout,
           "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {@var{h} =} __cap_open__ (@var{filename})\n\
+@deftypefn {Loadable Function} {[@var{h}, @var{opt}] =} __cap_open__ (@var{filename})\n\
 Creates an instance of CvCapture_FFMPEG.\n\
+OPT holds properties like bitrate, fps, total_frames, duration_sec...\n\
 @seealso{getsnapshot}\n\
 @end deftypefn")
 {
@@ -52,11 +53,18 @@ Creates an instance of CvCapture_FFMPEG.\n\
       h->open (filename.c_str ());
       retval.append (octave_value (h));
 
-      // FIXME: perhaps return these properties as struct?
-      printf ("get_total_frames () = %i\n", h->get_total_frames ());
-      printf ("get_duration_sec () = %f\n", h->get_duration_sec ());
-      printf ("get_fps ()          = %f\n", h->get_fps ());
-      printf ("get_bitrate ()      = %i\n", h->get_bitrate ());
+      if (nargout > 0)
+        {
+          octave_scalar_map opt;
+          opt.contents ("total_frames") = h->get_total_frames ();
+          opt.contents ("duration_sec") = h->get_duration_sec ();
+          opt.contents ("fps")          = h->get_fps ();
+          opt.contents ("bitrate")      = h->get_bitrate ();
+          opt.contents ("width")        = h->frame.width;
+          opt.contents ("height")       = h->frame.height;
+
+          retval.append (opt);
+        }
     }
   return retval;
 }
@@ -65,18 +73,15 @@ Creates an instance of CvCapture_FFMPEG.\n\
 // PKG_DEL: autoload ("__cap_grab_frame__", "cap_ffmpeg_wrapper.oct", "remove");
 DEFUN_DLD(__cap_grab_frame__, args, nargout,
           "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {@var{f} =} __cap_grab_frame__ (@var{h}, [@var{preview}])\n\
+@deftypefn {Loadable Function} {@var{f} =} __cap_grab_frame__ (@var{h})\n\
 \n\
 @end deftypefn")
 {
   octave_value_list retval;
   int nargin = args.length ();
 
-  //~ if (nargin < 1 || nargin>2)
-    //~ {
-      //~ print_usage ();
-      //~ return retval;
-    //~ }
+  if (nargin != 1)
+    error("__cap_grab_frame__ needs one parameter");
 
   CvCapture_FFMPEG* p = get_cap_from_ov (args(0));
   if (p)
@@ -142,9 +147,9 @@ DEFUN_DLD(__cap_retrieve_frame__, args, nargout,
           dim_vector dv (height, width, cn);
           uint8NDArray img (dv);
 
-          for (unsigned int x = 0; x < width; ++x)
-            for (unsigned int y = 0; y < height; ++y)
-              for (unsigned int c = 0; c < cn; ++c)
+          for (int x = 0; x < width; ++x)
+            for (int y = 0; y < height; ++y)
+              for (int c = 0; c < cn; ++c)
                 img (y, x, c) = data[x * cn + y * step + c];
 
 

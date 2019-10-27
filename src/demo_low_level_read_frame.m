@@ -13,7 +13,7 @@ autoload ("__writer_write_frame__", which ("cap_ffmpeg_wrapper.oct"));
 [x, opt] = __cap_open__ ("../samples/vtest.avi")
 
 im = [];
-for k=1:50
+for k=1:opt.total_frames
   __cap_grab_frame__ (x);
   img = __cap_retrieve_frame__ (x);
 
@@ -27,6 +27,3 @@ for k=1:50
   endif
   drawnow
 endfor
-
-#__cap_grab_frame__ (x);
-#img = __cap_retrieve_frame__ (x);

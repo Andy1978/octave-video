@@ -24,7 +24,5 @@ for k=1:60
 
 endfor
 
-
-
-%~ __writer_close__ (h);
+__writer_close__ (h);
 

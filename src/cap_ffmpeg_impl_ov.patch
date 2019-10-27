@@ -1,23 +1,25 @@
---- cap_ffmpeg_impl.hpp	2019-10-05 10:32:57.888980455 +0200
-+++ cap_ffmpeg_impl_ov.hpp	2019-10-27 10:36:38.189727512 +0100
-@@ -40,14 +40,24 @@
+--- cap_ffmpeg_impl.hpp	2019-10-27 21:06:02.144461471 +0100
++++ cap_ffmpeg_impl_ov.hpp	2019-10-27 21:16:10.611814562 +0100
+@@ -40,17 +40,24 @@
  //
  //M*/
  
--#include "cap_ffmpeg_api.hpp"
+-#include "cap_ffmpeg_legacy_api.hpp"
+-
+-using namespace cv;
++/* ATTENTION:
++*
++* This file was generated from
++*
++* https://github.com/opencv/opencv/blob/master/modules/videoio/src/cap_ffmpeg_impl.hpp
++* commit 2ad0487cec35b08a1dbf49e98c27b05153aaa23a
++*
++* and applying the patches in cap_ffmpeg_impl_ov.patch
++*/
+ 
 -#if !(defined(_WIN32) || defined(WINCE))
 -# include <pthread.h>
 -#endif
-+/* ATTENTION:
-+ *
-+ * This file was generated from
-+ *
-+ * https://github.com/opencv/opencv/blob/master/modules/videoio/src/cap_ffmpeg_impl.hpp
-+ * commit 9702987209a9a17ee2d0626c535d2b7bbc6ba1bc
-+ *
-+ * and applying the patches in cap_ffmpeg_impl_ov.patch
-+ */
-+
  #include <assert.h>
  #include <algorithm>
  #include <limits>
@@ -29,7 +31,7 @@
  #ifndef __OPENCV_BUILD
  #define CV_FOURCC(c1, c2, c3, c4) (((c1) & 255) + (((c2) & 255) << 8) + (((c3) & 255) << 16) + (((c4) & 255) << 24))
  #endif
-@@ -100,6 +110,15 @@
+@@ -103,6 +110,15 @@
  #define CV_WARN(message) fprintf(stderr, "warning: %s (%s:%d)\n", message, __FILE__, __LINE__)
  #endif
  
@@ -45,7 +47,7 @@
  #if defined _WIN32
      #include <windows.h>
      #if defined _MSC_VER && _MSC_VER < 1900
-@@ -472,9 +491,13 @@
+@@ -475,9 +491,13 @@
  #endif
  }
  
@@ -60,7 +62,7 @@
      bool open( const char* filename );
      void close();
  
-@@ -528,10 +551,38 @@
+@@ -531,10 +551,38 @@
  #if USE_AV_INTERRUPT_CALLBACK
      AVInterruptCallbackMetadata interrupt_metadata;
  #endif
@@ -99,20 +101,18 @@
      ic = 0;
      video_stream = -1;
      video_st = 0;
-@@ -886,24 +937,26 @@
- #else
-     av_dict_set(&dict, "rtsp_transport", "tcp", 0);
- #endif
--    int err = avformat_open_input(&ic, _filename, NULL, &dict);
-+    global_err = avformat_open_input(&ic, _filename, NULL, &dict);
+@@ -899,24 +947,24 @@
+       input_format = av_find_input_format(entry->value);
+     }
+ 
+-    int err = avformat_open_input(&ic, _filename, input_format, &dict);
++    global_err = avformat_open_input(&ic, _filename, input_format, &dict);
  #else
 -    int err = av_open_input_file(&ic, _filename, NULL, 0, NULL);
 +    global_err = av_open_input_file(&ic, _filename, NULL, 0, NULL);
  #endif
  
 -    if (err < 0)
-+//fprintf(stderr, "err = %i %s %i %i\n", global_err, icvFFMPEGErrStr(global_err), LIBAVUTIL_BUILD, CALC_FFMPEG_VERSION(52, 111, 0));
-+
 +    if (global_err < 0)
      {
          CV_WARN("Error opening file");
@@ -131,7 +131,7 @@
      {
          CV_WARN("Could not find codec parameters");
          goto exit_func;
-@@ -1159,6 +1212,8 @@
+@@ -1172,6 +1220,8 @@
      AVCodecID codec_id = AV_CODEC_ID_NONE;
      const char* codec_fourcc = NULL;
  
@@ -139,8 +139,8 @@
 +
      switch( property_id )
      {
-     case CV_FFMPEG_CAP_PROP_POS_MSEC:
-@@ -1203,7 +1258,7 @@
+     case CAP_PROP_POS_MSEC:
+@@ -1220,7 +1270,7 @@
      default:
          break;
      }
@@ -149,7 +149,7 @@
      return 0;
  }
  
-@@ -1344,7 +1399,7 @@
+@@ -1361,7 +1411,7 @@
  bool CvCapture_FFMPEG::setProperty( int property_id, double value )
  {
      if( !video_st ) return false;
@@ -157,8 +157,8 @@
 +#if 0
      switch( property_id )
      {
-     case CV_FFMPEG_CAP_PROP_POS_MSEC:
-@@ -1372,14 +1427,19 @@
+     case CAP_PROP_POS_MSEC:
+@@ -1389,14 +1439,19 @@
      default:
          return false;
      }
@@ -180,7 +180,7 @@
      bool open( const char* filename, int fourcc,
                 double fps, int width, int height, bool isColor );
      void close();
-@@ -1403,8 +1463,35 @@
+@@ -1420,8 +1475,35 @@
      int               frame_idx;
      bool              ok;
      struct SwsContext *img_convert_ctx;
@@ -216,7 +216,7 @@
  static const char * icvFFMPEGErrStr(int err)
  {
  #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(53, 2, 0)
-@@ -1465,6 +1552,7 @@
+@@ -1482,6 +1564,7 @@
  
  void CvVideoWriter_FFMPEG::init()
  {
@@ -224,7 +224,7 @@
      fmt = 0;
      oc = 0;
      outbuf = 0;
-@@ -1994,7 +2082,7 @@
+@@ -2016,7 +2099,7 @@
  {
      InternalFFMpegRegister::init();
      CV_CODEC_ID codec_id = CV_CODEC(CODEC_ID_NONE);
@@ -233,7 +233,7 @@
      double bitrate_scale = 1;
  
      close();
-@@ -2273,14 +2361,14 @@
+@@ -2295,14 +2378,14 @@
      c->bit_rate = (int)lbit_rate;
  
      /* open the codec */
@@ -250,7 +250,7 @@
          return false;
      }
  
-@@ -2331,12 +2419,12 @@
+@@ -2353,12 +2436,12 @@
  
  #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(52, 111, 0)
      /* write the stream header, if any */
@@ -266,54 +266,3 @@
      {
          close();
          remove(filename);
-@@ -2666,12 +2754,12 @@
-     if (!(fmt_->flags & AVFMT_NOFILE))
-     {
-         #if LIBAVFORMAT_BUILD < CALC_FFMPEG_VERSION(53, 2, 0)
--            int err = url_fopen(&oc_->pb, fileName, URL_WRONLY);
-+            global_err = url_fopen(&oc_->pb, fileName, URL_WRONLY);
-         #else
--            int err = avio_open(&oc_->pb, fileName, AVIO_FLAG_WRITE);
-+            global_err = avio_open(&oc_->pb, fileName, AVIO_FLAG_WRITE);
-         #endif
- 
--        if (err != 0)
-+        if (global_err != 0)
-             return false;
-     }
- 
-@@ -2788,8 +2876,6 @@
- 
- bool InputMediaStream_FFMPEG::open(const char* fileName, int* codec, int* chroma_format, int* width, int* height)
- {
--    int err;
--
-     ctx_ = 0;
-     video_stream_id_ = -1;
-     memset(&pkt_, 0, sizeof(AVPacket));
-@@ -2809,19 +2895,19 @@
-     #endif
- 
-     #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(53, 6, 0)
--        err = avformat_open_input(&ctx_, fileName, 0, 0);
-+        global_err = avformat_open_input(&ctx_, fileName, 0, 0);
-     #else
--        err = av_open_input_file(&ctx_, fileName, 0, 0, 0);
-+        global_err = av_open_input_file(&ctx_, fileName, 0, 0, 0);
-     #endif
--    if (err < 0)
-+    if (global_err < 0)
-         return false;
- 
-     #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(53, 6, 0)
--        err = avformat_find_stream_info(ctx_, 0);
-+        global_err = avformat_find_stream_info(ctx_, 0);
-     #else
--        err = av_find_stream_info(ctx_);
-+        global_err = av_find_stream_info(ctx_);
-     #endif
--    if (err < 0)
-+    if (global_err < 0)
-         return false;
- 
-     for (unsigned int i = 0; i < ctx_->nb_streams; ++i)

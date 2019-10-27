@@ -50,21 +50,28 @@ OPT holds properties like bitrate, fps, total_frames, duration_sec...\n\
   if (! error_state)
     {
       CvCapture_FFMPEG *h = new CvCapture_FFMPEG ();
-      h->open (filename.c_str ());
-      retval.append (octave_value (h));
-
-      if (nargout > 0)
+      
+      // returns "valid" (true if open was successful)
+      bool valid = h->open (filename.c_str ());
+      if (valid)
         {
-          octave_scalar_map opt;
-          opt.contents ("total_frames") = h->get_total_frames ();
-          opt.contents ("duration_sec") = h->get_duration_sec ();
-          opt.contents ("fps")          = h->get_fps ();
-          opt.contents ("bitrate")      = h->get_bitrate ();
-          opt.contents ("width")        = h->frame.width;
-          opt.contents ("height")       = h->frame.height;
+          retval.append (octave_value (h));
 
-          retval.append (opt);
+          if (nargout > 0)
+            {
+              octave_scalar_map opt;
+              opt.contents ("total_frames") = h->get_total_frames ();
+              opt.contents ("duration_sec") = h->get_duration_sec ();
+              opt.contents ("fps")          = h->get_fps ();
+              opt.contents ("bitrate")      = h->get_bitrate ();
+              opt.contents ("width")        = h->frame.width;
+              opt.contents ("height")       = h->frame.height;
+
+              retval.append (opt);
+            }
         }
+      else
+        error ("Opening '%s' failed : '%s'", filename.c_str (), get_last_err_msg().c_str ());
     }
   return retval;
 }
@@ -188,7 +195,7 @@ CvVideoWriter_FFMPEG* get_writer_from_ov (octave_value ov)
 // PKG_DEL: autoload ("__writer_open__", "cap_ffmpeg_wrapper.oct", "remove");
 DEFUN_DLD(__writer_open__, args, nargout,
           "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {@var{h} =} __writer_open__ (@var{filename}, @var{fourcc}, @var{fps}, @var{width}, @var{height}, @var{isColor})\n\
+@deftypefn {Loadable Function} {[@var{h}, @var{opt] =} __writer_open__ (@var{filename}, @var{fourcc}, @var{fps}, @var{width}, @var{height}, @var{isColor})\n\
 undocumented internal function\n\
 @end deftypefn")
 {
@@ -335,9 +342,27 @@ undocumented internal function\n\
 
       //printf ("h->open (%s, %i, %f, %u, %u, %u);\n", filename.c_str (), tag, fps, width, height, isColor);
 
-      bool ret = h->open (filename.c_str (), tag, fps, width, height, isColor);
-      //printf ("open returned %i\n", ret);
-      retval.append (octave_value (h));
+      bool valid = h->open (filename.c_str (), tag, fps, width, height, isColor);
+      if (valid)
+        {
+          retval.append (octave_value (h));
+
+          if (nargout > 0)
+            {
+              octave_scalar_map opt;
+              opt.contents ("ok")           = h->ok;
+              opt.contents ("frame_width")  = h->frame_width;
+              opt.contents ("frame_height") = h->frame_height;
+              retval.append (opt);
+              
+              // FIXME: implement more
+            }
+        }
+      else
+        {
+          // FIXME: CvVideoWriter_FFMPEG::open just returns false without explanation why
+          error ("Opening '%s' for writing failed", filename.c_str ());
+        }
     }
   return retval;
 }

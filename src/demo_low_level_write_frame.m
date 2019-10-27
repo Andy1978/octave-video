@@ -13,7 +13,9 @@ addpath ("../inst")
 x = zeros (200, 300, 3);
 x (:, 120, 1) = 255;
 
-h = __writer_open__ ("bar.mp4", "", 30, columns (x), rows (x), true);
+[h, opt] = __writer_open__ ("./bar.mp4", "", 30, columns (x), rows (x), true);
+
+opt
  
 for k=1:60
 
@@ -22,5 +24,7 @@ for k=1:60
 
 endfor
 
-__writer_close__ (h);
+
+
+%~ __writer_close__ (h);
 

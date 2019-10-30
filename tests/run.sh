@@ -1,9 +1,11 @@
 #!/bin/bash -e
 
-docker run -it debian_stretch_octave_4_4_1 octave --eval "pkg load video; test VideoWriter; test VideoReader"
+OCMD='pkg load video; system ("head -n2 /etc/os-release"); printf ("OCTAVE_VERSION = %s\n", OCTAVE_VERSION); test VideoWriter; test VideoReader; printf ("---\n");'
 
-docker run -it debian_stretch_octave_5_1_0 octave --eval "pkg load video; test VideoWriter; test VideoReader"
+docker run -it debian_stretch_octave_4_4_1 octave -q --eval "$OCMD"
 
-docker run -it centos7_epel_ffmpeg octave --eval "pkg load video; test VideoWriter; test VideoReader"
+docker run -it debian_stretch_octave_5_1_0 octave -q --eval "$OCMD"
 
-docker run -it fedora31_ffmpeg octave --eval "pkg load video; test VideoWriter; test VideoReader"
+docker run -it centos7_epel_ffmpeg octave -q --eval "$OCMD"
+
+docker run -it fedora31_ffmpeg octave -q --eval "$OCMD"

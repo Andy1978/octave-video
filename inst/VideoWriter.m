@@ -171,3 +171,30 @@ endclassdef
 %! endfor
 %! close (w)
 %! printf ("Now run '%s' in your favourite video player or try 'demo VideoReader'!\n", fn);
+
+%!test
+%! fn = fullfile (tempdir(), "rainbow.mp4");
+%! width = 200;
+%! height = 150;
+%! nframes = 120;
+%! p = permute (rainbow (width), [3 1 2]);
+%! raw_video = zeros (height, width, 3, nframes);
+%! w = VideoWriter (fn);
+%! for k=1:nframes
+%!   ps = circshift (p, k * 6);
+%!   img = uint8 (255 * repmat (ps, height, 1));
+%!   raw_video (:, :, :, k) = img;
+%!   writeVideo (w, img);
+%! endfor
+%! close (w)
+%! ## read video and compare
+%! clear -x raw_video fn
+%! r = VideoReader (fn);
+%! for k=1:size (raw_video, 4)
+%!   img = readFrame (r);
+%!   d = double (img) - raw_video(:,:,:,k);
+%!   # this doesn't work well due to compression....
+%!   rel_err = sum (abs(d(:)))/numel(d)/255;
+%!   assert (rel_err < 0.01)
+%! endfor
+%! close (r);

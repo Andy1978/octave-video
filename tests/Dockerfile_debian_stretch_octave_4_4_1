@@ -20,11 +20,8 @@ RUN cd octave-4.4.1-build && make install
 
 RUN apt-get update && apt-get --no-install-recommends install -y pkg-config libswscale-dev libavformat-dev libavcodec-dev patch
 
-RUN hg clone http://hg.code.sf.net/p/octave/video -r devel octave-video &&\
-    cd octave-video/src &&\
-    ./bootstrap &&\
-    ./configure &&\
-    make &&\
-    octave test_roundtrip.m
+COPY ./video-*.tar.gz /app
 
-CMD ["/bin/bash"]
+RUN octave --eval "pkg install video-*.tar.gz"
+
+CMD ["/usr/local/bin/octave"]

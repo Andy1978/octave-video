@@ -169,6 +169,30 @@ DEFUN_DLD(__cap_retrieve_frame__, args, nargout,
   return retval;
 }
 
+// PKG_ADD: autoload ("__cap_close__", "cap_ffmpeg_wrapper.oct");
+// PKG_DEL: autoload ("__cap_close__", "cap_ffmpeg_wrapper.oct", "remove");
+DEFUN_DLD(__cap_close__, args, nargout,
+          "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} {@var{h} =} __cap_close__ (@var{h})\n\
+undocumented internal function\n\
+@end deftypefn")
+{
+  octave_value_list retval;
+  int nargin = args.length ();
+
+  if (nargin != 1)
+    {
+      print_usage();
+      return retval;
+    }
+
+  CvCapture_FFMPEG* p = get_cap_from_ov (args(0));
+  if (p)
+    p->close ();
+
+  return retval;
+}
+
 /*************    CvVideoWriter_FFMPEG     ****************/
 
 CvVideoWriter_FFMPEG* get_writer_from_ov (octave_value ov)

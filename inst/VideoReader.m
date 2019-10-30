@@ -109,6 +109,12 @@ classdef VideoReader < handle
 
     endfunction
 
+    function close (v)
+
+      __cap_close__ (v.h);
+
+    endfunction
+
   endmethods
 
 endclassdef
@@ -130,3 +136,10 @@ endclassdef
 %!   drawnow
 %!   pause (1/30);
 %! endwhile
+
+## FIXME: add better test, perhaps find smaller online videos
+%!test
+%! a = VideoReader("https://raw.githubusercontent.com/opencv/opencv/master/samples/data/vtest.avi");
+%! assert (a.Duration, 79.5)
+%! assert (a.FrameRate, 10)
+%! assert (a.NumberOfFrames, 795)

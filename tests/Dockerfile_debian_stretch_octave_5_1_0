@@ -1,0 +1,27 @@
+FROM debian:stretch-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y g++ make\
+  libpcre3-dev libblas-dev liblapack-dev gfortran libtool libreadline-dev wget lzip mercurial automake
+
+## Download Octave 5.1.0 release, unpack, build
+COPY octave-5.1.0.tar.lz.sha1 /app
+RUN wget https://ftp.gnu.org/gnu/octave/octave-5.1.0.tar.lz &&\
+    sha1sum -c octave-5.1.0.tar.lz.sha1 &&\
+    tar --lzip -xvf octave-5.1.0.tar.lz
+    
+RUN mkdir octave-5.1.0-build &&\
+    cd octave-5.1.0-build &&\
+    ../octave-5.1.0/configure --disable-java --disable-docs &&\
+    make -j8
+
+RUN cd octave-5.1.0-build && make install
+
+RUN apt-get update && apt-get --no-install-recommends install -y pkg-config libswscale-dev libavformat-dev libavcodec-dev patch
+
+COPY ./video-*.tar.gz /app
+
+RUN octave --eval "pkg install -verbose video-*.tar.gz"
+
+CMD ["/usr/local/bin/octave"]

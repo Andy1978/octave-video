@@ -53,7 +53,7 @@ $(RELEASE_DIR): .hg/dirstate
 	@echo "Creating package version $(VERSION) release ..."
 	-rm -rf $@
 	hg archive --exclude ".hg*" --exclude Makefile --type files $@
-	cd "$@" && rm -rf "devel/" && cd "src/" && ./bootstrap && rm -rf "autom4te.cache"
+	cd "$@" && rm -rf "samples/" "tests/" && cd "src/" && ./bootstrap && rm -rf autom4te.cache configure.ac cap_ffmpeg_impl.hpp cap_ffmpeg_impl_ov.patch demo_low_level_read_frame.m demo_low_level_write_frame.m test_roundtrip.m && sed -i '/###/q' Makefile.in
 	chmod -R a+rX,u+w,go-w $@
 
 $(RELEASE_TARBALL): $(RELEASE_DIR)

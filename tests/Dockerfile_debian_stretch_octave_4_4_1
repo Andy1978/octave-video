@@ -22,6 +22,6 @@ RUN apt-get update && apt-get --no-install-recommends install -y pkg-config libs
 
 COPY ./video-*.tar.gz /app
 
-RUN octave --eval "pkg install video-*.tar.gz"
+RUN octave --eval "pkg install -verbose video-*.tar.gz"
 
 CMD ["/usr/local/bin/octave"]

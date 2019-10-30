@@ -9,7 +9,7 @@ debug : MKOCTFLAGS += -ggdb -O0
 debug : all
 
 cap_ffmpeg_wrapper.oct: cap_ffmpeg_wrapper.cc cap_ffmpeg_impl_ov.hpp
-	$(MKOCTFILE) $(MKOCTFLAGS) @FFMPEG_CFLAGS@ @DEFS@ $< $(filter %.o, $^) @LIBS@ @CPPFLAGS@
+	$(MKOCTFILE) $(MKOCTFLAGS) @FFMPEG_CFLAGS@ @DEFS@ $< $(filter %.o, $^) @FFMPEG_LIBS@ @CPPFLAGS@
 
 clean:
 	rm -f *.o *.oct octave-workspace

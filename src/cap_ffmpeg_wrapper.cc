@@ -1,5 +1,144 @@
 #include "cap_ffmpeg_impl_ov.hpp"
 
+// PKG_ADD: autoload ("__ffmpeg_defines__", "cap_ffmpeg_wrapper.oct");
+// PKG_DEL: autoload ("__ffmpeg_defines__", "cap_ffmpeg_wrapper.oct", "remove");
+DEFUN_DLD(__ffmpeg_defines__, args, nargout,
+          "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} {@var{def} =} __ffmpeg_defines__ ()\n\
+undocumented internal function\n\
+@end deftypefn")
+{
+  octave_value_list retval;
+  octave_scalar_map opt;
+
+  opt.contents ("LIBAVUTIL_BUILD") = LIBAVUTIL_BUILD;
+  opt.contents ("LIBAVUTIL_IDENT") = LIBAVUTIL_IDENT;
+
+  opt.contents ("LIBSWSCALE_BUILD") = LIBSWSCALE_BUILD;
+  opt.contents ("LIBSWSCALE_IDENT") = LIBSWSCALE_IDENT;
+
+  opt.contents ("LIBAVCODEC_BUILD") = LIBAVCODEC_BUILD;
+  opt.contents ("LIBAVCODEC_IDENT") = LIBAVCODEC_IDENT;
+
+  opt.contents ("LIBAVFORMAT_BUILD") = LIBAVFORMAT_BUILD;
+  opt.contents ("LIBAVFORMAT_IDENT") = LIBAVFORMAT_IDENT;
+
+
+  //join ident
+  opt.contents ("LIBAV_IDENT") = LIBAVUTIL_IDENT ", " LIBSWSCALE_IDENT ", " LIBAVCODEC_IDENT ", " LIBAVFORMAT_IDENT;
+
+
+  retval.append (opt);
+
+  return retval;
+}
+
+// PKG_ADD: autoload ("__ffmpeg_output_formats__", "cap_ffmpeg_wrapper.oct");
+// PKG_DEL: autoload ("__ffmpeg_output_formats__", "cap_ffmpeg_wrapper.oct", "remove");
+DEFUN_DLD(__ffmpeg_output_formats__, args, nargout,
+          "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} {@var{f} =} __ffmpeg_output_formats__ ()\n\
+undocumented internal function\n\
+@end deftypefn")
+{
+  av_register_all();
+
+  octave_idx_type n = 0;
+
+  // first loop to get numer of output formats
+  AVOutputFormat * oformat = av_oformat_next(NULL);
+  while (oformat != NULL)
+  {
+    n++;
+    oformat = av_oformat_next (oformat);
+  }
+
+  Cell names (n, 1);
+  Cell long_names (n, 1);
+  Cell mime_types (n, 1);
+  Cell extensions (n, 1);
+  Cell codecs (n, 1);
+
+  // second loop, now fill the cells
+  oformat = av_oformat_next(NULL);
+  int i = 0;
+  while(oformat != NULL)
+  {
+    names (i) = oformat->name;
+    long_names (i) = oformat->long_name;
+    mime_types (i) = oformat->mime_type;
+    extensions (i) = oformat->extensions;
+
+    octave_map map_codecs;
+
+    if (oformat->codec_tag)
+      {
+          // printf ("%s %s %s\n", oformat->name, oformat->long_name, oformat->mime_type);
+
+          std::vector<std::string> video_codecs;
+          const AVCodecTag * ptags = oformat->codec_tag[0];
+          while (ptags->id != AV_CODEC_ID_NONE)
+          {
+              AVCodecID id = (AVCodecID) ptags->id;
+              // get descriptor
+              const AVCodecDescriptor* d = avcodec_descriptor_get (id);
+              if (d)
+                {
+                  // only add encoder video codecs
+                  if (d->type == AVMEDIA_TYPE_VIDEO)
+                    {
+                      // prüfen, ob es einen encoder gibt
+                      if (avcodec_find_encoder (d->id))
+                        {
+                          unsigned int tag = ptags->tag;
+
+                          if (! strcmp (oformat->name, "mp4")) // use riff
+                            {
+                              const struct AVCodecTag *table[] = { avformat_get_riff_video_tags(), 0 };
+                              tag = av_codec_get_tag(table, id);
+                            }
+
+                          char buf[5];
+                          snprintf (buf, 5, "%c%c%c%c", CV_TAG_TO_PRINTABLE_CHAR4(tag));
+
+                          //printf("fourcc tag 0x%08x '%s' codec_id %04X\n", tag, buf, id);
+
+                          video_codecs.push_back (buf);
+                        }
+                    }
+
+                }
+
+            ptags++;
+
+          }
+
+        // unique but keep order
+        {
+          auto last = std::unique(video_codecs.begin(), video_codecs.end());
+          video_codecs.erase (last, video_codecs.end());
+          Cell codec_fourcc (video_codecs.size (), 1);
+          for (int k = 0; k < video_codecs.size (); ++k)
+            codec_fourcc(k) = video_codecs[k];
+          codecs (i) = codec_fourcc;
+        }
+      }
+
+    oformat = av_oformat_next(oformat);
+    i++;
+  }
+
+  octave_map m;
+
+  m.assign ("name", names);
+  m.assign ("long_name", long_names);
+  m.assign ("mime_type", mime_types);
+  m.assign ("extensions", extensions);
+  m.assign ("codecs", codecs);
+
+  return octave_value (m);
+}
+
 /******************    CvCapture_FFMPEG     **************************/
 
 CvCapture_FFMPEG* get_cap_from_ov (octave_value ov)
@@ -50,7 +189,7 @@ OPT holds properties like bitrate, fps, total_frames, duration_sec...\n\
   if (! error_state)
     {
       CvCapture_FFMPEG *h = new CvCapture_FFMPEG ();
-      
+
       // returns "valid" (true if open was successful)
       bool valid = h->open (filename.c_str ());
       if (valid)
@@ -258,16 +397,18 @@ undocumented internal function\n\
       AVOutputFormat* foo = av_guess_format	(NULL, filename.c_str (), NULL);
 
       // list supported codecs for guessed format
+#if 0
       if (foo->codec_tag)
         {
           const AVCodecTag * ptags = foo->codec_tag[0];
           while (ptags->id != AV_CODEC_ID_NONE)
           {
               unsigned int tag = ptags->tag;
-              //printf("fourcc tag 0x%08x/'%c%c%c%c' codec_id %04X\n", tag, CV_TAG_TO_PRINTABLE_CHAR4(tag), ptags->id);
+              printf("fourcc tag 0x%08x/'%c%c%c%c' codec_id %04X\n", tag, CV_TAG_TO_PRINTABLE_CHAR4(tag), ptags->id);
               ptags++;
           }
         }
+#endif
 
       tag = av_codec_get_tag (foo->codec_tag, foo->video_codec);
     }
@@ -292,7 +433,7 @@ undocumented internal function\n\
   //~ {
       //~ printf ("%s; %s; %s; %s\n", oformat->name, oformat->long_name, oformat->mime_type, oformat->extensions);
 
-      //~ cv_ff_codec_tag_dump (oformat->codec_tag);
+      //~ //cv_ff_codec_tag_dump (oformat->codec_tag);
 
       //~ oformat = av_oformat_next(oformat);
   //~ }
@@ -378,7 +519,7 @@ undocumented internal function\n\
               opt.contents ("frame_width")  = h->frame_width;
               opt.contents ("frame_height") = h->frame_height;
               retval.append (opt);
-              
+
               // FIXME: implement more
             }
         }

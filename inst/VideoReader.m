@@ -38,6 +38,9 @@ classdef VideoReader < handle
     NumberOfFrames = 0;
     VideoFormat    = "RGB24";
 
+    ## GNU Octave extensions
+    FFmpeg_versions        = "";
+
   endproperties
 
   properties (SetAccess = public, GetAccess = public)
@@ -70,6 +73,8 @@ classdef VideoReader < handle
       v.Bitrate = opt.bitrate;
       v.Width = opt.width;
       v.Height = opt.height;
+
+      v.FFmpeg_versions = __ffmpeg_defines__ ().LIBAV_IDENT;
 
     endfunction
 

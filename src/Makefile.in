@@ -14,6 +14,8 @@ cap_ffmpeg_wrapper.oct: cap_ffmpeg_wrapper.cc cap_ffmpeg_impl_ov.hpp
 clean:
 	rm -f *.o *.oct octave-workspace
 
+### below is removed in distributed Makefile.in
+
 distclean: clean
 	rm -f Makefile
 
@@ -22,7 +24,7 @@ realclean: distclean
 	rm -f config.status config.log config.h configure aclocal.m4
 	rm -f cap_ffmpeg_impl_ov.hpp
 
-### patches
+## patch and upstream managment (development only)
 
 cap_ffmpeg_impl_ov.hpp: cap_ffmpeg_impl_ov.patch cap_ffmpeg_impl.hpp
 	patch -i $< -o $@

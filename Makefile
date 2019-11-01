@@ -1,4 +1,4 @@
-## Copyright 2015-2016 Andreas Weber
+## Copyright 2015-2019 Andreas Weber
 ## Copyright 2015-2016 Mike Miller
 ## Copyright 2015-2016 Carnë Draug
 ## Copyright 2015-2016 Oliver Heimlich
@@ -20,7 +20,7 @@ HTML_TARBALL    = $(PACKAGE)-html.tar.gz
 
 M_SOURCES   = $(wildcard inst/*.m)
 CC_SOURCES  = src/cap_ffmpeg_wrapper.cc
-OCT_FILES   = $(patsubst %.cc,%.oct,$(CC_SOURCES))
+#OCT_FILES   = $(patsubst %.cc,%.oct,$(CC_SOURCES))
 PKG_ADD     = $(shell grep -Pho '(?<=// PKG_ADD: ).*' $(CC_SOURCES) $(M_SOURCES))
 
 MD5SUM    ?= md5sum
@@ -49,11 +49,14 @@ help:
 	@echo "   clean            - Remove releases, html documentation, and oct files"
 	@echo "   maintainer-clean - Additionally remove all generated files"
 
-$(RELEASE_DIR): .hg/dirstate
+$(RELEASE_DIR): all
 	@echo "Creating package version $(VERSION) release ..."
 	-rm -rf $@
-	hg archive --exclude ".hg*" --exclude Makefile --type files $@
-	cd "$@" && rm -rf "samples/" "tests/" && cd "src/" && ./bootstrap && rm -rf bootstrap autom4te.cache configure.ac cap_ffmpeg_impl.hpp cap_ffmpeg_impl_ov.patch demo_low_level_read_frame.m demo_low_level_write_frame.m test_roundtrip.m && sed -i '/###/q' Makefile.in
+	mkdir -p $@/src
+	cp COPYING DESCRIPTION NEWS $@
+	cp -r ./inst $@
+	cp ./src/configure ./src/Makefile.in ./src/cap_ffmpeg_impl_ov.hpp ./src/cap_ffmpeg_wrapper.cc ./src/ffmpeg_codecs.hpp $@/src
+	sed -i '/###/q' $@/src/Makefile.in
 	chmod -R a+rX,u+w,go-w $@
 
 $(RELEASE_TARBALL): $(RELEASE_DIR)

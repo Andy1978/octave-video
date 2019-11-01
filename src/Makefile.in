@@ -22,10 +22,8 @@ style:
 check:
 	cppcheck -q --enable=all --force --language=c++ cap_ffmpeg_impl_ov.hpp cap_ffmpeg_wrapper.cc ffmpeg_codecs.hpp
 
-distclean: clean
+realclean: clean
 	rm -f Makefile
-
-realclean: distclean
 	rm -rf autom4te.cache
 	rm -f config.status config.log config.h configure aclocal.m4
 	rm -f cap_ffmpeg_impl_ov.hpp

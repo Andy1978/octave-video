@@ -47,7 +47,7 @@ help:
 	@echo "   doc              - Build Texinfo package manual"
 	@echo
 	@echo "   clean            - Remove releases, html documentation, and oct files"
-	@echo "   maintainer-clean - Additionally remove all generated files"
+	@echo "   realclean        - Additionally remove all generated files"
 
 $(RELEASE_DIR): all
 	@echo "Creating package version $(VERSION) release ..."
@@ -67,7 +67,7 @@ $(HTML_DIR): install
 	@echo "Generating HTML documentation. This may take a while ..."
 	-rm -rf $@
 	$(OCTAVE) --silent \
-	  --eval 'graphics_toolkit ("gnuplot");' \
+	  --eval 'graphics_toolkit ("fltk");' \
 	  --eval 'pkg load generate_html $(PACKAGE);' \
 	  --eval 'generate_package_html ("$(PACKAGE)", "$@", "octave-forge");'
 	chmod -R a+rX,u+w,go-w $@
@@ -121,6 +121,6 @@ clean:
 	-rm -rf $(RELEASE_DIR) $(RELEASE_TARBALL) $(HTML_TARBALL) $(HTML_DIR)
 	cd src && $(MAKE) $@
 
-maintainer-clean: clean
+realclean: clean
 	cd src && $(MAKE) $@
 

@@ -11,14 +11,14 @@ x = __ffmpeg_output_formats__ ();
 #x(71)
 #x(13);
 
-for k=1:numel(x)
+%~ for k=1:numel(x)
 
-  if (! isempty (x(k).codecs))
-   unknown = cellfun ("any", strfind(x(k).codecs, "?"));
+  %~ if (! isempty (x(k).codecs))
+   %~ unknown = cellfun ("any", strfind(x(k).codecs, "?"));
    
-   if (any (unknown))
-    x(k)
-   endif
+   %~ if (any (unknown))
+    %~ x(k)
+   %~ endif
    
-  endif
-endfor
+  %~ endif
+%~ endfor

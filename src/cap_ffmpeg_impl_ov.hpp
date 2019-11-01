@@ -501,7 +501,7 @@ class CvCapture_FFMPEG: public octave_base_value
     bool open( const char* filename );
     void close();
 
-    double getProperty(int) const;
+    //double getProperty(int) const;
     bool setProperty(int, double);
     bool grabFrame();
     bool retrieveFrame(int, unsigned char** data, int* step, int* width, int* height, int* cn);
@@ -516,6 +516,18 @@ class CvCapture_FFMPEG: public octave_base_value
     double  get_duration_sec() const;
     double  get_fps() const;
     int     get_bitrate() const;
+
+    AVRational get_sample_aspect_ratio () const
+      { return _opencv_ffmpeg_get_sample_aspect_ratio(ic->streams[video_stream]); }
+
+    const char* get_video_codec_name () const
+      {
+#if LIBAVFORMAT_BUILD > 4628
+        return _opencv_avcodec_get_name(video_st->codec->codec_id);
+#else
+        return _opencv_avcodec_get_name(video_st->codec.codec_id);
+#endif
+      }
 
     double  r2d(AVRational r) const;
     int64_t dts_to_frame_number(int64_t dts);
@@ -572,6 +584,13 @@ class CvCapture_FFMPEG: public octave_base_value
     os << "  get_duration_sec() = " << get_duration_sec() << std::endl;
     os << "  get_fps()          = " << get_fps() << std::endl;
     os << "  get_bitrate()      = " << get_bitrate() << std::endl;
+    os << "  width              = " << frame.width << std::endl;
+    os << "  height             = " << frame.height << std::endl;
+    os << "  frame_number       = " << frame_number << std::endl;
+    os << "  video_codec_name   = " << get_video_codec_name () << std::endl;
+    AVRational s = get_sample_aspect_ratio ();
+    os << "  aspect_ration_num  = " << s.num << std::endl;
+    os << "  aspect_ration_den  = " << s.den << std::endl;
   }
 };
 
@@ -1211,7 +1230,7 @@ bool CvCapture_FFMPEG::retrieveFrame(int, unsigned char** data, int* step, int* 
     return true;
 }
 
-
+#if 0
 double CvCapture_FFMPEG::getProperty( int property_id ) const
 {
     if( !video_st ) return 0;
@@ -1219,8 +1238,6 @@ double CvCapture_FFMPEG::getProperty( int property_id ) const
     double codec_tag = 0;
     AVCodecID codec_id = AV_CODEC_ID_NONE;
     const char* codec_fourcc = NULL;
-
-#if 0
 
     switch( property_id )
     {
@@ -1270,9 +1287,9 @@ double CvCapture_FFMPEG::getProperty( int property_id ) const
     default:
         break;
     }
-#endif
     return 0;
 }
+#endif
 
 double CvCapture_FFMPEG::r2d(AVRational r) const
 {
@@ -2487,10 +2504,10 @@ int cvSetCaptureProperty_FFMPEG(CvCapture_FFMPEG* capture, int prop_id, double v
     return capture->setProperty(prop_id, value);
 }
 
-double cvGetCaptureProperty_FFMPEG(CvCapture_FFMPEG* capture, int prop_id)
-{
-    return capture->getProperty(prop_id);
-}
+//~ double cvGetCaptureProperty_FFMPEG(CvCapture_FFMPEG* capture, int prop_id)
+//~ {
+    //~ return capture->getProperty(prop_id);
+//~ }
 
 int cvGrabFrame_FFMPEG(CvCapture_FFMPEG* capture)
 {

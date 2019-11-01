@@ -39,6 +39,8 @@ classdef VideoReader < handle
     VideoFormat    = "RGB24";
 
     ## GNU Octave extensions
+    VideoCodec     = "";
+    AspectRatio    = [0, 1];
     FFmpeg_versions        = "";
 
   endproperties
@@ -66,13 +68,18 @@ classdef VideoReader < handle
       # varargin could be name/value property pairs
       # FIXME: implement me
 
-      [v.h, opt] = __cap_open__ (fullfile (v.Path, v.Name));
-      v.Duration = opt.duration_sec;
-      v.FrameRate = opt.fps;
-      v.NumberOfFrames = opt.total_frames;
-      v.Bitrate = opt.bitrate;
-      v.Width = opt.width;
-      v.Height = opt.height;
+      [v.h] = __cap_open__ (fullfile (v.Path, v.Name));
+
+      prop = __cap_get_properties__ (v.h);
+
+      v.Duration    = prop.duration_sec;
+      v.FrameRate   = prop.fps;
+      v.NumberOfFrames = prop.total_frames;
+      v.Bitrate     = prop.bitrate;
+      v.Width       = prop.width;
+      v.Height      = prop.height;
+      v.VideoCodec  = prop.video_codec_name;
+      v.AspectRatio = [prop.aspect_ration_num prop.aspect_ration_den];
 
       v.FFmpeg_versions = __ffmpeg_defines__ ().LIBAV_IDENT;
 
@@ -91,6 +98,8 @@ classdef VideoReader < handle
       printf ("    Path           = %s\n", v.Path);
       printf ("    NumberOfFrames = %i\n", v.NumberOfFrames);
       printf ("    VideoFormat    = %s\n", v.VideoFormat);
+      printf ("    VideoCodec     = %s\n", v.VideoCodec);
+      printf ("    AspectRatio    = %s\n", mat2str (v.AspectRatio));
 
     endfunction
 
@@ -143,8 +152,8 @@ endclassdef
 %! endwhile
 
 ## FIXME: add better test, perhaps find smaller online videos
-%!test
-%! a = VideoReader("https://raw.githubusercontent.com/opencv/opencv/master/samples/data/vtest.avi");
-%! assert (a.Duration, 79.5)
-%! assert (a.FrameRate, 10)
-%! assert (a.NumberOfFrames, 795)
+#%!test
+#%! a = VideoReader("https://raw.githubusercontent.com/opencv/opencv/master/samples/data/vtest.avi");
+#%! assert (a.Duration, 79.5)
+#%! assert (a.FrameRate, 10)
+#%! assert (a.NumberOfFrames, 795)

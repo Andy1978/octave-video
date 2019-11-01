@@ -165,10 +165,8 @@ CvCapture_FFMPEG* get_cap_from_ov (octave_value ov)
 // PKG_DEL: autoload ("__cap_open__", "cap_ffmpeg_wrapper.oct", "remove");
 DEFUN_DLD(__cap_open__, args, nargout,
           "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {[@var{h}, @var{opt}] =} __cap_open__ (@var{filename})\n\
+@deftypefn {Loadable Function} {@var{h} =} __cap_open__ (@var{filename})\n\
 Creates an instance of CvCapture_FFMPEG.\n\
-OPT holds properties like bitrate, fps, total_frames, duration_sec...\n\
-@seealso{getsnapshot}\n\
 @end deftypefn")
 {
   octave_value_list retval;
@@ -193,25 +191,59 @@ OPT holds properties like bitrate, fps, total_frames, duration_sec...\n\
       // returns "valid" (true if open was successful)
       bool valid = h->open (filename.c_str ());
       if (valid)
-        {
-          retval.append (octave_value (h));
-
-          if (nargout > 0)
-            {
-              octave_scalar_map opt;
-              opt.contents ("total_frames") = h->get_total_frames ();
-              opt.contents ("duration_sec") = h->get_duration_sec ();
-              opt.contents ("fps")          = h->get_fps ();
-              opt.contents ("bitrate")      = h->get_bitrate ();
-              opt.contents ("width")        = h->frame.width;
-              opt.contents ("height")       = h->frame.height;
-
-              retval.append (opt);
-            }
-        }
+        retval.append (octave_value (h));
       else
         error ("Opening '%s' failed : '%s'", filename.c_str (), get_last_err_msg().c_str ());
     }
+  return retval;
+}
+
+// PKG_ADD: autoload ("__cap_get_properties__", "cap_ffmpeg_wrapper.oct");
+// PKG_DEL: autoload ("__cap_get_properties__", "cap_ffmpeg_wrapper.oct", "remove");
+DEFUN_DLD(__cap_get_properties__, args, nargout,
+          "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} {[@var{h}, @var{opt}] =} __cap_get_properties__ (@var{h})\n\
+Gets CvCapture_FFMPEG properties like bitrate, fps, total_frames, duration_sec...\n\
+@end deftypefn")
+{
+  octave_value_list retval;
+  int nargin = args.length ();
+
+  if (nargin != 1)
+    error("__cap_get_properties__ needs one parameter");
+
+  CvCapture_FFMPEG* h = get_cap_from_ov (args(0));
+  if (h)
+    {
+      octave_scalar_map opt;
+      opt.contents ("total_frames") = h->get_total_frames ();
+      opt.contents ("duration_sec") = h->get_duration_sec ();
+      opt.contents ("fps")          = h->get_fps ();
+      opt.contents ("bitrate")      = h->get_bitrate ();
+      opt.contents ("width")        = h->frame.width;
+      opt.contents ("height")       = h->frame.height;
+
+      // Current position of the video file in milliseconds
+      opt.contents ("pos")          = (h->picture_pts == AV_NOPTS_VALUE_) ? 0 : h->dts_to_sec(h->picture_pts) * 1000;
+
+      // Relative position of the video file: 0=start of the film, 1=end of the film.
+      opt.contents ("rel_pos") = h->r2d(h->ic->streams[h->video_stream]->time_base);
+
+      //  0-based index of the frame to be decoded/captured next.
+      opt.contents ("frame_number") = h->frame_number;
+
+      opt.contents ("video_codec_name") = h->get_video_codec_name ();
+
+      // aspect ratio
+      // 0, 1 is "undefined"
+      {
+        AVRational s = h->get_sample_aspect_ratio ();
+        opt.contents ("aspect_ration_num") = s.num;
+        opt.contents ("aspect_ration_den") = s.den;
+      }
+
+      retval.append (opt);
+     }
   return retval;
 }
 

@@ -1,6 +1,7 @@
 clear all;
 
 autoload ("__cap_open__", which ("cap_ffmpeg_wrapper.oct"));
+autoload ("__cap_get_properties__", which ("cap_ffmpeg_wrapper.oct"));
 autoload ("__cap_grab_frame__", which ("cap_ffmpeg_wrapper.oct"))
 autoload ("__cap_retrieve_frame__", which ("cap_ffmpeg_wrapper.oct"));
 
@@ -10,7 +11,8 @@ autoload ("__writer_write_frame__", which ("cap_ffmpeg_wrapper.oct"));
 
 ## Open Video, read frames, show them
 
-[x, opt] = __cap_open__ ("../samples/vtest.avi")
+x = __cap_open__ ("../samples/vtest.avi")
+opt = __cap_get_properties__ (x);
 
 im = [];
 for k=1:opt.total_frames

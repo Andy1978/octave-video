@@ -118,7 +118,7 @@ undocumented internal function\n\
           auto last = std::unique(video_codecs.begin(), video_codecs.end());
           video_codecs.erase (last, video_codecs.end());
           Cell codec_fourcc (video_codecs.size (), 1);
-          for (int k = 0; k < video_codecs.size (); ++k)
+          for (unsigned int k = 0; k < video_codecs.size (); ++k)
             codec_fourcc(k) = video_codecs[k];
           codecs (i) = codec_fourcc;
         }
@@ -272,18 +272,15 @@ DEFUN_DLD(__cap_grab_frame__, args, nargout,
 // PKG_DEL: autoload ("__cap_retrieve_frame__", "cap_ffmpeg_wrapper.oct", "remove");
 DEFUN_DLD(__cap_retrieve_frame__, args, nargout,
           "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {@var{f} =} __cap_retrieve_frame__ (@var{h}, [@var{preview}])\n\
+@deftypefn {Loadable Function} {@var{f} =} __cap_retrieve_frame__ (@var{h})\n\
 \n\
 @end deftypefn")
 {
   octave_value_list retval;
   int nargin = args.length ();
 
-  //~ if (nargin < 1 || nargin>2)
-    //~ {
-      //~ print_usage ();
-      //~ return retval;
-    //~ }
+  if (nargin != 1)
+    error("__cap_retrieve_frame__ needs one parameter");
 
   CvCapture_FFMPEG* p = get_cap_from_ov (args(0));
   if (p)
@@ -613,7 +610,8 @@ undocumented internal function\n\
       unsigned char *t = reinterpret_cast<unsigned char*>(f.fortran_vec());
 
       bool ret = p->writeFrame (t, step, width, height, cn, origin);
-      //printf ("ret = %i\n", ret);
+      if (! ret)
+        error ("CvVideoWriter_FFMPEG::writeFrame failed");
 
     }
   return retval;

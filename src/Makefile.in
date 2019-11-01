@@ -1,7 +1,7 @@
 MKOCTFILE ?= mkoctfile
 MKOCTFLAGS ?= -Wall -v
 
-.PHONY: all clean realclean distclean
+.PHONY: all clean style check realclean distclean
 
 all: cap_ffmpeg_wrapper.oct
 
@@ -15,6 +15,12 @@ clean:
 	rm -f *.o *.oct octave-workspace
 
 ### below is removed in distributed Makefile.in
+
+style:
+	astyle --style=gnu -s2 -n cap_ffmpeg_wrapper.cc
+
+check:
+	cppcheck -q --enable=all --force --language=c++ cap_ffmpeg_impl_ov.hpp cap_ffmpeg_wrapper.cc ffmpeg_codecs.hpp
 
 distclean: clean
 	rm -f Makefile

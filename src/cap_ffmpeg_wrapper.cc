@@ -48,10 +48,10 @@ undocumented internal function\n\
   // first loop to get numer of output formats
   AVOutputFormat * oformat = av_oformat_next(NULL);
   while (oformat != NULL)
-  {
-    n++;
-    oformat = av_oformat_next (oformat);
-  }
+    {
+      n++;
+      oformat = av_oformat_next (oformat);
+    }
 
   Cell names (n, 1);
   Cell long_names (n, 1);
@@ -63,22 +63,22 @@ undocumented internal function\n\
   oformat = av_oformat_next(NULL);
   int i = 0;
   while(oformat != NULL)
-  {
-    names (i) = oformat->name;
-    long_names (i) = oformat->long_name;
-    mime_types (i) = oformat->mime_type;
-    extensions (i) = oformat->extensions;
+    {
+      names (i) = oformat->name;
+      long_names (i) = oformat->long_name;
+      mime_types (i) = oformat->mime_type;
+      extensions (i) = oformat->extensions;
 
-    octave_map map_codecs;
+      octave_map map_codecs;
 
-    if (oformat->codec_tag)
-      {
+      if (oformat->codec_tag)
+        {
           // printf ("%s %s %s\n", oformat->name, oformat->long_name, oformat->mime_type);
 
           std::vector<std::string> video_codecs;
           const AVCodecTag * ptags = oformat->codec_tag[0];
           while (ptags->id != AV_CODEC_ID_NONE)
-          {
+            {
               AVCodecID id = (AVCodecID) ptags->id;
               // get descriptor
               const AVCodecDescriptor* d = avcodec_descriptor_get (id);
@@ -109,24 +109,24 @@ undocumented internal function\n\
 
                 }
 
-            ptags++;
+              ptags++;
 
+            }
+
+          // unique but keep order
+          {
+            auto last = std::unique(video_codecs.begin(), video_codecs.end());
+            video_codecs.erase (last, video_codecs.end());
+            Cell codec_fourcc (video_codecs.size (), 1);
+            for (unsigned int k = 0; k < video_codecs.size (); ++k)
+              codec_fourcc(k) = video_codecs[k];
+            codecs (i) = codec_fourcc;
           }
-
-        // unique but keep order
-        {
-          auto last = std::unique(video_codecs.begin(), video_codecs.end());
-          video_codecs.erase (last, video_codecs.end());
-          Cell codec_fourcc (video_codecs.size (), 1);
-          for (unsigned int k = 0; k < video_codecs.size (); ++k)
-            codec_fourcc(k) = video_codecs[k];
-          codecs (i) = codec_fourcc;
         }
-      }
 
-    oformat = av_oformat_next(oformat);
-    i++;
-  }
+      oformat = av_oformat_next(oformat);
+      i++;
+    }
 
   octave_map m;
 
@@ -243,7 +243,7 @@ Gets CvCapture_FFMPEG properties like bitrate, fps, total_frames, duration_sec..
       }
 
       retval.append (opt);
-     }
+    }
   return retval;
 }
 
@@ -431,11 +431,11 @@ undocumented internal function\n\
         {
           const AVCodecTag * ptags = foo->codec_tag[0];
           while (ptags->id != AV_CODEC_ID_NONE)
-          {
+            {
               unsigned int tag = ptags->tag;
               printf("fourcc tag 0x%08x/'%c%c%c%c' codec_id %04X\n", tag, CV_TAG_TO_PRINTABLE_CHAR4(tag), ptags->id);
               ptags++;
-          }
+            }
         }
 #endif
 
@@ -452,37 +452,37 @@ undocumented internal function\n\
   //~ AVCodec * codec = av_codec_next(NULL);
   //~ while(codec != NULL)
   //~ {
-      //~ fprintf(stderr, "%s\n", codec->long_name);
-      //~ codec = av_codec_next(codec);
+  //~ fprintf(stderr, "%s\n", codec->long_name);
+  //~ codec = av_codec_next(codec);
   //~ }
 
   // list formats
   //~ AVOutputFormat * oformat = av_oformat_next(NULL);
   //~ while(oformat != NULL)
   //~ {
-      //~ printf ("%s; %s; %s; %s\n", oformat->name, oformat->long_name, oformat->mime_type, oformat->extensions);
+  //~ printf ("%s; %s; %s; %s\n", oformat->name, oformat->long_name, oformat->mime_type, oformat->extensions);
 
-      //~ //cv_ff_codec_tag_dump (oformat->codec_tag);
+  //~ //cv_ff_codec_tag_dump (oformat->codec_tag);
 
-      //~ oformat = av_oformat_next(oformat);
+  //~ oformat = av_oformat_next(oformat);
   //~ }
 
   //~ AVOutputFormat * oformat = av_oformat_next(NULL);
   //~ while(oformat != NULL)
   //~ {
-      //~ fprintf(stderr, "%s\n", oformat->long_name);
-      //~ if (oformat->codec_tag != NULL)
-      //~ {
-          //~ int i = 0;
+  //~ fprintf(stderr, "%s\n", oformat->long_name);
+  //~ if (oformat->codec_tag != NULL)
+  //~ {
+  //~ int i = 0;
 
-          //~ CV_CODEC_ID cid = CV_CODEC(CODEC_ID_MPEG1VIDEO);
-          //~ while (cid != CV_CODEC(CODEC_ID_NONE))
-          //~ {
-              //~ cid = av_codec_get_id(oformat->codec_tag, i++);
-              //~ fprintf(stderr, "    %d\n", cid);
-          //~ }
-      //~ }
-      //~ oformat = av_oformat_next(oformat);
+  //~ CV_CODEC_ID cid = CV_CODEC(CODEC_ID_MPEG1VIDEO);
+  //~ while (cid != CV_CODEC(CODEC_ID_NONE))
+  //~ {
+  //~ cid = av_codec_get_id(oformat->codec_tag, i++);
+  //~ fprintf(stderr, "    %d\n", cid);
+  //~ }
+  //~ }
+  //~ oformat = av_oformat_next(oformat);
   //~ }
 
   //printf ("tag = %i = %#x = %c%c%c%c\n", tag, tag, CV_TAG_TO_PRINTABLE_CHAR4(tag));

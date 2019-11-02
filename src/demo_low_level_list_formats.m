@@ -4,7 +4,9 @@ autoload ("__ffmpeg_defines__", which ("cap_ffmpeg_wrapper.oct"));
 autoload ("__ffmpeg_output_formats__", which ("cap_ffmpeg_wrapper.oct"));
 
 __ffmpeg_defines__ ()
-x = __ffmpeg_output_formats__ ();
+x = __ffmpeg_output_formats__ ()
+
+x.long_name
 
 # 68 ist mov
 # 71 ist mp4

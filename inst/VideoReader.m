@@ -39,7 +39,8 @@ classdef VideoReader < handle
     VideoFormat    = "RGB24";
 
     ## GNU Octave extensions
-    VideoCodec     = "";
+    FrameNumber    = 0;        # 0-based index of the frame to be decoded/captured next.
+    VideoCodec     = "";       # Name of used video codec as obtained by AVCodecDescriptor->name
     AspectRatio    = [0, 1];
     FFmpeg_versions        = "";
 
@@ -58,6 +59,11 @@ classdef VideoReader < handle
 
   endproperties
 
+  methods (Hidden)
+
+
+  endmethods
+
   methods
 
     function v = VideoReader (filename, varargin)
@@ -70,18 +76,9 @@ classdef VideoReader < handle
 
       [v.h] = __cap_open__ (fullfile (v.Path, v.Name));
 
-      prop = __cap_get_properties__ (v.h);
-
-      v.Duration    = prop.duration_sec;
-      v.FrameRate   = prop.fps;
-      v.NumberOfFrames = prop.total_frames;
-      v.Bitrate     = prop.bitrate;
-      v.Width       = prop.width;
-      v.Height      = prop.height;
-      v.VideoCodec  = prop.video_codec_name;
-      v.AspectRatio = [prop.aspect_ration_num prop.aspect_ration_den];
-
       v.FFmpeg_versions = __ffmpeg_defines__ ().LIBAV_IDENT;
+
+      update_properties (v);
 
     endfunction
 
@@ -97,6 +94,7 @@ classdef VideoReader < handle
       printf ("    Name           = %s\n", v.Name);
       printf ("    Path           = %s\n", v.Path);
       printf ("    NumberOfFrames = %i\n", v.NumberOfFrames);
+      printf ("    FrameNumber    = %i\n", v.FrameNumber);
       printf ("    VideoFormat    = %s\n", v.VideoFormat);
       printf ("    VideoCodec     = %s\n", v.VideoCodec);
       printf ("    AspectRatio    = %s\n", mat2str (v.AspectRatio));
@@ -116,10 +114,33 @@ classdef VideoReader < handle
 
     endfunction
 
+    function val = get.FrameNumber (v)
+
+      val = __cap_get_properties__ (v.h).frame_number;
+
+    endfunction
+
+    # internal function
+    # FIXME: perhaps this can be hidden or method Access = private but what would be the benefit?
+    function update_properties (v)
+
+      prop = __cap_get_properties__ (v.h);
+
+      v.Duration    = prop.duration_sec;
+      v.FrameRate   = prop.fps;
+      v.NumberOfFrames = prop.total_frames;
+      v.FrameNumber    = prop.frame_number;
+      v.Bitrate        = prop.bitrate;
+      v.Width          = prop.width;
+      v.Height         = prop.height;
+      v.VideoCodec     = prop.video_codec_name;
+      v.AspectRatio    = [prop.aspect_ration_num prop.aspect_ration_den];
+
+    endfunction
+
     function r = hasFrame (v)
 
-      # FIXME: implement me!
-      r = true;
+      r = v.FrameNumber < v.NumberOfFrames;
 
     endfunction
 
@@ -149,6 +170,20 @@ endclassdef
 %!   endif
 %!   drawnow
 %!   pause (1/30);
+%! endwhile
+
+%!demo
+%! r = VideoReader("https://raw.githubusercontent.com/opencv/opencv/master/samples/data/vtest.avi")
+%! im = [];
+%! while (r.hasFrame())
+%!   img = readFrame (r);
+%!   if (isempty (im))
+%!     im = image (img);
+%!     axis off;
+%!   else
+%!     set (im, "cdata", img);
+%!   endif
+%!   drawnow
 %! endwhile
 
 ## FIXME: add better test, perhaps find smaller online videos

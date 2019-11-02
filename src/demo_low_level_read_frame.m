@@ -29,3 +29,5 @@ for k=1:opt.total_frames
   endif
   drawnow
 endfor
+
+opt = __cap_get_properties__ (x)

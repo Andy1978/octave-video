@@ -22,6 +22,12 @@
 ## @end deftypefn
 
 ## ToDo: https://savannah.gnu.org/bugs/?func=detailitem&item_id=57020
+## pantxo
+## - most properties should be read-only (SetAccess = "private"): ColorChannels (codec specific), Duration, FileFormat (codec specific),
+##   FileName/Path (fixed at object instantiation), FrameCount, Height/Width (fixed by the first provided frame), VideoBitsPerPixel/VideoCompressionMethod/VideoFormat (codec specific)
+## - increment FrameCount and Duration after each successful call to writeVideo,
+## - allow passing frames or frame arrays  directly to writeVideo, without having to extract the "cdata" field manually,
+## - allow passing arbitrary image data types even if we end up converting them internally to whatever is prefered for the chosen codec, e.g uint8 for RGB 24bits video formats.
 
 classdef VideoWriter < handle
 

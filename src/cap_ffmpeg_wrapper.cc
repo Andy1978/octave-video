@@ -224,10 +224,10 @@ Gets CvCapture_FFMPEG properties like bitrate, fps, total_frames, duration_sec..
       opt.contents ("height")       = h->frame.height;
 
       // Current position of the video file in milliseconds
-      opt.contents ("pos")          = (h->picture_pts == AV_NOPTS_VALUE_) ? 0 : h->dts_to_sec(h->picture_pts) * 1000;
+      //opt.contents ("pos")          = (h->picture_pts == AV_NOPTS_VALUE_) ? 0 : h->dts_to_sec(h->picture_pts) * 1000;
 
       // Relative position of the video file: 0=start of the film, 1=end of the film.
-      opt.contents ("rel_pos") = h->r2d(h->ic->streams[h->video_stream]->time_base);
+      //opt.contents ("rel_pos") = h->r2d(h->ic->streams[h->video_stream]->time_base);
 
       //  0-based index of the frame to be decoded/captured next.
       opt.contents ("frame_number") = h->frame_number;

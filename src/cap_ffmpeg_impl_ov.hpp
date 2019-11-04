@@ -1493,6 +1493,15 @@ class CvVideoWriter_FFMPEG: public octave_base_value
     bool              ok;
     struct SwsContext *img_convert_ctx;
 
+    const char* get_video_codec_name () const
+      {
+#if LIBAVFORMAT_BUILD > 4628
+        return _opencv_avcodec_get_name(video_st->codec->codec_id);
+#else
+        return _opencv_avcodec_get_name(video_st->codec.codec_id);
+#endif
+      }
+
     bool is_constant (void) const
     {
       return true;

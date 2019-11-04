@@ -31,7 +31,7 @@
 
 classdef VideoWriter < handle
 
-  properties (SetAccess = public, GetAccess = public)
+  properties (SetAccess = private, GetAccess = public)
 
     ColorChannels          = 3;
     Colormap               = [];
@@ -140,16 +140,26 @@ classdef VideoWriter < handle
 
     function writeVideo (v, frame)
 
+      if (! isnumeric (frame))
+        error ("writeVideo: 'frame' has to be a numeric matrix")
+      endif
+
       if (! v.opened)
 
-        ## if height/width isn't defined yet, use size of frame
-        if (isempty (v.Width) || isempty (v.Height))
-          v.Width = columns (frame);
-          v.Height = rows (frame);
+        n_ch = size (frame, 3);
+        if (n_ch != 1 && n_ch != 3)
+          error ("writeVideo: 'frame' has to be a 'H x W x 1' (grayscale or indexed) or 'H x W x 3' matrix (RGB)");
         endif
 
-        # FIXME: isColor is set always true here...
-        v.h = __writer_open__ (fullfile (v.Path, v.Filename), v.FourCC, v.FrameRate, v.Width, v.Height, true);
+        v.ColorChannels = n_ch;
+        v.VideoBitsPerPixel = 8 * v.ColorChannels;
+
+        [v.h, opt] = __writer_open__ (fullfile (v.Path, v.Filename), v.FourCC, v.FrameRate, columns (frame), rows (frame), v.ColorChannels == 3);
+
+        v.Width = opt.frame_width;
+        v.Height = opt.frame_height;
+        v.VideoFormat = opt.output_format_long_name;
+        v.VideoCompressionMethod = opt.output_video_stream_codec;
         v.opened = true;
       endif
 

@@ -547,6 +547,9 @@ undocumented internal function\n\
               opt.contents ("ok")           = h->ok;
               opt.contents ("frame_width")  = h->frame_width;
               opt.contents ("frame_height") = h->frame_height;
+              opt.contents ("output_format_long_name") = h->fmt->long_name;
+              opt.contents ("output_video_stream_codec") = h->get_video_codec_name ();
+
               retval.append (opt);
 
               // FIXME: implement more
@@ -591,7 +594,7 @@ undocumented internal function\n\
     {
       int width = f.columns ();
       int height = f.rows ();
-      int cn = 3;
+      int cn = f.dim3 ();
       int step = width * cn;
       int origin = 0;
 

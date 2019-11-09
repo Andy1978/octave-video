@@ -20,7 +20,7 @@ RUN cd octave-4.4.1-build && make install
 
 RUN apt-get update && apt-get --no-install-recommends install -y pkg-config libswscale-dev libavformat-dev libavcodec-dev patch
 
-COPY ./video-*.tar.gz /app
+COPY ./video-*.tar.gz /app/
 
 RUN octave --eval "pkg install -verbose video-*.tar.gz"
 

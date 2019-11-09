@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-cp ../video*.tar.gz .
+cp ../video-2*.tar.gz .
 
 ## Debian stretch
 docker build -f Dockerfile_debian_stretch_octave_4_4_1 -t debian_stretch_octave_4_4_1 .

@@ -11,7 +11,7 @@ RUN dnf -y install ffmpeg ffmpeg-devel
 
 RUN dnf -y install make patch redhat-rpm-config
 
-COPY ./video-*.tar.gz /app
+COPY ./video-*.tar.gz /app/
 
 RUN octave --eval "pkg install -verbose video-*.tar.gz"
 

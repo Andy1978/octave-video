@@ -28,7 +28,7 @@ RUN tar xzf libav-12.3.tar.gz &&\
     make -j8 &&\
     make install
 
-COPY ./video-*.tar.gz /app
+COPY ./video-*.tar.gz /app/
 
 RUN octave --eval "pkg install -verbose video-*.tar.gz"
 

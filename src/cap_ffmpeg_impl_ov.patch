@@ -1,5 +1,5 @@
 --- cap_ffmpeg_impl.hpp	2019-10-27 21:06:02.144461471 +0100
-+++ cap_ffmpeg_impl_ov.hpp	2019-11-01 11:41:46.261477711 +0100
++++ cap_ffmpeg_impl_ov.hpp	2019-11-09 10:51:30.675744233 +0100
 @@ -40,17 +40,24 @@
  //
  //M*/
@@ -213,10 +213,19 @@
      bool open( const char* filename, int fourcc,
                 double fps, int width, int height, bool isColor );
      void close();
-@@ -1420,8 +1492,35 @@
+@@ -1420,8 +1492,44 @@
      int               frame_idx;
      bool              ok;
      struct SwsContext *img_convert_ctx;
++
++    const char* get_video_codec_name () const
++      {
++#if LIBAVFORMAT_BUILD > 4628
++        return _opencv_avcodec_get_name(video_st->codec->codec_id);
++#else
++        return _opencv_avcodec_get_name(video_st->codec.codec_id);
++#endif
++      }
 +
 +    bool is_constant (void) const
 +    {
@@ -249,7 +258,7 @@
  static const char * icvFFMPEGErrStr(int err)
  {
  #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(53, 2, 0)
-@@ -1482,6 +1581,7 @@
+@@ -1482,6 +1590,7 @@
  
  void CvVideoWriter_FFMPEG::init()
  {
@@ -257,7 +266,7 @@
      fmt = 0;
      oc = 0;
      outbuf = 0;
-@@ -2016,7 +2116,7 @@
+@@ -2016,7 +2125,7 @@
  {
      InternalFFMpegRegister::init();
      CV_CODEC_ID codec_id = CV_CODEC(CODEC_ID_NONE);
@@ -266,7 +275,7 @@
      double bitrate_scale = 1;
  
      close();
-@@ -2295,14 +2395,14 @@
+@@ -2295,14 +2404,14 @@
      c->bit_rate = (int)lbit_rate;
  
      /* open the codec */
@@ -283,7 +292,7 @@
          return false;
      }
  
-@@ -2353,12 +2453,12 @@
+@@ -2353,12 +2462,12 @@
  
  #if LIBAVFORMAT_BUILD >= CALC_FFMPEG_VERSION(52, 111, 0)
      /* write the stream header, if any */
@@ -299,7 +308,7 @@
      {
          close();
          remove(filename);
-@@ -2404,10 +2504,10 @@
+@@ -2404,10 +2513,10 @@
      return capture->setProperty(prop_id, value);
  }
  

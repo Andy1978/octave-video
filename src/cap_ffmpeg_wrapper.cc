@@ -387,7 +387,7 @@ CvVideoWriter_FFMPEG* get_writer_from_ov (octave_value ov)
 // PKG_DEL: autoload ("__writer_open__", "cap_ffmpeg_wrapper.oct", "remove");
 DEFUN_DLD(__writer_open__, args, nargout,
           "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {[@var{h}, @var{opt] =} __writer_open__ (@var{filename}, @var{fourcc}, @var{fps}, @var{width}, @var{height}, @var{isColor})\n\
+@deftypefn {Loadable Function} {@var{h} =} __writer_open__ (@var{filename}, @var{fourcc}, @var{fps}, @var{width}, @var{height}, @var{isColor})\n\
 undocumented internal function\n\
 @end deftypefn")
 {
@@ -540,26 +540,41 @@ undocumented internal function\n\
       if (valid)
         {
           retval.append (octave_value (h));
-
-          if (nargout > 0)
-            {
-              octave_scalar_map opt;
-              opt.contents ("ok")           = h->ok;
-              opt.contents ("frame_width")  = h->frame_width;
-              opt.contents ("frame_height") = h->frame_height;
-              opt.contents ("output_format_long_name") = h->fmt->long_name;
-              opt.contents ("output_video_stream_codec") = h->get_video_codec_name ();
-
-              retval.append (opt);
-
-              // FIXME: implement more
-            }
         }
       else
         {
           // FIXME: CvVideoWriter_FFMPEG::open just returns false without explanation why
           error ("Opening '%s' for writing failed", filename.c_str ());
         }
+    }
+  return retval;
+}
+
+// PKG_ADD: autoload ("__writer_get_properties__", "cap_ffmpeg_wrapper.oct");
+// PKG_DEL: autoload ("__writer_get_properties__", "cap_ffmpeg_wrapper.oct", "remove");
+DEFUN_DLD(__writer_get_properties__, args, nargout,
+          "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} {[@var{h}, @var{opt}] =} __cap_get_properties__ (@var{h})\n\
+Gets CvVideoWriter_FFMPEG properties...\n\
+@end deftypefn")
+{
+  octave_value_list retval;
+  int nargin = args.length ();
+
+  if (nargin != 1)
+    error("__writer_get_properties__ needs one parameter");
+
+  CvVideoWriter_FFMPEG* h = get_writer_from_ov (args(0));
+  if (h)
+    {
+      octave_scalar_map opt;
+      opt.contents ("ok")              = h->ok;
+      opt.contents ("frame_width")     = h->frame_width;
+      opt.contents ("output_format_long_name") = h->fmt->long_name;
+      opt.contents ("output_video_stream_codec") = h->get_video_codec_name ();
+      opt.contents ("frame_height")    = h->frame_height;
+      opt.contents ("frame_idx")       = h->frame_idx;
+      retval.append (opt);
     }
   return retval;
 }

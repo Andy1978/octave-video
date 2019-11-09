@@ -34,21 +34,22 @@ classdef VideoWriter < handle
   properties (SetAccess = private, GetAccess = public)
 
     ColorChannels          = 3;
-    Colormap               = [];
-    CompressionRatio       = 10;
-    Duration               = 0;  # [s]
+    #Colormap               = [];       # not yet implemented
+    #CompressionRatio       = 10;       # not yet implemented
+    #Duration               = 0;  # [s] # not yet implemented
     FileFormat             = "avi";
     Filename               = "";
     FrameCount             = 0;
-    FrameRate              = 30;
-    Height                 = [];
-    Width                  = [];
-    LosslessCompression    = false;
+    FrameRate              = 30;      # fps in [Hz]
+    Height                 = [];      # height of the video frames which can be different than requested due to padding or cropping
+    Width                  = [];      # width of the video frames which can be different than requested due to padding or cropping
+    #LosslessCompression    = false;  # FIXME: currently not used
     Path                   = "./";
-    Quality                = 75;
-    VideoBitsPerPixel      = 24;
-    VideoCompressionMethod = "none";
-    VideoFormat            = "foo";
+    #Quality                = 75;     # FIXME: currently not used
+    VideoBitsPerPixel      = 24;      # 8 * ColorChannels
+    VideoCompressionMethod = "";      # Used video codec, for exmaple "h264" or "mpeg4"
+    VideoFormat            = "";      # descriptive container format for example
+                                      # "MP4 (MPEG-4 Part 14)" or "AVI (Audio Video Interleaved)"
 
     ## GNU Octave extensions
     FourCC                 = "";
@@ -94,17 +95,17 @@ classdef VideoWriter < handle
 
       printf(" class VideoWriter:\n");
       printf("    ColorChannels          = %i\n", v.ColorChannels);
-      printf("    CompressionRatio       = %i\n", v.CompressionRatio);
-      printf("    Duration               = %f\n", v.Duration);
+      #printf("    CompressionRatio       = %i\n", v.CompressionRatio);
+      #printf("    Duration               = %f\n", v.Duration);
       printf("    FileFormat             = %s\n", v.FileFormat);
       printf("    Filename               = %s\n", v.Filename);
       printf("    FrameCount             = %i\n", v.FrameCount);
       printf("    FrameRate              = %i\n", v.FrameRate);
       printf("    Height                 = %i\n", v.Height);
       printf("    Width                  = %i\n", v.Width);
-      printf("    LosslessCompression    = %s\n", v.LosslessCompression);
+      #printf("    LosslessCompression    = %s\n", v.LosslessCompression);
       printf("    Path                   = %s\n", v.Path);
-      printf("    Quality                = %i\n", v.Quality);
+      #printf("    Quality                = %i\n", v.Quality);
       printf("    VideoBitsPerPixel      = %i\n", v.VideoBitsPerPixel);
       printf("    VideoCompressionMethod = %s\n", v.VideoCompressionMethod);
       printf("    VideoFormat            = %s\n", v.VideoFormat);
@@ -138,39 +139,60 @@ classdef VideoWriter < handle
 
     endfunction
 
-    function writeVideo (v, frame)
+    function writeVideo (v, in)
 
-      if (! isnumeric (frame))
-        error ("writeVideo: 'frame' has to be a numeric matrix")
+      # input can be an image or a frame geturned by getframe
+      is_frame = isstruct (in) && isfield (in, "cdata");
+      is_img = isnumeric (in);
+
+      if (! is_frame && ! is_img)
+        error ("writeVideo: 'in' has to be a numeric matrix or a frame with cdata")
+      endif
+
+      if (is_frame)
+        in = in.cdata;
       endif
 
       if (! v.opened)
 
-        n_ch = size (frame, 3);
+        n_ch = size (in, 3);
         if (n_ch != 1 && n_ch != 3)
-          error ("writeVideo: 'frame' has to be a 'H x W x 1' (grayscale or indexed) or 'H x W x 3' matrix (RGB)");
+          error ("writeVideo: 'in' has to be a 'H x W x 1' (grayscale or indexed) or 'H x W x 3' matrix (RGB)");
         endif
 
         v.ColorChannels = n_ch;
         v.VideoBitsPerPixel = 8 * v.ColorChannels;
 
-        [v.h, opt] = __writer_open__ (fullfile (v.Path, v.Filename), v.FourCC, v.FrameRate, columns (frame), rows (frame), v.ColorChannels == 3);
+        v.h = __writer_open__ (fullfile (v.Path, v.Filename), v.FourCC, v.FrameRate, columns (in), rows (in), v.ColorChannels == 3);
+
+        opt = __writer_get_properties__ (v.h);
 
         v.Width = opt.frame_width;
         v.Height = opt.frame_height;
         v.VideoFormat = opt.output_format_long_name;
         v.VideoCompressionMethod = opt.output_video_stream_codec;
+        v.FrameCount = opt.frame_idx;
         v.opened = true;
       endif
 
       # default ist BGR24, flip RGB -> BGR
-      frame = flip (frame, 3);
+      in = flip (in, 3);
 
-      __writer_write_frame__ (v.h, frame);
+      __writer_write_frame__ (v.h, in);
 
     endfunction
 
-    function getProfiles (v)
+    function val = get.FrameCount (v)
+
+      if (v.opened)
+        val = __writer_get_properties__ (v.h).frame_idx;
+      else
+        # FIXME: warning or just silently return 0?
+        # warning ("VideoWriter isn't opened yet");
+        val = 0;
+      endif
+
+      # FIXME: Implement and update duration. I don't know if we should calulate this using FrameCount and fps or ask the ffmpeg stream
 
     endfunction
 
@@ -189,8 +211,7 @@ endclassdef
 %! for ii = 1:nframes
 %!   set (hs, "zdata", z * sin (2*pi*ii/nframes));
 %!   drawnow
-%!   x = getframe (gcf).cdata;
-%!   writeVideo (w, uint8(x));
+%!   writeVideo (w, getframe (gcf));
 %! endfor
 %! close (w)
 %! printf ("Now run '%s' in your favourite video player or try 'demo VideoReader'!\n", fn);

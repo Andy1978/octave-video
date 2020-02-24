@@ -1,3 +1,5 @@
+# List available formats
+
 clear all;
 
 autoload ("__ffmpeg_defines__", which ("cap_ffmpeg_wrapper.oct"));

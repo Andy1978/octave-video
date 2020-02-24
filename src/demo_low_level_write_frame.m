@@ -24,10 +24,11 @@ for k=1:60
   # default ist BGR24, thus this gives a blue line
   __writer_write_frame__ (h, x);
 
-  opt = __writer_get_properties__ (h)
+  opt = __writer_get_properties__ (h);
 
 endfor
 
+h
 
 __writer_close__ (h);
 

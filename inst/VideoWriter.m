@@ -1,4 +1,4 @@
-## Copyright (C) 2019 Andreas Weber <octave@josoansi.de>
+## Copyright (C) 2019-2020 Andreas Weber <octave@josoansi.de>
 ##
 ## This file is part of octave-video.
 ##
@@ -36,7 +36,7 @@ classdef VideoWriter < handle
     ColorChannels          = 3;
     #Colormap               = [];       # not yet implemented
     #CompressionRatio       = 10;       # not yet implemented
-    #Duration               = 0;  # [s] # not yet implemented
+    Duration               = 0;       # [s]
     FileFormat             = "avi";
     Filename               = "";
     FrameCount             = 0;
@@ -63,6 +63,25 @@ classdef VideoWriter < handle
     opened = false;
 
   endproperties
+
+  methods (Access = private)
+
+    function update_variable_properties (v)
+
+      ## update properties which may change with calls to writeVideo
+      if (v.opened)
+        opt = __writer_get_properties__ (v.h);
+        v.FrameCount = opt.frame_idx;
+        v.Duration = opt.frame_idx / v.FrameRate;
+      else
+        #warning ("VideoWriter isn't opened");
+        # I think just don't update is the best here
+        ;
+      endif
+
+    endfunction
+
+  endmethods
 
   methods
 
@@ -96,13 +115,13 @@ classdef VideoWriter < handle
       printf(" class VideoWriter:\n");
       printf("    ColorChannels          = %i\n", v.ColorChannels);
       #printf("    CompressionRatio       = %i\n", v.CompressionRatio);
-      #printf("    Duration               = %f\n", v.Duration);
+      printf("    Duration [s]           = %.2f\n", v.Duration);
       printf("    FileFormat             = %s\n", v.FileFormat);
       printf("    Filename               = %s\n", v.Filename);
       printf("    FrameCount             = %i\n", v.FrameCount);
-      printf("    FrameRate              = %i\n", v.FrameRate);
-      printf("    Height                 = %i\n", v.Height);
-      printf("    Width                  = %i\n", v.Width);
+      printf("    FrameRate [1/s]        = %i\n", v.FrameRate);
+      printf("    Height [px]            = %i\n", v.Height);
+      printf("    Width [px]             = %i\n", v.Width);
       #printf("    LosslessCompression    = %s\n", v.LosslessCompression);
       printf("    Path                   = %s\n", v.Path);
       #printf("    Quality                = %i\n", v.Quality);
@@ -117,8 +136,8 @@ classdef VideoWriter < handle
     function open (v)
 
       ## This implementation just opens a dummy file to check if the file
-      ## can be created. The real video output is created on the first call
-      ## of writeVideo.
+      ## can be created. A new instance of CvVideoWriter_FFMPEG is
+      ## created on the first call writeVideo.
 
       fn = fullfile (v.Path, v.Filename);
       [fid, msg] = fopen (fn, "w");
@@ -135,6 +154,7 @@ classdef VideoWriter < handle
 
       if (v.opened)
         __writer_close__ (v.h);
+        v.opened = false;
       endif
 
     endfunction
@@ -165,13 +185,13 @@ classdef VideoWriter < handle
 
         v.h = __writer_open__ (fullfile (v.Path, v.Filename), v.FourCC, v.FrameRate, columns (in), rows (in), v.ColorChannels == 3);
 
+        ## update properties
         opt = __writer_get_properties__ (v.h);
-
         v.Width = opt.frame_width;
         v.Height = opt.frame_height;
         v.VideoFormat = opt.output_format_long_name;
         v.VideoCompressionMethod = opt.output_video_stream_codec;
-        v.FrameCount = opt.frame_idx;
+
         v.opened = true;
       endif
 
@@ -184,15 +204,8 @@ classdef VideoWriter < handle
 
     function val = get.FrameCount (v)
 
-      if (v.opened)
-        val = __writer_get_properties__ (v.h).frame_idx;
-      else
-        # FIXME: warning or just silently return 0?
-        # warning ("VideoWriter isn't opened yet");
-        val = 0;
-      endif
-
-      # FIXME: Implement and update duration. I don't know if we should calulate this using FrameCount and fps or ask the ffmpeg stream
+      update_variable_properties (v);
+      val = v.FrameCount;
 
     endfunction
 
@@ -209,7 +222,7 @@ endclassdef
 %! axis manual
 %! nframes = 100;
 %! for ii = 1:nframes
-%!   set (hs, "zdata", z * sin (2*pi*ii/nframes));
+%!   set (hs, "zdata", z * sin (2*pi*ii/nframes + pi/5));
 %!   drawnow
 %!   writeVideo (w, getframe (gcf));
 %! endfor

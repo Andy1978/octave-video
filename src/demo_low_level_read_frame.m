@@ -1,3 +1,6 @@
+# Use low-level functions to read frames, needs
+# vtest.avi in samples. Run "cd samples && make" to download it using wget
+
 clear all;
 
 autoload ("__cap_open__", which ("cap_ffmpeg_wrapper.oct"));

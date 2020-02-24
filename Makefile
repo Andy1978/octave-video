@@ -93,15 +93,16 @@ all:
 	cd src && $(MAKE) $@
 
 check: all
-	$(OCTAVE) --no-gui --silent \
-	  --eval 'addpath (fullfile ([pwd filesep "src"]));' \
+	$(OCTAVE) --silent \
+	  --eval 'addpath (fullfile (pwd, "src"));' \
+	  --eval 'addpath (fullfile (pwd, "inst"));' \
 	  --eval '${PKG_ADD}' \
-	  --eval 'runtests ("src");'
+	  --eval 'runtests ("inst");'
 
 run: all
 	$(OCTAVE) --silent --persist \
-	  --eval 'addpath (fullfile ([pwd filesep "src"]));' \
-	  --eval 'addpath (fullfile ([pwd filesep "inst"]));' \
+	  --eval 'addpath (fullfile (pwd, "src"));' \
+	  --eval 'addpath (fullfile (pwd, "inst"));' \
 	  --eval '${PKG_ADD}'
 
 debug: clean

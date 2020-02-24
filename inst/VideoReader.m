@@ -1,4 +1,4 @@
-## Copyright (C) 2019 Andreas Weber <octave@josoansi.de>
+## Copyright (C) 2019-2020 Andreas Weber <octave@josoansi.de>
 ##
 ## This file is part of octave-video.
 ##
@@ -85,19 +85,19 @@ classdef VideoReader < handle
     function disp (v)
 
       printf (" class VideoReader:\n");
-      printf ("    Duration       = %fs\n", v.Duration);
-      printf ("    BitsPerPixel   = %i\n", v.BitsPerPixel);
-      printf ("    Bitrate        = %i\n", v.Bitrate);
-      printf ("    FrameRate      = %.2ffps\n", v.FrameRate);
-      printf ("    Height         = %i\n", v.Height);
-      printf ("    Width          = %i\n", v.Width);
-      printf ("    Name           = %s\n", v.Name);
-      printf ("    Path           = %s\n", v.Path);
-      printf ("    NumberOfFrames = %i\n", v.NumberOfFrames);
-      printf ("    FrameNumber    = %i\n", v.FrameNumber);
-      printf ("    VideoFormat    = %s\n", v.VideoFormat);
-      printf ("    VideoCodec     = %s\n", v.VideoCodec);
-      printf ("    AspectRatio    = %s\n", mat2str (v.AspectRatio));
+      printf ("    Duration [s]    = %.2f\n", v.Duration);
+      printf ("    BitsPerPixel    = %i\n", v.BitsPerPixel);
+      printf ("    Bitrate         = %i\n", v.Bitrate);
+      printf ("    FrameRate [fps] = %.2f\n", v.FrameRate);
+      printf ("    Height [px]     = %i\n", v.Height);
+      printf ("    Width [px]      = %i\n", v.Width);
+      printf ("    Name            = %s\n", v.Name);
+      printf ("    Path            = %s\n", v.Path);
+      printf ("    NumberOfFrames  = %i\n", v.NumberOfFrames);
+      printf ("    FrameNumber     = %i\n", v.FrameNumber);
+      printf ("    VideoFormat     = %s\n", v.VideoFormat);
+      printf ("    VideoCodec      = %s\n", v.VideoCodec);
+      printf ("    AspectRatio     = %s\n", mat2str (v.AspectRatio));
 
     endfunction
 
@@ -157,7 +157,8 @@ endclassdef
 %!demo
 %! fn = fullfile (tempdir(), "sombrero.mp4");
 %! if (! exist (fn, "file"))
-%!   error ("'%s' isn't available. Please run 'demo VideoWriter' first to create it!", fn);
+%!   warning ("'%s' doesn't exist, running demo VideoWriter first...");
+%!   demo ("VideoWriter");
 %! endif
 %! x = VideoReader (fn);
 %! im = [];
@@ -186,9 +187,6 @@ endclassdef
 %!   drawnow
 %! endwhile
 
-## FIXME: add better test, perhaps find smaller online videos
-#%!test
-#%! a = VideoReader("https://raw.githubusercontent.com/opencv/opencv/master/samples/data/vtest.avi");
-#%! assert (a.Duration, 79.5)
-#%! assert (a.FrameRate, 10)
-#%! assert (a.NumberOfFrames, 795)
+# VideoReader is currently tested with VideoWriter
+%!test
+%! assert (true);

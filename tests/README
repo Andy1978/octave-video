@@ -1,0 +1,38 @@
+build docker containers and run "test VideoWriter" on them.
+
+Usage:
+$ [sudo] ./build.sh
+$ [sudo] ./run.sh
+
+expected output:
+
+PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
+NAME="Debian GNU/Linux"
+OCTAVE_VERSION = 4.4.1
+FFmpeg_versions = Lavu55.34.101, SwS4.2.100, Lavc57.64.101, Lavf57.56.101
+PASSES 1 out of 1 test
+---
+PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
+NAME="Debian GNU/Linux"
+OCTAVE_VERSION = 5.1.0
+FFmpeg_versions = Lavu55.34.101, SwS4.2.100, Lavc57.64.101, Lavf57.56.101
+PASSES 1 out of 1 test
+---
+NAME="CentOS Linux"
+VERSION="7 (Core)"
+OCTAVE_VERSION = 4.4.1
+FFmpeg_versions = Lavu54.31.100, SwS3.1.101, Lavc56.60.100, Lavf56.40.101
+PASSES 1 out of 1 test
+---
+NAME=Fedora
+VERSION="31 (Container Image)"
+OCTAVE_VERSION = 5.1.0
+FFmpeg_versions = Lavu56.31.100, SwS5.5.100, Lavc58.54.100, Lavf58.29.100
+PASSES 1 out of 1 test
+---
+PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
+NAME="Debian GNU/Linux"
+OCTAVE_VERSION = 4.4.1
+FFmpeg_versions = Lavu55.20.0, SwS4.0.0, Lavc57.25.0, Lavf57.7.2
+PASSES 1 out of 1 test
+---

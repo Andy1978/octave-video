@@ -157,7 +157,7 @@ endclassdef
 %!demo
 %! fn = fullfile (tempdir(), "sombrero.mp4");
 %! if (! exist (fn, "file"))
-%!   warning ("'%s' doesn't exist, running demo VideoWriter first...");
+%!   warning ("'%s' doesn't exist, running demo VideoWriter first...", fn);
 %!   demo ("VideoWriter");
 %! endif
 %! x = VideoReader (fn);

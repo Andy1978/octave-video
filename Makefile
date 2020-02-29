@@ -1,4 +1,4 @@
-## Copyright 2015-2016 Andreas Weber
+## Copyright 2015-2019 Andreas Weber
 ## Copyright 2015-2016 Mike Miller
 ## Copyright 2015-2016 Carnë Draug
 ## Copyright 2015-2016 Oliver Heimlich
@@ -17,6 +17,11 @@ RELEASE_DIR     = $(PACKAGE)-$(VERSION)
 RELEASE_TARBALL = $(PACKAGE)-$(VERSION).tar.gz
 HTML_DIR        = $(PACKAGE)-html
 HTML_TARBALL    = $(PACKAGE)-html.tar.gz
+
+M_SOURCES   = $(wildcard inst/*.m)
+CC_SOURCES  = src/cap_ffmpeg_wrapper.cc
+#OCT_FILES   = $(patsubst %.cc,%.oct,$(CC_SOURCES))
+PKG_ADD     = $(shell grep -Pho '(?<=// PKG_ADD: ).*' $(CC_SOURCES) $(M_SOURCES))
 
 MD5SUM    ?= md5sum
 MKOCTFILE ?= mkoctfile
@@ -42,13 +47,16 @@ help:
 	@echo "   doc              - Build Texinfo package manual"
 	@echo
 	@echo "   clean            - Remove releases, html documentation, and oct files"
-	@echo "   maintainer-clean - Additionally remove all generated files"
+	@echo "   realclean        - Additionally remove all generated files"
 
-$(RELEASE_DIR): .hg/dirstate
+$(RELEASE_DIR): all
 	@echo "Creating package version $(VERSION) release ..."
 	-rm -rf $@
-	hg archive --exclude ".hg*" --exclude Makefile --type files $@
-	cd "$@" && rm -rf "devel/" && cd "src/" && ./bootstrap && rm -rf "autom4te.cache"
+	mkdir -p $@/src
+	cp COPYING DESCRIPTION NEWS $@
+	cp -r ./inst $@
+	cp ./src/configure ./src/configure.ac ./src/bootstrap ./src/Makefile.in ./src/cap_ffmpeg_impl_ov.hpp ./src/cap_ffmpeg_wrapper.cc ./src/ffmpeg_codecs.hpp $@/src
+	sed -i '/###/q' $@/src/Makefile.in
 	chmod -R a+rX,u+w,go-w $@
 
 $(RELEASE_TARBALL): $(RELEASE_DIR)
@@ -59,7 +67,7 @@ $(HTML_DIR): install
 	@echo "Generating HTML documentation. This may take a while ..."
 	-rm -rf $@
 	$(OCTAVE) --silent \
-	  --eval 'graphics_toolkit ("gnuplot");' \
+	  --eval 'graphics_toolkit ("fltk");' \
 	  --eval 'pkg load generate_html $(PACKAGE);' \
 	  --eval 'generate_package_html ("$(PACKAGE)", "$@", "octave-forge");'
 	chmod -R a+rX,u+w,go-w $@
@@ -82,19 +90,23 @@ install: $(RELEASE_TARBALL)
 	$(OCTAVE) --silent --eval 'pkg install $(RELEASE_TARBALL);'
 
 all:
-	cd src && $(MAKE) $@
+	cd src && ./bootstrap && ./configure && $(MAKE) $@
 
 check: all
-	$(OCTAVE) --no-gui --silent \
-	  --eval 'addpath (fullfile ([pwd filesep "src"]));' \
-	  --eval 'runtests ("src");'
+	$(OCTAVE) --silent \
+	  --eval 'addpath (fullfile (pwd, "src"));' \
+	  --eval 'addpath (fullfile (pwd, "inst"));' \
+	  --eval '${PKG_ADD}' \
+	  --eval 'runtests ("inst");'
 
 run: all
 	$(OCTAVE) --silent --persist \
-	  --eval 'addpath (fullfile ([pwd filesep "src"]));'
+	  --eval 'addpath (fullfile (pwd, "src"));' \
+	  --eval 'addpath (fullfile (pwd, "inst"));' \
+	  --eval '${PKG_ADD}'
 
 debug: clean
-	cd src/ && ./configure
+	cd src/ && ./bootstrap && ./configure
 	$(MAKE) -C src/ debug
 	$(OCTAVE) --no-gui --silent --persist \
 	  --eval 'addpath (fullfile ([pwd filesep "src"]));' \
@@ -110,6 +122,6 @@ clean:
 	-rm -rf $(RELEASE_DIR) $(RELEASE_TARBALL) $(HTML_TARBALL) $(HTML_DIR)
 	cd src && $(MAKE) $@
 
-maintainer-clean: clean
+realclean: clean
 	cd src && $(MAKE) $@
 

@@ -1,0 +1,36 @@
+FROM debian:stretch-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y g++ make\
+  libpcre3-dev libblas-dev liblapack-dev gfortran libtool libreadline-dev wget lzip mercurial automake
+
+## Download Octave 4.4.1 release, unpack, build
+COPY octave-4.4.1.tar.lz.sha1 /app
+RUN wget https://ftp.gnu.org/gnu/octave/octave-4.4.1.tar.lz &&\
+    sha1sum -c octave-4.4.1.tar.lz.sha1 &&\
+    tar --lzip -xvf octave-4.4.1.tar.lz
+    
+RUN mkdir octave-4.4.1-build &&\
+    cd octave-4.4.1-build &&\
+    ../octave-4.4.1/configure --disable-java --disable-docs &&\
+    make -j8
+
+RUN cd octave-4.4.1-build && make install
+
+RUN wget https://libav.org/releases/libav-12.3.tar.gz
+
+RUN apt-get update && apt-get --no-install-recommends install -y pkg-config yasm
+
+RUN tar xzf libav-12.3.tar.gz &&\
+    cd libav-12.3 &&\
+    ./configure &&\
+    make -j8 &&\
+    make install
+
+COPY ./video-*.tar.gz /app/
+
+RUN octave --eval "pkg install -verbose video-*.tar.gz"
+
+CMD ["/usr/local/bin/octave"]
+

@@ -2,16 +2,15 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([Octave-Forge video package], [1.2.2+])
-AC_CONFIG_HEADERS([config.h])
+AC_INIT([Octave-Forge video package], [2.0.0])
+#AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
 AC_LANG(C++)
 
 # Define macros needed for libav
-AC_DEFINE(__STDC_CONSTANT_MACROS, [], [workaround for C++ programs to use C99 macros])
-AC_DEFINE(VIDEO_OUTBUF_SIZE, [200000], [size of video buffer])
+#AC_DEFINE(__STDC_CONSTANT_MACROS, [], [workaround for C++ programs to use C99 macros])
 
 AC_CHECK_PROG([HAVE_MKOCTFILE], [mkoctfile], [yes], [no])
 if [test $HAVE_MKOCTFILE = "no"]; then
@@ -20,29 +19,13 @@ fi
 
 # Checks for libraries.
 
-AC_CHECK_LIB([pthread], [pthread_create], [],
-             [AC_MSG_ERROR([$PACKAGE_NAME requires pthread])])
-AC_CHECK_LIB([avutil], [av_mallocz], [],
-             [AC_MSG_ERROR([$PACKAGE_NAME requires libavutil from FFmpeg])])
-
-PKG_CHECK_MODULES([FFMPEG], [libswscale, libavformat, libavcodec], [],
-  [AC_MSG_ERROR([FFmpeg libswscale, libavformat or libavcodec not found])])
-
-## FIMXE: Check if needed on CentOS 7
-#AC_CHECK_LIB([avresample], [avresample_close], [],
-#             [AC_MSG_ERROR([$PACKAGE_NAME requires libavresample from FFmpeg])])
-
-AC_CHECK_LIB([swscale], [sws_scale], [],
-             [AC_MSG_ERROR([$PACKAGE_NAME requires libswscale from FFmpeg])])
-AC_CHECK_LIB([avcodec], [av_frame_alloc], [],
-             [AC_MSG_ERROR([$PACKAGE_NAME requires libavcodec from FFmpeg])])
-AC_CHECK_LIB([avformat], [av_write_frame], [],
-             [AC_MSG_ERROR([$PACKAGE_NAME requires libavformat from FFmpeg])])
+PKG_CHECK_MODULES([FFMPEG], [libswscale, libavformat, libavcodec, libavutil], [],
+  [AC_MSG_ERROR([FFmpeg libswscale, libavformat, libavcodec or libavutil not found])])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_HEADER_STDBOOL
-AC_TYPE_UINT64_T
-AC_TYPE_UINT8_T
+#AC_CHECK_HEADER_STDBOOL
+#AC_TYPE_UINT64_T
+#AC_TYPE_UINT8_T
 
 AC_SUBST(CPPFLAGS)
 
@@ -53,7 +36,7 @@ AC_MSG_NOTICE([
 
 $PACKAGE_NAME is now configured with
 
-   FFMPEG LIBS:       $LIBS
+   FFMPEG LIBS:       $FFMPEG_LIBS
    FFMPEG CFLAGS:     $FFMPEG_CFLAGS
    DEFS:              $DEFS
 ])

@@ -1,0 +1,11 @@
+Want to start hacking on the development branch?
+
+$ hg clone http://hg.code.sf.net/p/octave/video -r devel octave-video
+$ cd octave-video/src/
+$ ./bootstrap
+$ ./configure
+$ cd ..
+$ make run
+
+octave:1>demo VideoWriter
+octave:2>demo VideoReader

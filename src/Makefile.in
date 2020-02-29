@@ -1,30 +1,41 @@
-OCTFILES = avifile.oct aviread.oct aviinfo.oct addframe.oct
-AVOBJS = AVHandler.o oct-avifile.o
-
 MKOCTFILE ?= mkoctfile
-MKOCTFLAGS ?= -Wall -v -Wno-deprecated-declarations
+MKOCTFLAGS ?= -Wall -v
 
-.PHONY: all clean realclean distclean
+.PHONY: all clean style check realclean distclean
 
-all: ${OCTFILES}
+all: cap_ffmpeg_wrapper.oct
 
 debug : MKOCTFLAGS += -ggdb -O0
 debug : all
 
-oct-avifile.o: AVHandler.o
-
-${AVOBJS}: %.o: %.cc
-	$(MKOCTFILE) $(MKOCTFLAGS) @FFMPEG_CFLAGS@ -c @DEFS@ $< -o $@ @CPPFLAGS@
-
-${OCTFILES}: %.oct: %.cc AVHandler.o oct-avifile.o
-	$(MKOCTFILE) $(MKOCTFLAGS) @FFMPEG_CFLAGS@ @DEFS@ $< $(filter %.o, $^) @LIBS@ @CPPFLAGS@
+cap_ffmpeg_wrapper.oct: cap_ffmpeg_wrapper.cc cap_ffmpeg_impl_ov.hpp
+	$(MKOCTFILE) $(MKOCTFLAGS) @FFMPEG_CFLAGS@ @DEFS@ $< $(filter %.o, $^) @FFMPEG_LIBS@ @CPPFLAGS@
 
 clean:
 	rm -f *.o *.oct octave-workspace
 
-distclean: clean
-	rm -f Makefile
+### below is removed in distributed Makefile.in
 
-realclean: distclean
+style:
+	astyle --style=gnu -s2 -n cap_ffmpeg_wrapper.cc
+
+check:
+	cppcheck -q --enable=all --force --language=c++ cap_ffmpeg_impl_ov.hpp cap_ffmpeg_wrapper.cc ffmpeg_codecs.hpp
+
+realclean: clean
+	rm -f Makefile
 	rm -rf autom4te.cache
 	rm -f config.status config.log config.h configure aclocal.m4
+	rm -f cap_ffmpeg_impl_ov.hpp
+
+## patch and upstream managment (development only)
+
+cap_ffmpeg_impl_ov.hpp: cap_ffmpeg_impl_ov.patch cap_ffmpeg_impl.hpp
+	patch -i $< -o $@
+
+update_patch:
+	diff -u cap_ffmpeg_impl.hpp cap_ffmpeg_impl_ov.hpp > cap_ffmpeg_impl_ov.patch || true
+
+update_opencv:
+	wget -N https://raw.githubusercontent.com/opencv/opencv/master/modules/videoio/src/ffmpeg_codecs.hpp
+	wget -N https://raw.githubusercontent.com/opencv/opencv/master/modules/videoio/src/cap_ffmpeg_impl.hpp

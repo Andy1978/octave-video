@@ -55,7 +55,7 @@ $(RELEASE_DIR): all
 	mkdir -p $@/src
 	cp COPYING DESCRIPTION NEWS $@
 	cp -r ./inst $@
-	cp ./src/configure ./src/Makefile.in ./src/cap_ffmpeg_impl_ov.hpp ./src/cap_ffmpeg_wrapper.cc ./src/ffmpeg_codecs.hpp $@/src
+	cp ./src/configure ./src/configure.ac ./src/bootstrap ./src/Makefile.in ./src/cap_ffmpeg_impl_ov.hpp ./src/cap_ffmpeg_wrapper.cc ./src/ffmpeg_codecs.hpp $@/src
 	sed -i '/###/q' $@/src/Makefile.in
 	chmod -R a+rX,u+w,go-w $@
 
@@ -90,7 +90,7 @@ install: $(RELEASE_TARBALL)
 	$(OCTAVE) --silent --eval 'pkg install $(RELEASE_TARBALL);'
 
 all:
-	cd src && $(MAKE) $@
+	cd src && ./bootstrap && $(MAKE) $@
 
 check: all
 	$(OCTAVE) --silent \
@@ -106,7 +106,7 @@ run: all
 	  --eval '${PKG_ADD}'
 
 debug: clean
-	cd src/ && ./configure
+	cd src/ && ./bootstrap && ./configure
 	$(MAKE) -C src/ debug
 	$(OCTAVE) --no-gui --silent --persist \
 	  --eval 'addpath (fullfile ([pwd filesep "src"]));' \

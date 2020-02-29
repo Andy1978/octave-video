@@ -90,7 +90,7 @@ install: $(RELEASE_TARBALL)
 	$(OCTAVE) --silent --eval 'pkg install $(RELEASE_TARBALL);'
 
 all:
-	cd src && ./bootstrap && $(MAKE) $@
+	cd src && ./bootstrap && ./configure && $(MAKE) $@
 
 check: all
 	$(OCTAVE) --silent \

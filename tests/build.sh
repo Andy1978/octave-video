@@ -15,7 +15,7 @@ docker build -f Dockerfile_centos7_epel_ffmpeg -t centos7_epel_ffmpeg .
 ## Fedora 31
 docker build -f Dockerfile_fedora31_ffmpeg -t fedora31_ffmpeg .
 
-## Ubuntu 18.04
-docker build -f Dockerfile_ubuntu_18_04 -t ubuntu_18_04 .
+## Ubuntu 20.04
+docker build -f Dockerfile_ubuntu_20_04 -t ubuntu_20_04 .
 
 rm -f video*.tar.gz

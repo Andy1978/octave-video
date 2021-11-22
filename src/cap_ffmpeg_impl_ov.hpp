@@ -136,7 +136,10 @@ std::string get_last_err_msg ()
 #if defined __APPLE__
     #include <sys/sysctl.h>
     #include <mach/clock.h>
-    #include <mach/mach.h>
+    #include <mach/mach_host.h>
+    #include <mach/mach_init.h>
+    #include <mach/mach_traps.h>
+    #include <mach/mach_port.h>
 #endif
 #endif
 

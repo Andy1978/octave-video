@@ -67,7 +67,6 @@ $(HTML_DIR): install
 	@echo "Generating HTML documentation. This may take a while ..."
 	-rm -rf $@
 	$(OCTAVE) --silent \
-	  --eval 'graphics_toolkit ("fltk");' \
 	  --eval 'pkg load generate_html $(PACKAGE);' \
 	  --eval 'generate_package_html ("$(PACKAGE)", "$@", "octave-forge");'
 	chmod -R a+rX,u+w,go-w $@

@@ -1,6 +1,6 @@
 Name: video
-Version: 2.0.0
-Date: 2020-02-24
+Version: 2.0.1
+Date: 2021-11-22
 Author: Andreas Weber <octave@josoansi.de> and the OpenCV developers
 Maintainer: Andreas Weber <octave@josoansi.de>
 Title: Video functions

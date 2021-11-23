@@ -12,8 +12,8 @@ AC_LANG(C++)
 # Define macros needed for libav
 #AC_DEFINE(__STDC_CONSTANT_MACROS, [], [workaround for C++ programs to use C99 macros])
 
-AC_CHECK_PROG([HAVE_MKOCTFILE], [mkoctfile], [yes], [no])
-if [test $HAVE_MKOCTFILE = "no"]; then
+AC_CHECK_PROG([MKOCTFILE], [mkoctfile], [yes], [no])
+if [test $MKOCTFILE = "no"]; then
   AC_MSG_ERROR([mkoctfile required to install $PACKAGE_NAME])
 fi
 

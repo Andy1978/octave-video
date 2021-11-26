@@ -189,29 +189,21 @@ Creates an instance of CvCapture_FFMPEG.\n\
   octave_value_list retval;
   int nargin = args.length ();
 
-  if (nargin != 1)
+  if (nargin != 1 || !args(0).is_string ())
     {
       print_usage();
       return retval;
     }
 
-  //if (!type_loaded)
-  //  {
-  //    CvCapture_FFMPEG::register_type();
-  //    type_loaded = true;
-  //  }
   std::string filename = args(0).string_value ();
-  if (! error_state)
-    {
-      CvCapture_FFMPEG *h = new CvCapture_FFMPEG ();
+  CvCapture_FFMPEG *h = new CvCapture_FFMPEG ();
 
-      // returns "valid" (true if open was successful)
-      bool valid = h->open (filename.c_str ());
-      if (valid)
-        retval.append (octave_value (h));
-      else
-        error ("Opening '%s' failed : '%s'", filename.c_str (), get_last_err_msg().c_str ());
-    }
+  // returns "valid" (true if open was successful)
+  bool valid = h->open (filename.c_str ());
+  if (valid)
+    retval.append (octave_value (h));
+  else
+    error ("Opening '%s' failed : '%s'", filename.c_str (), get_last_err_msg().c_str ());
   return retval;
 }
 
@@ -535,34 +527,31 @@ undocumented internal function\n\
    * cmdutils.c:int show_codecs(void *optctx, const char *opt, const char *arg)
    */
 
-  if (! error_state)
+  CvVideoWriter_FFMPEG *h = new CvVideoWriter_FFMPEG ();
+
+  // https://docs.opencv.org/3.4.1/dd/d9e/classcv_1_1VideoWriter.html#ac3478f6257454209fa99249cc03a5c59
+  // fourcc	4-character code of codec used to compress the frames. For example,
+  // VideoWriter::fourcc('P','I','M','1') is a MPEG-1 codec,
+  // VideoWriter::fourcc('M','J','P','G') is a motion-jpeg codec etc.
+  // List of codes can be obtained at Video Codecs by FOURCC page.
+  // FFMPEG backend with MP4 container natively uses other values as fourcc code: see http://mp4ra.org/#/codecs,
+  // so you may receive a warning message from OpenCV about fourcc code conversion.
+
+  // fps	Framerate of the created video stream.
+  // isColor	If it is not zero, the encoder will expect and encode color frames,
+  // otherwise it will work with grayscale frames (the flag is currently supported on Windows only).
+
+  //printf ("h->open (%s, %i, %f, %u, %u, %u);\n", filename.c_str (), tag, fps, width, height, isColor);
+
+  bool valid = h->open (filename.c_str (), tag, fps, width, height, isColor);
+  if (valid)
     {
-      CvVideoWriter_FFMPEG *h = new CvVideoWriter_FFMPEG ();
-
-      // https://docs.opencv.org/3.4.1/dd/d9e/classcv_1_1VideoWriter.html#ac3478f6257454209fa99249cc03a5c59
-      // fourcc	4-character code of codec used to compress the frames. For example,
-      // VideoWriter::fourcc('P','I','M','1') is a MPEG-1 codec,
-      // VideoWriter::fourcc('M','J','P','G') is a motion-jpeg codec etc.
-      // List of codes can be obtained at Video Codecs by FOURCC page.
-      // FFMPEG backend with MP4 container natively uses other values as fourcc code: see http://mp4ra.org/#/codecs,
-      // so you may receive a warning message from OpenCV about fourcc code conversion.
-
-      // fps	Framerate of the created video stream.
-      // isColor	If it is not zero, the encoder will expect and encode color frames,
-      // otherwise it will work with grayscale frames (the flag is currently supported on Windows only).
-
-      //printf ("h->open (%s, %i, %f, %u, %u, %u);\n", filename.c_str (), tag, fps, width, height, isColor);
-
-      bool valid = h->open (filename.c_str (), tag, fps, width, height, isColor);
-      if (valid)
-        {
-          retval.append (octave_value (h));
-        }
-      else
-        {
-          // FIXME: CvVideoWriter_FFMPEG::open just returns false without explanation why
-          error ("Opening '%s' for writing failed", filename.c_str ());
-        }
+      retval.append (octave_value (h));
+    }
+  else
+    {
+      // FIXME: CvVideoWriter_FFMPEG::open just returns false without explanation why
+      error ("Opening '%s' for writing failed", filename.c_str ());
     }
   return retval;
 }
@@ -615,11 +604,6 @@ undocumented internal function\n\
 
   //NDArray f = args(1).array_value();
   uint8NDArray f = args(1).uint8_array_value();
-  if (error_state)
-    {
-      error("__writer_write_frame__: frame should be a matrix");
-      return retval;
-    }
 
   CvVideoWriter_FFMPEG* p = get_writer_from_ov (args(0));
   if (p)

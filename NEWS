@@ -1,3 +1,7 @@
+Summary of important user-visible changes for video 2.0.2:
+-------------------------------------------------------------------
+  ** Fix build on GNU Octave 8.x (bug #61551)
+
 Summary of important user-visible changes for video 2.0.1:
 -------------------------------------------------------------------
   ** Fix build on MacOS Monterrey (bug #57938)

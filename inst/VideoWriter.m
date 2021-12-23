@@ -23,7 +23,6 @@
 
 ## ToDo: https://savannah.gnu.org/bugs/?func=detailitem&item_id=57020
 ## pantxo
-## - most properties should be read-only (SetAccess = "private"): ColorChannels (codec specific), Duration, FileFormat (codec specific),
 ##   FileName/Path (fixed at object instantiation), FrameCount, Height/Width (fixed by the first provided frame), VideoBitsPerPixel/VideoCompressionMethod/VideoFormat (codec specific)
 ## - increment FrameCount and Duration after each successful call to writeVideo,
 ## - allow passing frames or frame arrays  directly to writeVideo, without having to extract the "cdata" field manually,
@@ -114,6 +113,8 @@ classdef VideoWriter < handle
     endfunction
 
     function disp (v)
+
+      update_variable_properties (v);
 
       printf(" class VideoWriter:\n");
       printf("    ColorChannels          = %i\n", v.ColorChannels);
@@ -208,7 +209,7 @@ classdef VideoWriter < handle
     function v = set.FrameRate (v, fps)
 
       if (v.opened && ! isequal (fps, v.FrameRate))
-        error (["VideoWriter: cannot change the FrameRate propery of " ...
+        error (["VideoWriter: cannot change the FrameRate propery of ", ...
                 "an already open VideoWriter object"]);
       elseif (! isnumeric (fps) || ! isscalar (fps) || iscomplex (fps)
               || fps <= 0)
@@ -216,6 +217,13 @@ classdef VideoWriter < handle
       else
         v.FrameRate = fps;
       endif
+
+    endfunction
+
+    function val = get.Duration (v)
+
+      update_variable_properties (v);
+      val = v.Duration;
 
     endfunction
 

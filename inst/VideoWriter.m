@@ -31,6 +31,10 @@
 
 classdef VideoWriter < handle
 
+  properties (SetAccess = public, GetAccess = public)
+    FrameRate              = 30;      # fps in [Hz]
+  endproperties
+
   properties (SetAccess = private, GetAccess = public)
 
     ColorChannels          = 3;
@@ -40,7 +44,6 @@ classdef VideoWriter < handle
     FileFormat             = "avi";
     Filename               = "";
     FrameCount             = 0;
-    FrameRate              = 30;      # fps in [Hz]
     Height                 = [];      # height of the video frames which can be different than requested due to padding or cropping
     Width                  = [];      # width of the video frames which can be different than requested due to padding or cropping
     #LosslessCompression    = false;  # FIXME: currently not used
@@ -202,6 +205,20 @@ classdef VideoWriter < handle
 
     endfunction
 
+    function v = set.FrameRate (v, fps)
+
+      if (v.opened && ! isequal (fps, v.FrameRate))
+        error (["VideoWriter: cannot change the FrameRate propery of " ...
+                "an already open VideoWriter object"]);
+      elseif (! isnumeric (fps) || ! isscalar (fps) || iscomplex (fps)
+              || fps <= 0)
+        error ("VideoWriter: FrameRate must be a positive scalar value");
+      else
+        v.FrameRate = fps;
+      endif
+
+    endfunction
+
     function val = get.FrameCount (v)
 
       update_variable_properties (v);
@@ -214,20 +231,21 @@ classdef VideoWriter < handle
 endclassdef
 
 %!demo
-%! fn = fullfile (tempdir(), "sombrero.mp4");
+%! fn = fullfile (tempdir (), "sombrero.mp4");
 %! w = VideoWriter (fn);
+%! w.FrameRate = 50;
 %! open (w);
 %! z = sombrero ();
 %! hs = surf (z);
 %! axis manual
-%! nframes = 100;
+%! nframes = 200;
 %! for ii = 1:nframes
 %!   set (hs, "zdata", z * sin (2*pi*ii/nframes + pi/5));
 %!   drawnow
 %!   writeVideo (w, getframe (gcf));
 %! endfor
 %! close (w)
-%! printf ("Now run '%s' in your favourite video player or try 'demo VideoReader'!\n", fn);
+%! printf ("Now run 'open %s' to read the video with your default video player or try 'demo VideoReader'!\n", fn);
 
 %!test
 %! fn = fullfile (tempdir(), "rainbow.mp4");

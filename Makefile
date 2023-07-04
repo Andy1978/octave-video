@@ -96,7 +96,7 @@ check: all
 	  --eval 'addpath (fullfile (pwd, "src"));' \
 	  --eval 'addpath (fullfile (pwd, "inst"));' \
 	  --eval '${PKG_ADD}' \
-	  --eval 'runtests ("inst");'
+	  --eval 'oruntests ("inst");'
 
 run: all
 	$(OCTAVE) --silent --persist \
@@ -109,6 +109,8 @@ debug: clean
 	$(MAKE) -C src/ debug
 	$(OCTAVE) --no-gui --silent --persist \
 	  --eval 'addpath (fullfile ([pwd filesep "src"]));' \
+	  --eval 'addpath (fullfile ([pwd filesep "inst"]));' \
+	  --eval '${PKG_ADD}' \
 	  --eval 'system (sprintf ("xfce4-terminal --command \"gdb -p %d\"", getpid ()), "async");'
 
 style:

@@ -299,10 +299,11 @@ DEFUN_DLD(__cap_retrieve_frame__, args, nargout,
       int height = 0;
       int step;         // AVFrame::linesize, size in bytes of each picture line
       int cn;           // number of colors and should always be 3 here
+      int depth;        // 0 = CV_8U, 1 glaube ich signed, 2 = CV_16U
 
-      bool ret = p->retrieveFrame (0, &data, &step, &width, &height, &cn);
+      bool ret = p->retrieveFrame (0, &data, &step, &width, &height, &cn, &depth);
 
-      //printf ("ret = %i, width = %i, height = %i, step = %i, cn = %i\n", ret, width, height, step, cn);
+      //printf ("ret = %i, width = %i, height = %i, step = %i, cn = %i, depth = %i\n", ret, width, height, step, cn, depth);
 
       assert (cn == 3);
 

@@ -9,7 +9,7 @@ debug : MKOCTFLAGS += -ggdb -O0
 debug : all
 
 cap_ffmpeg_wrapper.oct: cap_ffmpeg_wrapper.cc cap_ffmpeg_impl_ov.hpp
-	$(MKOCTFILE) $(MKOCTFLAGS) @FFMPEG_CFLAGS@ @DEFS@ $< $(filter %.o, $^) @FFMPEG_LIBS@ @CPPFLAGS@
+	$(MKOCTFILE) $(MKOCTFLAGS) @FFMPEG_CFLAGS@ @DEFS@ $< $(filter %.o, $^) @FFMPEG_LIBS@ @CPPFLAGS@ @CXXFLAGS@
 
 clean:
 	rm -f *.o *.oct octave-workspace
@@ -37,5 +37,5 @@ update_patch:
 	diff -u cap_ffmpeg_impl.hpp cap_ffmpeg_impl_ov.hpp > cap_ffmpeg_impl_ov.patch || true
 
 update_opencv:
-	wget -N https://raw.githubusercontent.com/opencv/opencv/master/modules/videoio/src/ffmpeg_codecs.hpp
-	wget -N https://raw.githubusercontent.com/opencv/opencv/master/modules/videoio/src/cap_ffmpeg_impl.hpp
+	wget -N https://raw.githubusercontent.com/opencv/opencv/4.x/modules/videoio/src/ffmpeg_codecs.hpp
+	wget -N https://raw.githubusercontent.com/opencv/opencv/4.x/modules/videoio/src/cap_ffmpeg_impl.hpp

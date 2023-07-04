@@ -253,11 +253,6 @@ std::string get_last_err_msg ()
 #define USE_AV_INTERRUPT_CALLBACK 1
 #endif
 
-// von andy
-#define USE_AV_SEND_FRAME_API 0
-
-
-
 #ifndef USE_AV_SEND_FRAME_API
 // https://github.com/FFmpeg/FFmpeg/commit/7fc329e2dd6226dfecaa4a1d7adf353bf2773726
 #if LIBAVCODEC_VERSION_MICRO >= 100 \
@@ -556,11 +551,11 @@ class CvCapture_FFMPEG: public octave_base_value
 
     const char* get_video_codec_name () const
       {
-#if LIBAVFORMAT_BUILD > 4628
-        return _opencv_avcodec_get_name(video_st->codec->codec_id);
-#else
-        return _opencv_avcodec_get_name(video_st->codec.codec_id);
-#endif
+//#if LIBAVFORMAT_BUILD > 4628
+        return _opencv_avcodec_get_name(video_st->codecpar->codec_id);
+//#else
+//        return _opencv_avcodec_get_name(video_st->codec.codec_id);
+//#endif
       }
 
     double  r2d(AVRational r) const;
@@ -1964,7 +1959,7 @@ class CvVideoWriter_FFMPEG: public octave_base_value
     const char* get_video_codec_name () const
       {
 #if LIBAVFORMAT_BUILD > 4628
-        return _opencv_avcodec_get_name(video_st->codec->codec_id);
+        return _opencv_avcodec_get_name(video_st->CV_FFMPEG_CODEC_FIELD->codec_id);
 #else
         return _opencv_avcodec_get_name(video_st->codec.codec_id);
 #endif
@@ -2265,7 +2260,7 @@ static int icv_av_write_frame_FFMPEG( AVFormatContext * oc, AVStream * video_st,
             pkt->stream_index = video_st->index;
             ret = avcodec_receive_packet(c, pkt);
 
-			fprintf (stderr, "USE_AV_SEND_FRAME_API avcodec_receive_packet returned %i\n", ret);
+			//fprintf (stderr, "USE_AV_SEND_FRAME_API avcodec_receive_packet returned %i\n", ret);
 
             if (!ret)
             {
@@ -2275,7 +2270,14 @@ static int icv_av_write_frame_FFMPEG( AVFormatContext * oc, AVStream * video_st,
                 continue;
             }
 
-			fprintf (stderr, "free\n");
+			
+			// von Andy: mir scheint bei der USE_AV_SEND_FRAME_API
+			// ist das okay, wenn ein EAGAIN zurück kommt
+			if (ret == AVERROR(EAGAIN))
+			{
+				//fprintf (stderr, "von Andy, Rückgabe von avcodec_receive_packet umbiegen...\n");
+				ret = 0;
+			}
 
             av_packet_free(&pkt);
             break;

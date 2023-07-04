@@ -58,17 +58,14 @@ DEFUN_DLD(__ffmpeg_output_formats__, args, nargout,
 undocumented internal function\n\
 @end deftypefn")
 {
-  av_register_all();
+  //av_register_all();
 
   octave_idx_type n = 0;
 
   // first loop to get numer of output formats
-  AVOutputFormat * oformat = av_oformat_next(NULL);
-  while (oformat != NULL)
-    {
-      n++;
-      oformat = av_oformat_next (oformat);
-    }
+  const AVOutputFormat * oformat;
+  void *opaque = NULL;
+  while ((oformat = av_muxer_iterate(&opaque))) {n++;}
 
   Cell names (n, 1);
   Cell long_names (n, 1);
@@ -77,9 +74,9 @@ undocumented internal function\n\
   Cell codecs (n, 1);
 
   // second loop, now fill the cells
-  oformat = av_oformat_next(NULL);
   int i = 0;
-  while(oformat != NULL)
+  opaque = NULL;
+  while ((oformat = av_muxer_iterate(&opaque)))
     {
       names (i) = oformat->name;
       long_names (i) = oformat->long_name;
@@ -140,8 +137,6 @@ undocumented internal function\n\
             codecs (i) = codec_fourcc;
           }
         }
-
-      oformat = av_oformat_next(oformat);
       i++;
     }
 
@@ -414,7 +409,7 @@ undocumented internal function\n\
     {
       CvVideoWriter_FFMPEG::register_type();
       writer_type_loaded = true;
-      av_register_all();
+      //av_register_all();
     }
 
   std::string filename = args(0).string_value ();
@@ -433,7 +428,7 @@ undocumented internal function\n\
   if (fourcc.size () == 0)
     {
       // get tag for default codec for guessed container from filename
-      AVOutputFormat* foo = av_guess_format	(NULL, filename.c_str (), NULL);
+      const AVOutputFormat* foo = av_guess_format	(NULL, filename.c_str (), NULL);
 
       // list supported codecs for guessed format
 #if 0

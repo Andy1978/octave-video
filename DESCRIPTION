@@ -1,12 +1,12 @@
 Name: video
-Version: 2.0.2
-Date: 2021-11-28
+Version: 2.1.0
+Date: 2023-07-05
 Author: Andreas Weber <octave@josoansi.de> and the OpenCV developers
 Maintainer: Andreas Weber <octave@josoansi.de>
 Title: Video functions
 Description: A wrapper for OpenCV's CvCapture_FFMPEG and CvVideoWriter_FFMPEG
 Categories: Video processing
 Depends: octave (>= 4.4.0)
-BuildRequires: ffmpeg or libav
+BuildRequires: ffmpeg or libav >= Lavu56.22.100, SwS5.3.100, Lavc58.35.100, Lavf58.20.100
 License: GPLv3 and 3-clause BSD (https://www.opencv.org/license.html)
-Url: https://octave.sourceforge.io/video/index.html
+Url: https://gnu-octave.github.io/packages/video/

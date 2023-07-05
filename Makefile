@@ -1,4 +1,4 @@
-## Copyright 2015-2019 Andreas Weber
+## Copyright 2015-2023 Andreas Weber
 ## Copyright 2015-2016 Mike Miller
 ## Copyright 2015-2016 Carnë Draug
 ## Copyright 2015-2016 Oliver Heimlich

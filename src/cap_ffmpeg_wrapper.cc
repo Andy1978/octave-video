@@ -40,10 +40,8 @@ undocumented internal function\n\
   opt.contents ("LIBAVFORMAT_BUILD") = LIBAVFORMAT_BUILD;
   opt.contents ("LIBAVFORMAT_IDENT") = LIBAVFORMAT_IDENT;
 
-
   //join ident
   opt.contents ("LIBAV_IDENT") = LIBAVUTIL_IDENT ", " LIBSWSCALE_IDENT ", " LIBAVCODEC_IDENT ", " LIBAVFORMAT_IDENT;
-
 
   retval.append (opt);
 
@@ -58,8 +56,6 @@ DEFUN_DLD(__ffmpeg_output_formats__, args, nargout,
 undocumented internal function\n\
 @end deftypefn")
 {
-  //av_register_all();
-
   octave_idx_type n = 0;
 
   // first loop to get numer of output formats
@@ -409,7 +405,6 @@ undocumented internal function\n\
     {
       CvVideoWriter_FFMPEG::register_type();
       writer_type_loaded = true;
-      //av_register_all();
     }
 
   std::string filename = args(0).string_value ();

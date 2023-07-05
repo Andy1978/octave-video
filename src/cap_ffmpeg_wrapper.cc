@@ -429,13 +429,16 @@ undocumented internal function\n\
   if (fourcc.size () == 0)
     {
       // get tag for default codec for guessed container from filename
-      const AVOutputFormat* foo = av_guess_format	(NULL, filename.c_str (), NULL);
+      const AVOutputFormat* fmt = av_guess_format	(NULL, filename.c_str (), NULL);
+
+      if (! fmt)
+		error ("Can't guess container format from filename '%s'", filename.c_str ());
 
       // list supported codecs for guessed format
 #if 0
-      if (foo->codec_tag)
+      if (fmt && fmt->codec_tag)
         {
-          const AVCodecTag * ptags = foo->codec_tag[0];
+          const AVCodecTag * ptags = fmt->codec_tag[0];
           while (ptags->id != AV_CODEC_ID_NONE)
             {
               unsigned int tag = ptags->tag;
@@ -445,7 +448,7 @@ undocumented internal function\n\
         }
 #endif
 
-      tag = av_codec_get_tag (foo->codec_tag, foo->video_codec);
+      tag = av_codec_get_tag (fmt->codec_tag, fmt->video_codec);
     }
   else if (fourcc.size () == 4)
     {

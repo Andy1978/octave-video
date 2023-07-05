@@ -1,0 +1,16 @@
+FROM debian:buster-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y g++ make\
+  libpcre3-dev libblas-dev liblapack-dev gfortran libtool libreadline-dev wget lzip mercurial automake
+
+RUN apt-get update && apt-get --no-install-recommends install -y pkg-config octave liboctave-dev patch
+
+RUN apt-get update && apt-get --no-install-recommends install -y pkg-config libswscale-dev libavformat-dev libavcodec-dev patch
+
+COPY ./video-*.tar.gz /app/
+
+RUN octave --eval "pkg install -verbose video-*.tar.gz"
+
+CMD ["/usr/local/bin/octave"]

@@ -1,0 +1,46 @@
+sudo ./run.sh | grep -iP "version|name"
+
+PRETTY_NAME="Debian GNU/Linux 10 (buster)"
+NAME="Debian GNU/Linux"
+OCTAVE_VERSION = 4.4.1
+FFmpeg_versions = Lavu56.22.100, SwS5.3.100, Lavc58.35.100, Lavf58.20.100  <-- lowest
+
+PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
+NAME="Debian GNU/Linux"
+OCTAVE_VERSION = 6.2.0
+FFmpeg_versions = Lavu56.51.100, SwS5.7.100, Lavc58.91.100, Lavf58.45.100
+
+PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+NAME="Debian GNU/Linux"
+OCTAVE_VERSION = 7.3.0
+FFmpeg_versions = Lavu57.28.100, SwS6.7.100, Lavc59.37.100, Lavf59.27.100
+
+NAME=Fedora
+VERSION="31 (Container Image)"
+OCTAVE_VERSION = 5.1.0
+FFmpeg_versions = Lavu56.31.100, SwS5.5.100, Lavc58.54.100, Lavf58.29.100
+
+NAME=Fedora
+VERSION="33 (Container Image)"
+OCTAVE_VERSION = 5.2.0
+FFmpeg_versions = Lavu56.51.100, SwS5.7.100, Lavc58.91.100, Lavf58.45.100
+
+NAME="Fedora Linux"
+VERSION="38 (Container Image)"
+OCTAVE_VERSION = 7.3.0
+FFmpeg_versions = Lavu58.2.100, SwS7.1.100, Lavc60.3.100, Lavf60.3.100
+
+NAME="Ubuntu"
+VERSION="20.04.6 LTS (Focal Fossa)"
+OCTAVE_VERSION = 5.2.0
+FFmpeg_versions = Lavu56.31.100, SwS5.5.100, Lavc58.54.100, Lavf58.29.100
+
+PRETTY_NAME="Ubuntu 22.04.2 LTS"
+NAME="Ubuntu"
+OCTAVE_VERSION = 6.4.0
+FFmpeg_versions = Lavu56.70.100, SwS5.9.100, Lavc58.134.100, Lavf58.76.100
+
+PRETTY_NAME="Ubuntu 23.04"
+NAME="Ubuntu"
+OCTAVE_VERSION = 7.3.0
+FFmpeg_versions = Lavu57.28.100, SwS6.7.100, Lavc59.37.100, Lavf59.27.100

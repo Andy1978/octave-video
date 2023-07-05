@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2019-2020 Andreas Weber <octave@josoansi.de>
+  Copyright (C) 2019-2023 Andreas Weber <octave@josoansi.de>
 
   This file is part of octave-video; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
@@ -155,6 +155,7 @@ CvCapture_FFMPEG* get_cap_from_ov (octave_value ov)
     {
       CvCapture_FFMPEG::register_type();
       capture_type_loaded = true;
+      av_log_set_level (AV_LOG_WARNING);
     }
 
   if (ov.type_id() != CvCapture_FFMPEG::static_type_id())
@@ -405,6 +406,11 @@ undocumented internal function\n\
     {
       CvVideoWriter_FFMPEG::register_type();
       writer_type_loaded = true;
+
+	  // see https://ffmpeg.org/doxygen/4.4/group__lavu__log__constants.html
+	  //av_log_set_level (AV_LOG_DEBUG);
+	  //av_log_set_level (AV_LOG_INFO);
+	  av_log_set_level (AV_LOG_WARNING);
     }
 
   std::string filename = args(0).string_value ();

@@ -857,11 +857,6 @@ inline void fill_codec_context(AVCodecContext * enc, AVDictionary * dict)
     {
         int nCpus = get_number_of_cpus();
         int requestedThreads = std::min(nCpus, 16);  // [OPENCV:FFMPEG:24] Application has requested XX threads. Using a thread count greater than 16 is not recommended.
-        char* threads_option = getenv("OPENCV_FFMPEG_THREADS");
-        if (threads_option != NULL)
-        {
-            requestedThreads = atoi(threads_option);
-        }
         enc->thread_count = requestedThreads;
     }
 
@@ -886,7 +881,8 @@ inline void fill_codec_context(AVCodecContext * enc, AVDictionary * dict)
     }
 }
 
-static bool isThreadSafe() {
+static bool isThreadSafe()
+{
     const bool threadSafe = false; //utils::getConfigurationParameterBool("OPENCV_FFMPEG_IS_THREAD_SAFE", false);
     if (threadSafe) {
         CV_LOG_WARNING(NULL, "VIDEOIO/FFMPEG: OPENCV_FFMPEG_IS_THREAD_SAFE == 1, all OpenCV locks removed, relying on FFmpeg to provide thread safety.  If FFmpeg is not thread safe isOpened() may return false when multiple threads try to call open() at the same time.");
@@ -916,20 +912,7 @@ bool CvCapture_FFMPEG::open(const char* _filename)
     ic->interrupt_callback.callback = _opencv_ffmpeg_interrupt_callback;
     ic->interrupt_callback.opaque = &interrupt_metadata;
 
-#ifndef NO_GETENV
-    char* options = getenv("OPENCV_FFMPEG_CAPTURE_OPTIONS");
-    if(options == NULL)
-    {
-        av_dict_set(&dict, "rtsp_flags", "prefer_tcp", 0);
-    }
-    else
-    {
-        CV_LOG_DEBUG(NULL, "VIDEOIO/FFMPEG: using capture options from environment: " << options);
-        av_dict_parse_string(&dict, options, ";", "|", 0);
-    }
-#else
     av_dict_set(&dict, "rtsp_transport", "tcp", 0);
-#endif
     CV_FFMPEG_FMT_CONST AVInputFormat* input_format = NULL;
     AVDictionaryEntry* entry = av_dict_get(dict, "input_format", NULL, 0);
     if (entry != 0)
@@ -2389,14 +2372,6 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
     }
 
     AVDictionary *dict = NULL;
-#if !defined(NO_GETENV) && (LIBAVUTIL_VERSION_MAJOR >= 53)
-    char* options = getenv("OPENCV_FFMPEG_WRITER_OPTIONS");
-    if (options)
-    {
-        CV_LOG_DEBUG(NULL, "VIDEOIO/FFMPEG: using writer options from environment: " << options);
-        av_dict_parse_string(&dict, options, ";", "|", 0);
-    }
-#endif
 
     // find and open encoder, try HW acceleration types specified in 'hw_acceleration' list (in order)
     int err = -1;

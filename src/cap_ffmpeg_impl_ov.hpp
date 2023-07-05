@@ -770,7 +770,7 @@ bool ImplMutex::trylock() { return impl->trylock(); }
 class AutoLock
 {
 public:
-    AutoLock(ImplMutex& m) : mutex(&m) { mutex->lock(); }
+    explicit AutoLock(ImplMutex& m) : mutex(&m) { mutex->lock(); }
     ~AutoLock() { mutex->unlock(); }
 protected:
     ImplMutex* mutex;
@@ -1747,21 +1747,18 @@ void CvVideoWriter_FFMPEG::init()
  */
 static AVFrame * icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height, bool alloc)
 {
-    AVFrame * picture;
-    uint8_t * picture_buf = 0;
-    int size;
-
-    picture = av_frame_alloc();
+    AVFrame *picture = av_frame_alloc();
     if (!picture)
-        return NULL;
+      return NULL;
 
     picture->format = pix_fmt;
     picture->width = width;
     picture->height = height;
 
-    size = _opencv_ffmpeg_av_image_get_buffer_size( (AVPixelFormat) pix_fmt, width, height);
-    if(alloc){
-        picture_buf = (uint8_t *) malloc(size);
+    int size = _opencv_ffmpeg_av_image_get_buffer_size( (AVPixelFormat) pix_fmt, width, height);
+    if(alloc)
+    {
+        uint8_t *picture_buf = (uint8_t *) malloc(size);
         if (!picture_buf)
         {
             av_free(picture);
@@ -1770,7 +1767,6 @@ static AVFrame * icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height, bo
         _opencv_ffmpeg_av_image_fill_arrays(picture, picture_buf,
                        (AVPixelFormat) pix_fmt, width, height);
     }
-
     return picture;
 }
 
@@ -1881,44 +1877,45 @@ static int icv_av_write_frame_FFMPEG( AVFormatContext * oc, AVStream * video_st,
                                       uint8_t *, uint32_t,
                                       AVFrame * picture, int frame_idx)
 {
-    int ret = OPENCV_NO_FRAMES_WRITTEN_CODE;
-    {
-        /* encode the image */
-        if (picture == NULL && frame_idx == 0) {
-            ret = 0;
-        } else {
-            ret = avcodec_send_frame(c, picture);
-            if (ret < 0)
-                fprintf (stderr, "Error sending frame to encoder (avcodec_send_frame)");
-        }
-        while (ret >= 0)
-        {
-            AVPacket* pkt = av_packet_alloc();
-            pkt->stream_index = video_st->index;
-            ret = avcodec_receive_packet(c, pkt);
+    int ret;
 
-			//fprintf (stderr, "USE_AV_SEND_FRAME_API avcodec_receive_packet returned %i\n", ret);
+	/* encode the image */
+	if (picture == NULL && frame_idx == 0)
+		ret = 0;
+	else
+	{
+		ret = avcodec_send_frame(c, picture);
+		if (ret < 0)
+			fprintf (stderr, "Error sending frame to encoder (avcodec_send_frame)");
+	}
 
-            if (!ret)
-            {
-                av_packet_rescale_ts(pkt, c->time_base, video_st->time_base);
-                ret = av_write_frame(oc, pkt);
-                av_packet_free(&pkt);
-                continue;
-            }
+	while (ret >= 0)
+	{
+		AVPacket* pkt = av_packet_alloc();
+		pkt->stream_index = video_st->index;
+		ret = avcodec_receive_packet(c, pkt);
 
-			// FIXME von Andy: mir scheint bei der USE_AV_SEND_FRAME_API
-			// ist das okay, wenn ein EAGAIN zurück kommt
-			if (ret == AVERROR(EAGAIN))
-			{
-				//fprintf (stderr, "von Andy, Rückgabe von avcodec_receive_packet umbiegen...\n");
-				ret = 0;
-			}
+		//fprintf (stderr, "USE_AV_SEND_FRAME_API avcodec_receive_packet returned %i\n", ret);
 
-            av_packet_free(&pkt);
-            break;
-        }
-    }
+		if (!ret)
+		{
+			av_packet_rescale_ts(pkt, c->time_base, video_st->time_base);
+			ret = av_write_frame(oc, pkt);
+			av_packet_free(&pkt);
+			continue;
+		}
+
+		// FIXME von Andy: mir scheint bei der USE_AV_SEND_FRAME_API
+		// ist das okay, wenn ein EAGAIN zurück kommt
+		if (ret == AVERROR(EAGAIN))
+		{
+			//fprintf (stderr, "von Andy, Rückgabe von avcodec_receive_packet umbiegen...\n");
+			ret = 0;
+		}
+
+		av_packet_free(&pkt);
+		break;
+	}
     return ret;
 }
 
@@ -2144,15 +2141,18 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 
     close();
 
-	// AW: original params.get(VIDEOWRITER_PROP_DEPTH, CV_8U);
-    const int depth = CV_8U;
-    const bool is_supported = depth == CV_8U || (depth == CV_16U && !is_color);
-    if (!is_supported)
-    {
-        CV_LOG_WARNING(NULL, "Unsupported depth/isColor combination is selected, "
-                             "only CV_8UC1/CV_8UC3/CV_16UC1 are supported.");
-        return false;
-    }
+	/* original code with depth in VideoParameter:
+	   const int depth = params.get(VIDEOWRITER_PROP_DEPTH, CV_8U);
+       const bool is_supported = depth == CV_8U || (depth == CV_16U && !is_color);
+	   if (!is_supported)
+		{
+			CV_LOG_WARNING(NULL, "Unsupported depth/isColor combination is selected, "
+								 "only CV_8UC1/CV_8UC3/CV_16UC1 are supported.");
+			return false;
+		}
+	*/
+
+    const int depth = CV_8U; //FIXME: interesting for octave-video wrapper?
 
     // check arguments
     if( !filename )

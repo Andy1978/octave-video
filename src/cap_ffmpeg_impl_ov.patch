@@ -1,5 +1,5 @@
 --- cap_ffmpeg_impl.hpp	2023-07-04 12:24:00.592937230 +0200
-+++ cap_ffmpeg_impl_ov.hpp	2023-07-05 10:17:26.783277457 +0200
++++ cap_ffmpeg_impl_ov.hpp	2023-07-05 10:40:44.082041638 +0200
 @@ -40,19 +40,82 @@
  //
  //M*/
@@ -584,6 +584,15 @@
      }
  
      init();
+@@ -847,7 +770,7 @@
+ class AutoLock
+ {
+ public:
+-    AutoLock(ImplMutex& m) : mutex(&m) { mutex->lock(); }
++    explicit AutoLock(ImplMutex& m) : mutex(&m) { mutex->lock(); }
+     ~AutoLock() { mutex->unlock(); }
+ protected:
+     ImplMutex* mutex;
 @@ -860,39 +783,6 @@
  
  static ImplMutex _mutex;
@@ -634,7 +643,7 @@
 +		AutoLock lock(_mutex);
          static InternalFFMpegRegister instance;
 -        initLogger_();  // update logger setup unconditionally (GStreamer's libav plugin may override these settings)
--    }
+     }
 -    static void initLogger_()
 -    {
 -#ifndef NO_GETENV
@@ -655,7 +664,7 @@
 -        {
 -            av_log_set_level(AV_LOG_ERROR);
 -        }
-     }
+-    }
 -
 -public:
      InternalFFMpegRegister()
@@ -1544,20 +1553,48 @@
      hw_device = -1;
      use_opencl = 0;
      ok = false;
-@@ -2132,12 +1751,7 @@
-     uint8_t * picture_buf = 0;
-     int size;
- 
+@@ -2128,26 +1747,18 @@
+  */
+ static AVFrame * icv_alloc_picture_FFMPEG(int pix_fmt, int width, int height, bool alloc)
+ {
+-    AVFrame * picture;
+-    uint8_t * picture_buf = 0;
+-    int size;
+-
 -#if LIBAVCODEC_BUILD >= (LIBAVCODEC_VERSION_MICRO >= 100 \
 -    ? CALC_FFMPEG_VERSION(55, 45, 101) : CALC_FFMPEG_VERSION(55, 28, 1))
-     picture = av_frame_alloc();
+-    picture = av_frame_alloc();
 -#else
 -    picture = avcodec_alloc_frame();
 -#endif
++    AVFrame *picture = av_frame_alloc();
      if (!picture)
-         return NULL;
+-        return NULL;
++      return NULL;
  
-@@ -2167,27 +1781,16 @@
+     picture->format = pix_fmt;
+     picture->width = width;
+     picture->height = height;
+ 
+-    size = _opencv_ffmpeg_av_image_get_buffer_size( (AVPixelFormat) pix_fmt, width, height);
+-    if(alloc){
+-        picture_buf = (uint8_t *) malloc(size);
++    int size = _opencv_ffmpeg_av_image_get_buffer_size( (AVPixelFormat) pix_fmt, width, height);
++    if(alloc)
++    {
++        uint8_t *picture_buf = (uint8_t *) malloc(size);
+         if (!picture_buf)
+         {
+             av_free(picture);
+@@ -2156,7 +1767,6 @@
+         _opencv_ffmpeg_av_image_fill_arrays(picture, picture_buf,
+                        (AVPixelFormat) pix_fmt, width, height);
+     }
+-
+     return picture;
+ }
+ 
+@@ -2167,27 +1777,16 @@
                                                     int w, int h, int bitrate,
                                                     double fps, AVPixelFormat pixel_format, int fourcc)
  {
@@ -1586,7 +1623,7 @@
      /* put sample parameters */
      int64_t lbit_rate = (int64_t)bitrate;
      lbit_rate += (bitrate / 2);
-@@ -2215,7 +1818,7 @@
+@@ -2215,7 +1814,7 @@
      c->time_base.den = frame_rate;
      c->time_base.num = frame_rate_base;
      /* adjust time base for supported framerates */
@@ -1595,7 +1632,7 @@
          const AVRational *p= codec->supported_framerates;
          AVRational req = {frame_rate, frame_rate_base};
          const AVRational *best=NULL;
-@@ -2230,9 +1833,7 @@
+@@ -2230,9 +1829,7 @@
          }
          if (best == NULL)
          {
@@ -1605,7 +1642,7 @@
              return NULL;
          }
          c->time_base.den= best->num;
-@@ -2266,20 +1867,10 @@
+@@ -2266,20 +1863,10 @@
  
      // some formats want stream headers to be separate
      if(oc->oformat->flags & AVFMT_GLOBALHEADER)
@@ -1627,10 +1664,11 @@
  
      return c;
  }
-@@ -2291,33 +1882,14 @@
+@@ -2290,77 +1877,45 @@
+                                       uint8_t *, uint32_t,
                                        AVFrame * picture, int frame_idx)
  {
-     int ret = OPENCV_NO_FRAMES_WRITTEN_CODE;
+-    int ret = OPENCV_NO_FRAMES_WRITTEN_CODE;
 -
 -#if LIBAVFORMAT_BUILD < CALC_FFMPEG_VERSION(57, 0, 0)
 -    if (oc->oformat->flags & AVFMT_RAWPICTURE)
@@ -1649,45 +1687,34 @@
 -    }
 -    else
 -#endif
-     {
-         /* encode the image */
+-    {
+-        /* encode the image */
 -#if USE_AV_SEND_FRAME_API
-         if (picture == NULL && frame_idx == 0) {
-             ret = 0;
-         } else {
-             ret = avcodec_send_frame(c, picture);
-             if (ret < 0)
+-        if (picture == NULL && frame_idx == 0) {
+-            ret = 0;
+-        } else {
+-            ret = avcodec_send_frame(c, picture);
+-            if (ret < 0)
 -                CV_LOG_ERROR(NULL, "Error sending frame to encoder (avcodec_send_frame)");
-+                fprintf (stderr, "Error sending frame to encoder (avcodec_send_frame)");
-         }
-         while (ret >= 0)
-         {
-@@ -2325,7 +1897,9 @@
-             pkt->stream_index = video_st->index;
-             ret = avcodec_receive_packet(c, pkt);
+-        }
+-        while (ret >= 0)
+-        {
+-            AVPacket* pkt = av_packet_alloc();
+-            pkt->stream_index = video_st->index;
+-            ret = avcodec_receive_packet(c, pkt);
++    int ret;
  
 -            if(!ret)
-+			//fprintf (stderr, "USE_AV_SEND_FRAME_API avcodec_receive_packet returned %i\n", ret);
-+
-+            if (!ret)
-             {
-                 av_packet_rescale_ts(pkt, c->time_base, video_st->time_base);
-                 ret = av_write_frame(oc, pkt);
-@@ -2333,33 +1907,17 @@
-                 continue;
-             }
- 
-+			// FIXME von Andy: mir scheint bei der USE_AV_SEND_FRAME_API
-+			// ist das okay, wenn ein EAGAIN zurück kommt
-+			if (ret == AVERROR(EAGAIN))
-+			{
-+				//fprintf (stderr, "von Andy, Rückgabe von avcodec_receive_packet umbiegen...\n");
-+				ret = 0;
-+			}
-+
-             av_packet_free(&pkt);
-             break;
-         }
+-            {
+-                av_packet_rescale_ts(pkt, c->time_base, video_st->time_base);
+-                ret = av_write_frame(oc, pkt);
+-                av_packet_free(&pkt);
+-                continue;
+-            }
+-
+-            av_packet_free(&pkt);
+-            break;
+-        }
 -#else
 -        CV_UNUSED(frame_idx);
 -        AVPacket pkt;
@@ -1712,10 +1739,48 @@
 -        else
 -            ret = OPENCV_NO_FRAMES_WRITTEN_CODE;
 -#endif
-     }
+-    }
++	/* encode the image */
++	if (picture == NULL && frame_idx == 0)
++		ret = 0;
++	else
++	{
++		ret = avcodec_send_frame(c, picture);
++		if (ret < 0)
++			fprintf (stderr, "Error sending frame to encoder (avcodec_send_frame)");
++	}
++
++	while (ret >= 0)
++	{
++		AVPacket* pkt = av_packet_alloc();
++		pkt->stream_index = video_st->index;
++		ret = avcodec_receive_packet(c, pkt);
++
++		//fprintf (stderr, "USE_AV_SEND_FRAME_API avcodec_receive_packet returned %i\n", ret);
++
++		if (!ret)
++		{
++			av_packet_rescale_ts(pkt, c->time_base, video_st->time_base);
++			ret = av_write_frame(oc, pkt);
++			av_packet_free(&pkt);
++			continue;
++		}
++
++		// FIXME von Andy: mir scheint bei der USE_AV_SEND_FRAME_API
++		// ist das okay, wenn ein EAGAIN zurück kommt
++		if (ret == AVERROR(EAGAIN))
++		{
++			//fprintf (stderr, "von Andy, Rückgabe von avcodec_receive_packet umbiegen...\n");
++			ret = 0;
++		}
++
++		av_packet_free(&pkt);
++		break;
++	}
      return ret;
  }
-@@ -2427,10 +1985,6 @@
+ 
+@@ -2427,10 +1982,6 @@
      }
  
      AVPixelFormat sw_pix_fmt = context->pix_fmt;
@@ -1726,7 +1791,7 @@
      if ( sw_pix_fmt != input_pix_fmt ) {
          CV_Assert( input_picture );
          // let input_picture point to the raw data buffer of 'image'
-@@ -2465,30 +2019,6 @@
+@@ -2465,30 +2016,6 @@
      }
  
      bool ret;
@@ -1757,7 +1822,7 @@
      {
          picture->pts = frame_idx;
          int ret_write = icv_av_write_frame_FFMPEG(oc, video_st, context, outbuf, outbuf_size, picture, frame_idx);
-@@ -2500,61 +2030,6 @@
+@@ -2500,61 +2027,6 @@
      return ret;
  }
  
@@ -1819,7 +1884,7 @@
  /// close video output stream and free associated memory
  void CvVideoWriter_FFMPEG::close()
  {
-@@ -2566,17 +2041,12 @@
+@@ -2566,17 +2038,12 @@
      /* write the trailer, if any */
      if (picture && ok && oc)
      {
@@ -1843,7 +1908,7 @@
          av_write_trailer(oc);
      }
  
-@@ -2598,14 +2068,7 @@
+@@ -2598,14 +2065,7 @@
      if (input_picture)
          av_free(input_picture);
  
@@ -1858,7 +1923,7 @@
  
      av_free(outbuf);
  
-@@ -2668,14 +2131,12 @@
+@@ -2668,14 +2128,12 @@
  
  /// Create a video writer object that uses FFMPEG
  bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
@@ -1875,21 +1940,19 @@
  
      CV_CODEC_ID codec_id = CV_CODEC(CODEC_ID_NONE);
      AVPixelFormat codec_pix_fmt;
-@@ -2683,8 +2144,8 @@
+@@ -2683,49 +2141,18 @@
  
      close();
  
 -    const bool is_color = params.get(VIDEOWRITER_PROP_IS_COLOR, true);
 -    const int depth = params.get(VIDEOWRITER_PROP_DEPTH, CV_8U);
-+	// AW: original params.get(VIDEOWRITER_PROP_DEPTH, CV_8U);
-+    const int depth = CV_8U;
-     const bool is_supported = depth == CV_8U || (depth == CV_16U && !is_color);
-     if (!is_supported)
-     {
-@@ -2692,40 +2153,6 @@
-                              "only CV_8UC1/CV_8UC3/CV_16UC1 are supported.");
-         return false;
-     }
+-    const bool is_supported = depth == CV_8U || (depth == CV_16U && !is_color);
+-    if (!is_supported)
+-    {
+-        CV_LOG_WARNING(NULL, "Unsupported depth/isColor combination is selected, "
+-                             "only CV_8UC1/CV_8UC3/CV_16UC1 are supported.");
+-        return false;
+-    }
 -    if (params.has(VIDEOWRITER_PROP_HW_ACCELERATION))
 -    {
 -        va_type = params.get<VideoAccelerationType>(VIDEOWRITER_PROP_HW_ACCELERATION, VIDEO_ACCELERATION_NONE);
@@ -1918,12 +1981,23 @@
 -    if (params.has(VIDEOWRITER_PROP_HW_ACCELERATION_USE_OPENCL)) {
 -        use_opencl = params.get<int>(VIDEOWRITER_PROP_HW_ACCELERATION_USE_OPENCL);
 -    }
--
++	/* original code with depth in VideoParameter:
++	   const int depth = params.get(VIDEOWRITER_PROP_DEPTH, CV_8U);
++       const bool is_supported = depth == CV_8U || (depth == CV_16U && !is_color);
++	   if (!is_supported)
++		{
++			CV_LOG_WARNING(NULL, "Unsupported depth/isColor combination is selected, "
++								 "only CV_8UC1/CV_8UC3/CV_16UC1 are supported.");
++			return false;
++		}
++	*/
+ 
 -    if (params.warnUnusedParameters())
 -    {
 -        CV_LOG_ERROR(NULL, "VIDEOIO/FFMPEG: unsupported parameters in VideoWriter, see logger INFO channel for details");
 -        return false;
 -    }
++    const int depth = CV_8U; //FIXME: interesting for octave-video wrapper?
  
      // check arguments
      if( !filename )

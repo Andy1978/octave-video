@@ -96,6 +96,7 @@ check: all
 	  --eval 'addpath (fullfile (pwd, "src"));' \
 	  --eval 'addpath (fullfile (pwd, "inst"));' \
 	  --eval '${PKG_ADD}' \
+	  --eval '__octave_video_set_verbosity_level__(1);' \
 	  --eval 'oruntests ("inst");'
 
 run: all

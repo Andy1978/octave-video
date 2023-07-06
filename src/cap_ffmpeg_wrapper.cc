@@ -25,6 +25,7 @@ DEFUN_DLD(__octave_video_set_verbosity_level__, args, nargout,
 undocumented internal function\n\
 @end deftypefn")
 {
+  // default = 1 => show errors and warnings
   octave_value_list retval;
   int l = args(0).int_value ();
   set_verbosity_level (l);
@@ -169,7 +170,6 @@ CvCapture_FFMPEG* get_cap_from_ov (octave_value ov)
     {
       CvCapture_FFMPEG::register_type();
       capture_type_loaded = true;
-      set_verbosity_level (0);
     }
 
   if (ov.type_id() != CvCapture_FFMPEG::static_type_id())
@@ -420,7 +420,6 @@ undocumented internal function\n\
     {
       CvVideoWriter_FFMPEG::register_type();
       writer_type_loaded = true;
-      set_verbosity_level (0);
     }
 
   std::string filename = args(0).string_value ();
@@ -447,20 +446,20 @@ undocumented internal function\n\
         return retval;
       }
 
+      MSG_INFO ("Guessed format '%s' from filename '%s'", fmt->long_name, filename.c_str ());
 
       // list supported codecs for guessed format
-#if 0
       if (fmt && fmt->codec_tag)
         {
+          MSG_VERBOSE ("supported codecs for format '%s':", fmt->long_name);
           const AVCodecTag * ptags = fmt->codec_tag[0];
           while (ptags->id != AV_CODEC_ID_NONE)
             {
               unsigned int tag = ptags->tag;
-              printf("fourcc tag 0x%08x/'%c%c%c%c' codec_id %04X\n", tag, CV_TAG_TO_PRINTABLE_CHAR4(tag), ptags->id);
+              MSG_VERBOSE("  fourcc tag 0x%08x/'%c%c%c%c' codec_id %04X", tag, CV_TAG_TO_PRINTABLE_CHAR4(tag), ptags->id);
               ptags++;
             }
         }
-#endif
 
       tag = av_codec_get_tag (fmt->codec_tag, fmt->video_codec);
     }
@@ -470,6 +469,8 @@ undocumented internal function\n\
     }
   else
     error ("fourcc has to be empty or 4 chars long");
+
+  MSG_INFO ("selected tag = %i = %#x = '%c%c%c%c'", tag, tag, CV_TAG_TO_PRINTABLE_CHAR4(tag));
 
   // list codecs
   //~ AVCodec * codec = av_codec_next(NULL);
@@ -507,8 +508,6 @@ undocumented internal function\n\
   //~ }
   //~ oformat = av_oformat_next(oformat);
   //~ }
-
-  //printf ("tag = %i = %#x = %c%c%c%c\n", tag, tag, CV_TAG_TO_PRINTABLE_CHAR4(tag));
 
 #if 0
   // that would be a workaround:

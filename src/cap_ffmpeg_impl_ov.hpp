@@ -1279,7 +1279,7 @@ bool CvCapture_FFMPEG::retrieveFrame(int flag, unsigned char** data, int* step, 
     if (!sw_picture || !sw_picture->data[0])
         return false;
 
-    MSG_INFO("Input picture format: '%s'", av_get_pix_fmt_name((AVPixelFormat)sw_picture->format));
+    MSG_VERBOSE("Input picture format: '%s'", av_get_pix_fmt_name((AVPixelFormat)sw_picture->format));
     const AVPixelFormat result_format = convertRGB ? AV_PIX_FMT_BGR24 : (AVPixelFormat)sw_picture->format;
     switch (result_format)
     {
@@ -2113,7 +2113,6 @@ static inline bool cv_ff_codec_tag_list_match(const AVCodecTag *const *tags, CV_
     }
     return false;
 }
-
 
 static inline void cv_ff_codec_tag_dump(const AVCodecTag *const *tags)
 {

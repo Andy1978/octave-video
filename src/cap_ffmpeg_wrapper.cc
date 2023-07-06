@@ -17,6 +17,20 @@
 
 #include "cap_ffmpeg_impl_ov.hpp"
 
+// PKG_ADD: autoload ("__octave_video_set_verbosity_level__", "cap_ffmpeg_wrapper.oct");
+// PKG_DEL: autoload ("__octave_video_set_verbosity_level__", "cap_ffmpeg_wrapper.oct", "remove");
+DEFUN_DLD(__octave_video_set_verbosity_level__, args, nargout,
+          "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} {@var{def} =} __octave_video_set_verbosity_level__ ()\n\
+undocumented internal function\n\
+@end deftypefn")
+{
+  octave_value_list retval;
+  int l = args(0).int_value ();
+  set_verbosity_level (l);
+  return retval;
+}
+
 // PKG_ADD: autoload ("__ffmpeg_defines__", "cap_ffmpeg_wrapper.oct");
 // PKG_DEL: autoload ("__ffmpeg_defines__", "cap_ffmpeg_wrapper.oct", "remove");
 DEFUN_DLD(__ffmpeg_defines__, args, nargout,
@@ -155,7 +169,7 @@ CvCapture_FFMPEG* get_cap_from_ov (octave_value ov)
     {
       CvCapture_FFMPEG::register_type();
       capture_type_loaded = true;
-      av_log_set_level (AV_LOG_WARNING);
+      set_verbosity_level (0);
     }
 
   if (ov.type_id() != CvCapture_FFMPEG::static_type_id())
@@ -406,11 +420,7 @@ undocumented internal function\n\
     {
       CvVideoWriter_FFMPEG::register_type();
       writer_type_loaded = true;
-
-	  // see https://ffmpeg.org/doxygen/4.4/group__lavu__log__constants.html
-	  //av_log_set_level (AV_LOG_DEBUG);
-	  //av_log_set_level (AV_LOG_INFO);
-	  av_log_set_level (AV_LOG_WARNING);
+      set_verbosity_level (0);
     }
 
   std::string filename = args(0).string_value ();
@@ -432,7 +442,11 @@ undocumented internal function\n\
       const AVOutputFormat* fmt = av_guess_format	(NULL, filename.c_str (), NULL);
 
       if (! fmt)
-		error ("Can't guess container format from filename '%s'", filename.c_str ());
+      {
+        error ("Can't guess container format from filename '%s'", filename.c_str ());
+        return retval;
+      }
+
 
       // list supported codecs for guessed format
 #if 0
@@ -537,9 +551,9 @@ undocumented internal function\n\
   // FFMPEG backend with MP4 container natively uses other values as fourcc code: see http://mp4ra.org/#/codecs,
   // so you may receive a warning message from OpenCV about fourcc code conversion.
 
-  // fps	Framerate of the created video stream.
-  // isColor	If it is not zero, the encoder will expect and encode color frames,
-  // otherwise it will work with grayscale frames (the flag is currently supported on Windows only).
+  // fps	    Framerate of the created video stream.
+  // isColor    If it is not zero, the encoder will expect and encode color frames,
+  // otherwise  it will work with grayscale frames (the flag is currently supported on Windows only).
 
   //printf ("h->open (%s, %i, %f, %u, %u, %u);\n", filename.c_str (), tag, fps, width, height, isColor);
 

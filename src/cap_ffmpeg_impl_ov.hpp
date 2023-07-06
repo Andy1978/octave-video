@@ -101,16 +101,6 @@
 	FFmpeg_versions = Lavu57.28.100, SwS6.7.100, Lavc59.37.100, Lavf59.27.100
 */
 
-// dummy until implemented
-#define CV_LOG_DEBUG(tag, ...) ;
-#define CV_LOG_ERROR(tag, ...) ;
-#define CV_LOG_WARNING(tag, ...) ;
-
-#define CV_Assert(x) assert(x);
-
-#define CV_8U   0
-#define CV_16U  2
-
 #include <algorithm>
 #include <limits>
 #include <string>
@@ -190,6 +180,59 @@ extern "C" {
 #else
 #define CV_WARN(message) fprintf(stderr, "warning: %s (%s:%d)\n", message, __FILE__, __LINE__)
 #endif
+
+// octave-video wrappers verbosity level
+// 0 = only errors
+// 1 = + warnings
+// 2 = + wrapper info+debug messages
+// 3 = + libav debug messages
+
+static int verbosity_level = 1;
+const char lvl_prefix[][8] = {"ERR", "WARN", "INFO", "VERBOSE", "DEBUG"};
+
+#define MSG(l, fmt, ...) if (verbosity_level >= l)\
+  { fprintf (stderr, "%s: ", lvl_prefix[l]);\
+    fprintf (stderr, fmt, __VA_ARGS__);\
+    fprintf (stderr, " (%s:%d)\n", __FILE__, __LINE__);}
+
+#define MSG_ERR(fmt, ...)     MSG(0, fmt, __VA_ARGS__)
+#define MSG_WARN(fmt, ...)    MSG(1, fmt, __VA_ARGS__)
+#define MSG_INFO(fmt, ...)    MSG(2, fmt, __VA_ARGS__)
+#define MSG_VERBOSE(fmt, ...) MSG(3, fmt, __VA_ARGS__)
+#define MSG_DEBUG(fmt, ...)   MSG(4, fmt, __VA_ARGS__)
+
+#define CV_Assert(x) assert(x);
+
+#define CV_8U   0
+#define CV_16U  2
+
+void set_verbosity_level (int l)
+{
+    if (l < 0)
+      l = 0;
+    else if (l > 4)
+      l = 4;
+    verbosity_level = l;
+
+    // see https://ffmpeg.org/doxygen/4.4/group__lavu__log__constants.html
+    switch (l)
+    {
+        case 0:
+        case 1:
+            av_log_set_level (AV_LOG_WARNING); //Something somehow does not look correct. This may or may not lead to problems
+            break;
+        case 2:
+            av_log_set_level (AV_LOG_INFO); //Standard information.
+            break;
+        case 3:
+            av_log_set_level (AV_LOG_VERBOSE); //Detailed information.
+            break;
+        case 4:
+            av_log_set_level (AV_LOG_DEBUG); //Stuff which is only useful for libav* developers
+            break;
+    }
+    MSG_DEBUG ("set new verbosity_level = %i", av_log_get_level ());
+}
 
 static int global_err;
 
@@ -783,19 +826,6 @@ private:
 
 static ImplMutex _mutex;
 
-static void ffmpeg_log_callback(void *ptr, int level, const char *fmt, va_list vargs)
-{
-    static bool skip_header = false;
-    static int prev_level = -1;
-    CV_UNUSED(ptr);
-    if (level>av_log_get_level()) return;
-    if (!skip_header || level != prev_level) printf("[OPENCV:FFMPEG:%02d] ", level);
-    vprintf(fmt, vargs);
-    size_t fmt_len = strlen(fmt);
-    skip_header = fmt_len > 0 && fmt[fmt_len - 1] != '\n';
-    prev_level = level;
-}
-
 class InternalFFMpegRegister
 {
 public:
@@ -881,11 +911,10 @@ inline void fill_codec_context(AVCodecContext * enc, AVDictionary * dict)
     }
 }
 
-static bool isThreadSafe()
-{
+static bool isThreadSafe() {
     const bool threadSafe = false; //utils::getConfigurationParameterBool("OPENCV_FFMPEG_IS_THREAD_SAFE", false);
     if (threadSafe) {
-        CV_LOG_WARNING(NULL, "VIDEOIO/FFMPEG: OPENCV_FFMPEG_IS_THREAD_SAFE == 1, all OpenCV locks removed, relying on FFmpeg to provide thread safety.  If FFmpeg is not thread safe isOpened() may return false when multiple threads try to call open() at the same time.");
+        MSG_WARN("VIDEOIO/FFMPEG: OPENCV_FFMPEG_IS_THREAD_SAFE == %i, all OpenCV locks removed, relying on FFmpeg to provide thread safety. If FFmpeg is not thread safe isOpened() may return false when multiple threads try to call open() at the same time.", threadSafe);
     }
     return threadSafe;
 }
@@ -931,7 +960,7 @@ bool CvCapture_FFMPEG::open(const char* _filename)
     global_err = avformat_find_stream_info(ic, NULL);
     if (global_err < 0)
     {
-        CV_LOG_WARNING(NULL, "Unable to read codec parameters from stream (" << _opencv_ffmpeg_get_error_string(global_err) << ")");
+        MSG_WARN("Unable to read codec parameters from stream (%s)", _opencv_ffmpeg_get_error_string(global_err).c_str());
         goto exit_func;
     }
     for(i = 0; i < ic->nb_streams; i++)
@@ -946,10 +975,7 @@ bool CvCapture_FFMPEG::open(const char* _filename)
             int enc_width = par->width;
             int enc_height = par->height;
 
-            CV_LOG_DEBUG(NULL, "FFMPEG: stream[" << i << "] is video stream with codecID=" << (int)codec_id
-                    << " width=" << enc_width
-                    << " height=" << enc_height
-            );
+            MSG_INFO("FFMPEG: stream[%i] is video stream with codecID=%i, width=%i, height=%i", i, (int)codec_id, enc_width, enc_height);
 
             // find and open decoder, try HW acceleration types specified in 'hw_acceleration' list (in order)
             const AVCodec *codec = NULL;
@@ -967,11 +993,11 @@ bool CvCapture_FFMPEG::open(const char* _filename)
                     }
                     else
                     {
-                        CV_LOG_DEBUG(NULL, "FFMPEG: Using video_codec='" << video_codec_param->value << "'");
+                        MSG_INFO("FFMPEG: Using video_codec='%s'", video_codec_param->value);
                         codec = avcodec_find_decoder_by_name(video_codec_param->value);
                         if (!codec)
                         {
-                            CV_LOG_ERROR(NULL, "Could not find decoder '" << video_codec_param->value << "'");
+                            MSG_ERR("Could not find decoder '%s'", video_codec_param->value);
                         }
                     }
                     if (codec)
@@ -992,11 +1018,11 @@ bool CvCapture_FFMPEG::open(const char* _filename)
                 if (global_err >= 0) {
                     break;
                 } else {
-                    CV_LOG_ERROR(NULL, "Could not open codec " << codec->name << ", error: " << global_err);
+                    MSG_ERR("Could not open codec '%s', error: %i", codec->name, global_err);
                 }
             } while (0);
             if (global_err < 0) {
-                CV_LOG_ERROR(NULL, "VIDEOIO/FFMPEG: Failed to initialize VideoCapture");
+                MSG_ERR("VIDEOIO/FFMPEG: Failed to initialize VideoCapture. global_err = %i", global_err);
                 goto exit_func;
             }
 
@@ -1171,11 +1197,7 @@ bool CvCapture_FFMPEG::grabFrame()
             _opencv_ffmpeg_av_packet_unref (&packet);
             if (++cur_read_attempts > max_read_attempts)
             {
-                CV_LOG_WARNING(NULL,
-                    "packet read max attempts exceeded, if your video have "
-                    "multiple streams (video, audio) try to increase attempt "
-                    "limit by setting environment variable OPENCV_FFMPEG_READ_ATTEMPTS "
-                    "(current value is " << max_read_attempts << ")");
+                MSG_WARN("packet read max attempts (%li) exceeded", max_read_attempts);
                 break;
             }
             continue;
@@ -1257,7 +1279,7 @@ bool CvCapture_FFMPEG::retrieveFrame(int flag, unsigned char** data, int* step, 
     if (!sw_picture || !sw_picture->data[0])
         return false;
 
-    CV_LOG_DEBUG(NULL, "Input picture format: " << av_get_pix_fmt_name((AVPixelFormat)sw_picture->format));
+    MSG_INFO("Input picture format: '%s'", av_get_pix_fmt_name((AVPixelFormat)sw_picture->format));
     const AVPixelFormat result_format = convertRGB ? AV_PIX_FMT_BGR24 : (AVPixelFormat)sw_picture->format;
     switch (result_format)
     {
@@ -1265,8 +1287,7 @@ bool CvCapture_FFMPEG::retrieveFrame(int flag, unsigned char** data, int* step, 
     case AV_PIX_FMT_GRAY8: *depth = CV_8U; *cn = 1; break;
     case AV_PIX_FMT_GRAY16LE: *depth = CV_16U; *cn = 1; break;
     default:
-        CV_LOG_WARNING(NULL, "Unknown/unsupported picture format: " << av_get_pix_fmt_name(result_format)
-                       << ", will be treated as 8UC1.");
+        MSG_WARN("Unknown/unsupported picture format: %s, will be treated as 8UC1.", av_get_pix_fmt_name(result_format));
         *depth = CV_8U;
         *cn = 1;
         break; // TODO: return false?
@@ -1917,9 +1938,8 @@ bool CvVideoWriter_FFMPEG::writeFrame( const unsigned char* data, int step, int 
         }
     }
     else {
-        CV_LOG_WARNING(NULL, "Input data does not match selected pixel format: "
-                       << av_get_pix_fmt_name(input_pix_fmt)
-                       << ", number of channels: " << cn);
+        MSG_ERR("Input data does not match selected pixel format: %s,  number of channels: %i",
+                av_get_pix_fmt_name(input_pix_fmt), cn);
         CV_Assert(false);
     }
 
@@ -2129,8 +2149,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
        const bool is_supported = depth == CV_8U || (depth == CV_16U && !is_color);
 	   if (!is_supported)
 		{
-			CV_LOG_WARNING(NULL, "Unsupported depth/isColor combination is selected, "
-								 "only CV_8UC1/CV_8UC3/CV_16UC1 are supported.");
+			MSG_ERR(Unsupported depth/isColor combination is selected, only CV_8UC1/CV_8UC3/CV_16UC1 are supported.");
 			return false;
 		}
 	*/
@@ -2165,7 +2184,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
         {
         case CV_8U: input_pix_fmt = AV_PIX_FMT_BGR24; break;
         default:
-            CV_LOG_WARNING(NULL, "Unsupported input depth for color image: " << depth);
+            MSG_ERR("Unsupported input depth %i for color image", depth);
             return false;
         }
     }
@@ -2176,15 +2195,15 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
         case CV_8U: input_pix_fmt = AV_PIX_FMT_GRAY8; break;
         case CV_16U: input_pix_fmt = AV_PIX_FMT_GRAY16LE; break;
         default:
-            CV_LOG_WARNING(NULL, "Unsupported input depth for grayscale image: " << depth);
+            MSG_ERR("Unsupported input depth %i for grayscale image", depth);
             return false;
         }
     }
-    CV_LOG_DEBUG(NULL, "Selected pixel format: " << av_get_pix_fmt_name(input_pix_fmt));
+    MSG_INFO("Selected pixel format: '%s'", av_get_pix_fmt_name(input_pix_fmt));
 
     if (fourcc == -1)
     {
-        fprintf(stderr,"OpenCV: FFMPEG: format %s / %s\n", fmt->name, fmt->long_name);
+        MSG_ERR ("OpenCV: FFMPEG: format %s / %s\n", fmt->name, fmt->long_name);
         cv_ff_codec_tag_dump(fmt->codec_tag);
         return false;
     }
@@ -2210,8 +2229,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 
         if (codec_id == CV_CODEC(CODEC_ID_NONE))
         {
-            fflush(stdout);
-            fprintf(stderr, "OpenCV: FFMPEG: tag 0x%08x/'%c%c%c%c' is not found (format '%s / %s')'\n",
+            MSG_ERR ("OpenCV: FFMPEG: tag 0x%08x/'%c%c%c%c' is not found (format '%s / %s')'\n",
                     fourcc, CV_TAG_TO_PRINTABLE_CHAR4(fourcc),
                     fmt->name, fmt->long_name);
             return false;
@@ -2223,13 +2241,13 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
     if (cv_ff_codec_tag_list_match(fmt->codec_tag, codec_id, fourcc) == false)
     {
         fflush(stdout);
-        fprintf(stderr, "OpenCV: FFMPEG: tag 0x%08x/'%c%c%c%c' is not supported with codec id %d and format '%s / %s'\n",
+        MSG_ERR ("OpenCV: FFMPEG: tag 0x%08x/'%c%c%c%c' is not supported with codec id %d and format '%s / %s'\n",
                 fourcc, CV_TAG_TO_PRINTABLE_CHAR4(fourcc),
                 codec_id, fmt->name, fmt->long_name);
         int supported_tag;
         if( (supported_tag = av_codec_get_tag(fmt->codec_tag, codec_id)) != 0 )
         {
-            fprintf(stderr, "OpenCV: FFMPEG: fallback to use tag 0x%08x/'%c%c%c%c'\n",
+            MSG_WARN("OpenCV: FFMPEG: fallback to use tag 0x%08x/'%c%c%c%c'\n",
                     supported_tag, CV_TAG_TO_PRINTABLE_CHAR4(supported_tag));
             fourcc = supported_tag;
         }
@@ -2380,8 +2398,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
         {
             codec = avcodec_find_encoder(codec_id);
             if (!codec) {
-                CV_LOG_ERROR(NULL, "Could not find encoder for codec_id=" << (int)codec_id << ", error: "
-                        << icvFFMPEGErrStr(AVERROR_ENCODER_NOT_FOUND));
+                MSG_ERR("Could not find encoder for codec_id = %i, error: %s", (int)codec_id, icvFFMPEGErrStr(AVERROR_ENCODER_NOT_FOUND));
             }
         }
         if (!codec)
@@ -2416,7 +2433,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
         if (err >= 0) {
             break;
         } else {
-            CV_LOG_ERROR(NULL, "Could not open codec " << codec->name << ", error: " << icvFFMPEGErrStr(err) << " (" << err << ")");
+            MSG_ERR("Could not open codec '%s', error: %s (%i)", codec->name, icvFFMPEGErrStr(err), err);
         }
     } while (0);
 
@@ -2424,7 +2441,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
         av_dict_free(&dict);
 
     if (err < 0) {
-        CV_LOG_ERROR(NULL, "VIDEOIO/FFMPEG: Failed to initialize VideoWriter");
+        MSG_ERR("VIDEOIO/FFMPEG: Failed to initialize VideoWriter, err = %i", err);
         return false;
     }
 

@@ -1,23 +1,22 @@
 #!/bin/bash -e
 
 # INFO: "test VideoWriter" writes and reads a video
-OCMD='pkg load video; system ("head -n2 /etc/os-release"); printf ("OCTAVE_VERSION = %s\n", OCTAVE_VERSION); x=VideoWriter("foo.avi"); printf ("FFmpeg_versions = %s\n", x.FFmpeg_versions); test VideoWriter; printf ("---\n");'
-echo "octave command: ${OCMD}" | tee run.log
+OCMD='pkg load video; system ("head -n2 /etc/os-release"); printf ("OCTAVE_VERSION = %s\n", OCTAVE_VERSION); x=VideoWriter("foo.avi"); printf ("FFmpeg_versions = %s\n", x.FFmpeg_versions); test VideoWriter;'
+echo "octave command: ${OCMD}"
+echo
 
-docker run -it debian_buster octave -q --eval "$OCMD" | tee -a run.log
+do_run () {
+  # Info: If you want to play in an interactive shell, just add --persist before --eval
+  docker run -it "$1" octave -q --eval "$OCMD"
+  echo "---"
+}
 
-docker run -it debian_bullseye octave -q --eval "$OCMD"
-
-docker run -it debian_bookworm octave -q --eval "$OCMD"
-
-docker run -it fedora31_ffmpeg octave -q --eval "$OCMD"
-
-docker run -it fedora33_ffmpeg octave -q --eval "$OCMD"
-
-docker run -it fedora38_ffmpeg octave -q --eval "$OCMD"
-
-docker run -it ubuntu_20_04 octave -q --eval "$OCMD"
-
-docker run -it ubuntu_22_04 octave -q --eval "$OCMD"
-
-docker run -it ubuntu_23_04 octave -q --eval "$OCMD"
+do_run debian_buster
+do_run debian_bullseye
+do_run debian_bookworm
+do_run fedora31_ffmpeg
+do_run fedora33_ffmpeg
+do_run fedora38_ffmpeg
+do_run ubuntu_20_04
+do_run ubuntu_22_04
+do_run ubuntu_23_04

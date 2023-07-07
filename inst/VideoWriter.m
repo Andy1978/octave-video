@@ -1,4 +1,6 @@
-## Copyright (C) 2019-2020 Andreas Weber <octave@josoansi.de>
+########################################################################
+##
+## Copyright (C) 2019-2023 Andreas Weber <octave@josoansi.de>
 ##
 ## This file is part of octave-video.
 ##
@@ -15,20 +17,42 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program; see the file COPYING.  If not, see
 ## <https://www.gnu.org/licenses/>.
-
-## -*- texinfo -*-
-## @deftypefn {} {@var{p} =} VideoWriter ()
-## Create object @var{p} of the VideoWriter class.
-## @end deftypefn
-
-## ToDo: https://savannah.gnu.org/bugs/?func=detailitem&item_id=57020
-## pantxo
-##   FileName/Path (fixed at object instantiation), FrameCount, Height/Width (fixed by the first provided frame), VideoBitsPerPixel/VideoCompressionMethod/VideoFormat (codec specific)
-## - increment FrameCount and Duration after each successful call to writeVideo,
-## - allow passing frames or frame arrays  directly to writeVideo, without having to extract the "cdata" field manually,
-## - allow passing arbitrary image data types even if we end up converting them internally to whatever is prefered for the chosen codec, e.g uint8 for RGB 24bits video formats.
+##
+########################################################################
 
 classdef VideoWriter < handle
+
+  ## -*- texinfo -*-
+  ## @deftypefn {} {@var{p} =} VideoWriter ()
+  ## Create object @var{p} of the VideoWriter class.
+  ## @end deftypefn
+  ##
+  ## @deftypefn {} {} VideoWriter.open
+  ## Just checks if the file can be created, no need to call this before
+  ## 'writeVideo' in this implementation.
+  ##
+  ## @end deftypefn
+  ##
+  ## @deftypefn {} {} VideoWriter.writeVideo
+  ## This ultimately creates the video file with previously set params.
+  ## Width and height of the first frame given determines the width and
+  ## height of the video.
+  ##
+  ## @end deftypefn
+  ##
+  ## @deftypefn {} {} __octave_video_set_verbosity_level__ (LEVEL)
+  ## Internal function to increase chattiness of the underlying code
+  ## for debugging purposes.
+  ##
+  ## @itemize
+  ## @item 0: only errors
+  ## @item 1: + warnings (default)
+  ## @item 2: + info messages
+  ## @item 3: + verbose info messages
+  ## @item 4: + ffmpeg debug messages
+  ## @end itemize
+  ##
+  ## @end deftypefn
 
   properties (SetAccess = public, GetAccess = public)
     FrameRate              = 30;      # fps in [Hz]
@@ -43,8 +67,11 @@ classdef VideoWriter < handle
     FileFormat             = "avi";
     Filename               = "";
     FrameCount             = 0;
+
+    # Height/Width is set by the first frame written and can't be changed after that
     Height                 = [];      # height of the video frames which can be different than requested due to padding or cropping
     Width                  = [];      # width of the video frames which can be different than requested due to padding or cropping
+
     #LosslessCompression    = false;  # FIXME: currently not used
     Path                   = "./";
     #Quality                = 75;     # FIXME: currently not used
@@ -139,9 +166,12 @@ classdef VideoWriter < handle
 
     function open (v)
 
-      ## This implementation just opens a dummy file to check if the file
-      ## can be created. A new instance of CvVideoWriter_FFMPEG is
-      ## created on the first call writeVideo.
+      ## We can't create an instance of CvVideoWriter_FFMPEG right now
+      ## because width,height, codec and so on aren't known yet.
+      ##
+      ## This implementation just opens the given filename to check if the
+      ## file could be created. A new instance of CvVideoWriter_FFMPEG is
+      ## created on the first call to writeVideo.
 
       fn = fullfile (v.Path, v.Filename);
       [fid, msg] = fopen (fn, "w");
@@ -165,7 +195,11 @@ classdef VideoWriter < handle
 
     function writeVideo (v, in)
 
-      # input can be an image or a frame geturned by getframe
+      # TODO / IDEAS:
+      # pantxo: allow passing arbitrary image data types even if we end up converting them internally
+      # to whatever is prefered for the chosen codec, e.g uint8 for RGB 24bits video formats.
+
+      # input can be an image or a frame returned by getframe
       is_frame = isstruct (in) && isfield (in, "cdata");
       is_img = isnumeric (in);
 

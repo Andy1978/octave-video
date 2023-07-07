@@ -185,9 +185,10 @@ extern "C" {
 // 0 = only errors
 // 1 = + warnings
 // 2 = + wrapper info+debug messages
-// 3 = + libav debug messages
+// 3 = + verbose messages
+// 4 = + libav debug messages
 
-static int verbosity_level = 1;
+static int verbosity_level = -1;
 const char lvl_prefix[][8] = {"ERR", "WARN", "INFO", "VERBOSE", "DEBUG"};
 
 #define MSG(l, fmt, ...) if (verbosity_level >= l)\
@@ -501,11 +502,21 @@ class CvCapture_FFMPEG: public octave_base_value
     int64_t get_bitrate() const;
 
     AVRational get_sample_aspect_ratio () const
-      { return _opencv_ffmpeg_get_sample_aspect_ratio(ic->streams[video_stream]); }
+    {
+         if (ok)
+            return _opencv_ffmpeg_get_sample_aspect_ratio(ic->streams[video_stream]);
+        else
+        {
+            AVRational tmp;
+            tmp.num = 0;
+            tmp.den = 1;
+            return tmp;
+        }
+    }
 
     const char* get_video_codec_name () const
       {
-        return _opencv_avcodec_get_name(video_st->codecpar->codec_id);
+        return (ok)? _opencv_avcodec_get_name(video_st->codecpar->codec_id) : NULL;
       }
 
     double  r2d(AVRational r) const;
@@ -554,6 +565,8 @@ class CvCapture_FFMPEG: public octave_base_value
     AVBSFContext* bsfc;
     int use_opencl;
     int extraDataIdx;
+    bool ok;
+    bool is_ok () { return ok; }
 
   bool is_constant (void) const
   {
@@ -593,6 +606,9 @@ CvCapture_FFMPEG::CvCapture_FFMPEG ()
 
 void CvCapture_FFMPEG::init()
 {
+    if (verbosity_level < 0)
+      set_verbosity_level (1);
+
 #ifdef HAVE_FFMPEG_LIBAVDEVICE
     //libavdevice is available, so let's register all input and output devices (e.g v4l2)
     avdevice_register_all();
@@ -631,6 +647,7 @@ void CvCapture_FFMPEG::init()
     bsfc = NULL;
     use_opencl = 0;
     extraDataIdx = 1;
+    ok = false;
 }
 
 
@@ -927,7 +944,6 @@ bool CvCapture_FFMPEG::open(const char* _filename)
 	AutoLock lock(_mutex);
 
     unsigned i;
-    bool valid = false;
     int nThreads = 0;
 
     close();
@@ -1045,17 +1061,17 @@ bool CvCapture_FFMPEG::open(const char* _filename)
     }
 
     if (video_stream >= 0)
-        valid = true;
+        ok = true;
 
 exit_func:
 
     // deactivate interrupt callback
     interrupt_metadata.timeout_after_ms = 0;
 
-    if( !valid )
-        close();
+    if( !ok )
+      close();
 
-    return valid;
+    return ok;
 }
 
 
@@ -1446,6 +1462,9 @@ double CvCapture_FFMPEG::r2d(AVRational r) const
 
 double CvCapture_FFMPEG::get_duration_sec() const
 {
+    if (! ok)
+        return -1;
+
     double sec = (double)ic->duration / (double)AV_TIME_BASE;
 
     if (sec < eps_zero)
@@ -1458,17 +1477,26 @@ double CvCapture_FFMPEG::get_duration_sec() const
 
 int64_t CvCapture_FFMPEG::get_bitrate() const
 {
+    if (! ok)
+        return -1;
+
     return ic->bit_rate / 1000;
 }
 
 double CvCapture_FFMPEG::get_fps() const
 {
+    if (! ok)
+        return -1;
+
     double fps = r2d(av_guess_frame_rate(ic, ic->streams[video_stream], NULL));
     return fps;
 }
 
 int64_t CvCapture_FFMPEG::get_total_frames() const
 {
+    if (! ok)
+        return -1;
+
     int64_t nbf = ic->streams[video_stream]->nb_frames;
 
     if (nbf == 0)
@@ -1643,10 +1671,12 @@ class CvVideoWriter_FFMPEG: public octave_base_value
     size_t            aligned_input_size;
     int               frame_width, frame_height;
     int               frame_idx;
-    bool              ok;
     struct SwsContext *img_convert_ctx;
     int               hw_device;
     int               use_opencl;
+
+    bool              ok;
+    bool is_ok () { return ok; }
 
     const char* get_video_codec_name () const
     {
@@ -1724,6 +1754,9 @@ extern "C" {
 
 void CvVideoWriter_FFMPEG::init()
 {
+    if (verbosity_level < 0)
+      set_verbosity_level (1);
+
     fmt = 0;
     oc = 0;
     outbuf = 0;

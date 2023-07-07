@@ -230,6 +230,7 @@ Gets CvCapture_FFMPEG properties like bitrate, fps, total_frames, duration_sec..
   CvCapture_FFMPEG* h = get_cap_from_ov (args(0));
   if (h)
     {
+
       octave_scalar_map opt;
       opt.contents ("total_frames") = h->get_total_frames ();
       opt.contents ("duration_sec") = h->get_duration_sec ();
@@ -256,6 +257,8 @@ Gets CvCapture_FFMPEG properties like bitrate, fps, total_frames, duration_sec..
         opt.contents ("aspect_ration_num") = s.num;
         opt.contents ("aspect_ration_den") = s.den;
       }
+
+      opt.contents ("is_okay") = h->is_ok();
 
       retval.append (opt);
     }

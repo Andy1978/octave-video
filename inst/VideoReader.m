@@ -1,4 +1,6 @@
-## Copyright (C) 2019-2020 Andreas Weber <octave@josoansi.de>
+########################################################################
+##
+## Copyright (C) 2019-2023 Andreas Weber <octave@josoansi.de>
 ##
 ## This file is part of octave-video.
 ##
@@ -15,15 +17,39 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program; see the file COPYING.  If not, see
 ## <https://www.gnu.org/licenses/>.
-
-## -*- texinfo -*-
-## @deftypefn {} {@var{p} =} VideoReader ()
-## Create object @var{p} of the VideoReader class.
-## @end deftypefn
-
-## ToDo: https://savannah.gnu.org/bugs/?func=detailitem&item_id=57020
+##
+########################################################################
 
 classdef VideoReader < handle
+
+  ## -*- texinfo -*-
+  ## @deftypefn {} {@var{p} =} VideoReader ()
+  ## Create object @var{p} of the VideoReader class.
+  ## @end deftypefn
+  ##
+  ## @deftypefn {} {} VideoReader.disp
+  ## Outputs a list of all available properties.
+  ##
+  ## @end deftypefn
+  ##
+  ## @deftypefn {} {} VideoReader.readFrame
+  ## Get next RGB24 frame. This also increases 'FrameNumber'.
+  ##
+  ## @end deftypefn
+  ##
+  ## @deftypefn {} {} __octave_video_set_verbosity_level__ (LEVEL)
+  ## Internal function to increase chattiness of the underlying code
+  ## for debugging purposes.
+  ##
+  ## @itemize
+  ## @item 0: only errors
+  ## @item 1: + warnings (default)
+  ## @item 2: + info messages
+  ## @item 3: + verbose info messages
+  ## @item 4: + ffmpeg debug messages
+  ## @end itemize
+  ##
+  ## @end deftypefn
 
   properties (SetAccess = private, GetAccess = public)
 
@@ -84,20 +110,29 @@ classdef VideoReader < handle
 
     function disp (v)
 
-      printf (" class VideoReader:\n");
+      printf (" class VideoReader:\n\n");
+      printf ("  read-only access:\n");
       printf ("    Duration [s]    = %.2f\n", v.Duration);
       printf ("    BitsPerPixel    = %i\n", v.BitsPerPixel);
       printf ("    Bitrate         = %i\n", v.Bitrate);
       printf ("    FrameRate [fps] = %.2f\n", v.FrameRate);
       printf ("    Height [px]     = %i\n", v.Height);
       printf ("    Width [px]      = %i\n", v.Width);
-      printf ("    Name            = %s\n", v.Name);
-      printf ("    Path            = %s\n", v.Path);
+      printf ("    Name            = '%s'\n", v.Name);
+      printf ("    Path            = '%s'\n", v.Path);
       printf ("    NumberOfFrames  = %i\n", v.NumberOfFrames);
+      printf ("    VideoFormat     = '%s'\n", v.VideoFormat);
+
+      ## GNU Octave extensions
       printf ("    FrameNumber     = %i\n", v.FrameNumber);
-      printf ("    VideoFormat     = %s\n", v.VideoFormat);
-      printf ("    VideoCodec      = %s\n", v.VideoCodec);
-      printf ("    AspectRatio     = %s\n", mat2str (v.AspectRatio));
+      printf ("    VideoCodec      = '%s'\n", v.VideoCodec);
+      printf ("    AspectRatio     = '%s'\n", mat2str (v.AspectRatio));
+      printf ("    FFmpeg_versions = '%s'\n", v.FFmpeg_versions);
+
+      printf ("\n");
+      printf ("  read-write access:\n");
+      printf ("    CurrentTime     = %i\n", v.CurrentTime);
+      printf ("    Tag             = '%s'\n", v.Tag);
 
     endfunction
 
@@ -120,8 +155,24 @@ classdef VideoReader < handle
 
     endfunction
 
+    function r = hasFrame (v)
+
+      r = v.FrameNumber < v.NumberOfFrames;
+
+    endfunction
+
+    function close (v)
+
+      __cap_close__ (v.h);
+      update_properties (v);
+
+    endfunction
+
+  endmethods
+
+  methods (Access = private)
+
     # internal function
-    # FIXME: perhaps this can be hidden or method Access = private but what would be the benefit?
     function update_properties (v)
 
       prop = __cap_get_properties__ (v.h);
@@ -135,18 +186,6 @@ classdef VideoReader < handle
       v.Height         = prop.height;
       v.VideoCodec     = prop.video_codec_name;
       v.AspectRatio    = [prop.aspect_ration_num prop.aspect_ration_den];
-
-    endfunction
-
-    function r = hasFrame (v)
-
-      r = v.FrameNumber < v.NumberOfFrames;
-
-    endfunction
-
-    function close (v)
-
-      __cap_close__ (v.h);
 
     endfunction
 

@@ -23,7 +23,7 @@ CC_SOURCES  = src/cap_ffmpeg_wrapper.cc
 #OCT_FILES   = $(patsubst %.cc,%.oct,$(CC_SOURCES))
 PKG_ADD     = $(shell grep -Pho '(?<=// PKG_ADD: ).*' $(CC_SOURCES) $(M_SOURCES))
 
-MD5SUM    ?= md5sum
+SHA256    ?= sha256sum
 MKOCTFILE ?= mkoctfile
 OCTAVE    ?= octave
 SED       ?= sed
@@ -37,7 +37,7 @@ help:
 	@echo "Targets:"
 	@echo "   dist             - Create $(RELEASE_TARBALL) for release"
 	@echo "   html             - Create $(HTML_TARBALL) for release"
-	@echo "   release          - Create both of the above and show md5sums"
+	@echo "   release          - Create both of the above and show sha256 checksums"
 	@echo
 	@echo "   install          - Install the package in GNU Octave"
 	@echo "   all              - Build all oct files"
@@ -80,7 +80,7 @@ dist: $(RELEASE_TARBALL)
 html: $(HTML_TARBALL)
 
 release: dist html
-	@$(MD5SUM) $(RELEASE_TARBALL) $(HTML_TARBALL)
+	@$(SHA256) $(RELEASE_TARBALL) $(HTML_TARBALL)
 	@echo "Upload @ https://sourceforge.net/p/octave/package-releases/new/"
 	@echo "Execute: hg tag \"$(VERSION)\""
 

@@ -1,21 +1,33 @@
+Summary of important user-visible changes for video 2.1.1:
+-------------------------------------------------------------------
+ ** Add support for FFMPEG 5.x. (See #61978)
+
+ ** Drop support for old ffmpeg versions.
+    Lavu56.22.100, SwS5.3.100, Lavc58.35.100, Lavf58.20.100
+    is the lowest tested combination.
+
+ ** Removed tests for outdated GNU/Linux distributions
+    like Debian stretch, CentOS 7 and so on.
+    See tests/docker_results.log for a list of tested distributions.
+
 Summary of important user-visible changes for video 2.0.2:
 -------------------------------------------------------------------
-  ** Fix build on GNU Octave 8.x (bug #61551)
+ ** Fix build on GNU Octave 8.x (bug #61551)
 
 Summary of important user-visible changes for video 2.0.1:
 -------------------------------------------------------------------
-  ** Fix build on MacOS Monterrey (bug #57938)
+ ** Fix build on MacOS Monterrey (bug #57938)
 
 Summary of important user-visible changes for video 2.0.0:
 -------------------------------------------------------------------
-  ** complete rewrite of the package, all sourcecode from
-     previous versions was dropped and OpenCV's CvCapture_FFMPEG
-     and CvVideoWriter_FFMPEG was used as base to implement
-     the new VideoReader and VideoWriter classes.
+ ** complete rewrite of the package, all sourcecode from
+    previous versions was dropped and OpenCV's CvCapture_FFMPEG
+    and CvVideoWriter_FFMPEG was used as base to implement
+    the new VideoReader and VideoWriter classes.
 
 Summary of important user-visible changes for video 1.2.4:
 -------------------------------------------------------------------
-  ** Bugfix #51057
+ ** Bugfix #51057
 
 Summary of important user-visible changes for video 1.2.3:
 -------------------------------------------------------------------

@@ -82,7 +82,8 @@ html: $(HTML_TARBALL)
 release: dist html
 	@$(SHA256) $(RELEASE_TARBALL) $(HTML_TARBALL)
 	@echo "Upload @ https://sourceforge.net/p/octave/package-releases/new/"
-	@echo "Execute: hg tag \"$(VERSION)\""
+	@echo "Execute: git tag -a \"$(VERSION)\" -m \"tag version $(VERSION)\""
+	@echo "         git push --tags"
 
 install: $(RELEASE_TARBALL)
 	@echo "Installing package locally ..."

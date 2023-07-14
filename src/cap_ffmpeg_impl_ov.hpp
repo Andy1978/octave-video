@@ -239,9 +239,14 @@ static int global_err;
 
 std::string get_last_err_msg ()
 {
-  char err_buf[80];
-  av_strerror (global_err, err_buf, 80);
-  return err_buf;
+  char err_buf[AV_ERROR_MAX_STRING_SIZE + 1];
+  if (global_err)
+  {
+    av_strerror (global_err, err_buf, AV_ERROR_MAX_STRING_SIZE);
+    return err_buf;
+  }
+  else
+    return "No error";
 }
 
 #if defined _WIN32
@@ -465,18 +470,6 @@ static AVRational _opencv_ffmpeg_get_sample_aspect_ratio(AVStream *stream)
     return av_guess_sample_aspect_ratio(NULL, stream, NULL);
 }
 
-inline static std::string _opencv_ffmpeg_get_error_string(int error_code)
-{
-    char buf[255] = {0};
-    const int err = av_strerror(error_code, buf, 254);
-    if (err == 0)
-        return std::string(buf);
-    else
-        return std::string("Unknown error");
-}
-
-static bool capture_type_loaded = false;
-
 class CvCapture_FFMPEG: public octave_base_value
 {
   public:
@@ -581,6 +574,7 @@ class CvCapture_FFMPEG: public octave_base_value
 
   void print (std::ostream & os, bool pr_as_read_syntax = false)
   {
+    (void) pr_as_read_syntax;
 	os << "CvCapture_FFMPEG:" << std::endl;
 	if (filename)
 	  os << "  filename           = " << filename << std::endl;
@@ -846,7 +840,7 @@ static ImplMutex _mutex;
 class InternalFFMpegRegister
 {
 public:
-    static void init(const bool threadSafe)
+    static void init()
     {
 		AutoLock lock(_mutex);
         static InternalFFMpegRegister instance;
@@ -928,18 +922,9 @@ inline void fill_codec_context(AVCodecContext * enc, AVDictionary * dict)
     }
 }
 
-static bool isThreadSafe() {
-    const bool threadSafe = false; //utils::getConfigurationParameterBool("OPENCV_FFMPEG_IS_THREAD_SAFE", false);
-    if (threadSafe) {
-        MSG_WARN("VIDEOIO/FFMPEG: OPENCV_FFMPEG_IS_THREAD_SAFE == %i, all OpenCV locks removed, relying on FFmpeg to provide thread safety. If FFmpeg is not thread safe isOpened() may return false when multiple threads try to call open() at the same time.", threadSafe);
-    }
-    return threadSafe;
-}
-
 bool CvCapture_FFMPEG::open(const char* _filename)
 {
-    const bool threadSafe = isThreadSafe();
-    InternalFFMpegRegister::init(threadSafe);
+    InternalFFMpegRegister::init();
 
 	AutoLock lock(_mutex);
 
@@ -976,7 +961,7 @@ bool CvCapture_FFMPEG::open(const char* _filename)
     global_err = avformat_find_stream_info(ic, NULL);
     if (global_err < 0)
     {
-        MSG_WARN("Unable to read codec parameters from stream (%s)", _opencv_ffmpeg_get_error_string(global_err).c_str());
+        MSG_WARN("Unable to read codec parameters from stream (%s)", get_last_err_msg().c_str());
         goto exit_func;
     }
     for(i = 0; i < ic->nb_streams; i++)
@@ -1034,11 +1019,11 @@ bool CvCapture_FFMPEG::open(const char* _filename)
                 if (global_err >= 0) {
                     break;
                 } else {
-                    MSG_ERR("Could not open codec '%s', error: %i", codec->name, global_err);
+                    MSG_ERR("Could not open codec '%s', error: '%s'", codec->name, get_last_err_msg ().c_str());
                 }
             } while (0);
             if (global_err < 0) {
-                MSG_ERR("VIDEOIO/FFMPEG: Failed to initialize VideoCapture. global_err = %i", global_err);
+                MSG_ERR("VIDEOIO/FFMPEG: Failed to initialize VideoCapture, error: '%s'", get_last_err_msg().c_str());
                 goto exit_func;
             }
 
@@ -1362,7 +1347,7 @@ bool CvCapture_FFMPEG::retrieveFrame(int flag, unsigned char** data, int* step, 
 
     return true;
 }
-
+/*
 static inline double getCodecTag(const AVCodecID codec_id) {
     const struct AVCodecTag* fallback_tags[] = {
         avformat_get_riff_video_tags(),
@@ -1371,7 +1356,8 @@ static inline double getCodecTag(const AVCodecID codec_id) {
         NULL };
     return av_codec_get_tag(fallback_tags, codec_id);
 }
-
+*/
+/*
 static inline double getCodecIdFourcc(const AVCodecID codec_id)
 {
     if (codec_id == AV_CODEC_ID_NONE) return -1;
@@ -1380,6 +1366,8 @@ static inline double getCodecIdFourcc(const AVCodecID codec_id)
         return getCodecTag(codec_id);
     return (double)CV_FOURCC(codec_fourcc[0], codec_fourcc[1], codec_fourcc[2], codec_fourcc[3]);
 }
+*/
+
 #if 0
 double CvCapture_FFMPEG::getProperty( int property_id ) const
 {
@@ -1595,6 +1583,7 @@ void CvCapture_FFMPEG::seek(double sec)
     seek((int64_t)(sec * get_fps() + 0.5));
 }
 
+/*
 bool CvCapture_FFMPEG::setProperty( int property_id, double value )
 {
     if( !video_st ) return false;
@@ -1639,9 +1628,8 @@ bool CvCapture_FFMPEG::setProperty( int property_id, double value )
 #endif
     return true;
 }
-
+*/
 ///////////////// FFMPEG CvVideoWriter implementation //////////////////////////
-static bool writer_type_loaded = false;
 
 class CvVideoWriter_FFMPEG: public octave_base_value
 {
@@ -1694,15 +1682,16 @@ class CvVideoWriter_FFMPEG: public octave_base_value
 
     DECLARE_OV_TYPEID_FUNCTIONS_AND_DATA
 
+    // called from Octave, see example in demo_low_level_write_frame.m
     void print (std::ostream & os, bool pr_as_read_syntax = false)
     {
+      (void) pr_as_read_syntax;
       os << "CvVideoWriter_FFMPEG:" << std::endl;
       os << "  ok                      = " << ok << std::endl;
       os << "  frame_width             = " << frame_width << std::endl;
       os << "  frame_height            = " << frame_height << std::endl;
       os << "  frame_idx               = " << frame_idx << std::endl;
-
-    // FIXME: add more properties
+      os << "  get_video_codec_name () = " << get_video_codec_name () << std::endl;
     }
 };
 
@@ -1918,12 +1907,19 @@ static int icv_av_write_frame_FFMPEG( AVFormatContext * oc, AVStream * video_st,
 
 	/* encode the image */
 	if (picture == NULL && frame_idx == 0)
-		ret = 0;
+    {
+		ret = OPENCV_NO_FRAMES_WRITTEN_CODE;
+        MSG_ERR ("picture == NULL && frame_idx == %i", frame_idx);
+        return ret;
+    }
 	else
 	{
 		ret = avcodec_send_frame(c, picture);
 		if (ret < 0)
-			fprintf (stderr, "Error sending frame to encoder (avcodec_send_frame)");
+        {
+          global_err = ret;
+          MSG_ERR ("Error '%s' sending frame to encoder (avcodec_send_frame)", get_last_err_msg().c_str());
+        }
 	}
 
 	while (ret >= 0)
@@ -1962,22 +1958,30 @@ bool CvVideoWriter_FFMPEG::writeFrame( const unsigned char* data, int step, int 
     // check parameters
     if (input_pix_fmt == AV_PIX_FMT_BGR24) {
         if (cn != 3) {
+            MSG_ERR("Only cn == 3 is allowed for AV_PIX_FMT_BGR24 (but is %i)", cn);
             return false;
         }
     }
     else if (input_pix_fmt == AV_PIX_FMT_GRAY8 || input_pix_fmt == AV_PIX_FMT_GRAY16LE) {
         if (cn != 1) {
+            MSG_ERR("Only cn == 1 is allowed for AV_PIX_FMT_GRAY8 or AV_PIX_FMT_GRAY16LE (but is %i)", cn);
             return false;
         }
     }
     else {
-        MSG_ERR("Input data does not match selected pixel format: %s,  number of channels: %i",
+        MSG_ERR("Input data does not match selected pixel format: %s, number of channels: %i",
                 av_get_pix_fmt_name(input_pix_fmt), cn);
         CV_Assert(false);
     }
 
-    if( (width & -2) != frame_width || (height & -2) != frame_height || !data )
+    // hint: in ::open, width and height was truncated to even number
+    if(    (width & -2) != frame_width
+        || (height & -2) != frame_height
+        || !data )
+    {
+        MSG_ERR("width (%i) or height (%i) doesn't match truncated values (frame_width = %i, frame_height = %i) previously given to ::open", width, height, frame_width, frame_height);
         return false;
+    }
     width = frame_width;
     height = frame_height;
 
@@ -2077,7 +2081,7 @@ void CvVideoWriter_FFMPEG::close()
 		for(;;)
 		{
 			int ret = icv_av_write_frame_FFMPEG( oc, video_st, context, outbuf, outbuf_size, NULL, frame_idx);
-			if( ret == OPENCV_NO_FRAMES_WRITTEN_CODE || ret < 0 )
+			if (ret == OPENCV_NO_FRAMES_WRITTEN_CODE || ret < 0 )
 				break;
 		}
         av_write_trailer(oc);
@@ -2165,8 +2169,7 @@ static inline void cv_ff_codec_tag_dump(const AVCodecTag *const *tags)
 bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
                                  double fps, int width, int height, bool is_color)
 {
-    const bool threadSafe = isThreadSafe();
-    InternalFFMpegRegister::init(threadSafe);
+    InternalFFMpegRegister::init();
 
 	AutoLock lock(_mutex);
 
@@ -2246,7 +2249,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
         const struct AVCodecTag * fallback_tags[] = {
                 avformat_get_riff_video_tags(),
                 avformat_get_mov_video_tags(),
-                codec_bmp_tags, // fallback for avformat < 54.1
+                //codec_bmp_tags, // fallback for avformat < 54.1
                 NULL };
         if (codec_id == CV_CODEC(CODEC_ID_NONE)) {
             codec_id = av_codec_get_id(fallback_tags, fourcc);
@@ -2562,12 +2565,12 @@ void cvReleaseCapture_FFMPEG(CvCapture_FFMPEG** capture)
     }
 }
 */
-
+/*
 int cvSetCaptureProperty_FFMPEG(CvCapture_FFMPEG* capture, int prop_id, double value)
 {
     return capture->setProperty(prop_id, value);
 }
-
+*/
 //double cvGetCaptureProperty_FFMPEG(CvCapture_FFMPEG* capture, int prop_id)
 //{
 //    return capture->getProperty(prop_id);

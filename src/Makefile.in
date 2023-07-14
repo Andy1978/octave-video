@@ -27,15 +27,3 @@ realclean: clean
 	rm -rf autom4te.cache
 	rm -f config.status config.log config.h configure aclocal.m4
 	rm -f cap_ffmpeg_impl_ov.hpp
-
-## patch and upstream managment (development only)
-
-cap_ffmpeg_impl_ov.hpp: cap_ffmpeg_impl_ov.patch cap_ffmpeg_impl.hpp
-	patch -i $< -o $@
-
-update_patch:
-	diff -u cap_ffmpeg_impl.hpp cap_ffmpeg_impl_ov.hpp > cap_ffmpeg_impl_ov.patch || true
-
-update_opencv:
-	wget -N https://raw.githubusercontent.com/opencv/opencv/4.x/modules/videoio/src/ffmpeg_codecs.hpp
-	wget -N https://raw.githubusercontent.com/opencv/opencv/4.x/modules/videoio/src/cap_ffmpeg_impl.hpp

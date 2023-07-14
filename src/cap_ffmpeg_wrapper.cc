@@ -17,6 +17,9 @@
 
 #include "cap_ffmpeg_impl_ov.hpp"
 
+static bool writer_type_loaded = false;
+static bool capture_type_loaded = false;
+
 // PKG_ADD: autoload ("__octave_video_set_verbosity_level__", "cap_ffmpeg_wrapper.oct");
 // PKG_DEL: autoload ("__octave_video_set_verbosity_level__", "cap_ffmpeg_wrapper.oct", "remove");
 DEFUN_DLD(__octave_video_set_verbosity_level__, args, nargout,

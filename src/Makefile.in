@@ -26,4 +26,3 @@ realclean: clean
 	rm -f Makefile
 	rm -rf autom4te.cache
 	rm -f config.status config.log config.h configure aclocal.m4
-	rm -f cap_ffmpeg_impl_ov.hpp

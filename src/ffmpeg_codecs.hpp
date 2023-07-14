@@ -73,10 +73,8 @@ extern "C" {
 
 // required to look up the correct codec ID depending on the FOURCC code,
 // this is just a snipped from the file riff.c from ffmpeg/libavformat
-/*
+
 typedef struct AVCodecTag {
     int id;
     unsigned int tag;
 } AVCodecTag;
-*/
-

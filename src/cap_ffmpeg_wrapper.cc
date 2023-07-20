@@ -66,105 +66,6 @@ undocumented internal function\n\
   return retval;
 }
 
-// PKG_ADD: autoload ("__ffmpeg_output_formats__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__ffmpeg_output_formats__", "cap_ffmpeg_wrapper.oct", "remove");
-DEFUN_DLD(__ffmpeg_output_formats__, args, nargout,
-          "-*- texinfo -*-\n\
-@deftypefn {Loadable Function} {@var{f} =} __ffmpeg_output_formats__ ()\n\
-undocumented internal function\n\
-@end deftypefn")
-{
-  octave_idx_type n = 0;
-
-  // first loop to get numer of output formats
-  const AVOutputFormat * oformat;
-  void *opaque = NULL;
-  while ((oformat = av_muxer_iterate(&opaque))) {n++;}
-
-  Cell names (n, 1);
-  Cell long_names (n, 1);
-  Cell mime_types (n, 1);
-  Cell extensions (n, 1);
-  Cell codecs (n, 1);
-
-  // second loop, now fill the cells
-  int i = 0;
-  opaque = NULL;
-  while ((oformat = av_muxer_iterate(&opaque)))
-    {
-      names (i) = oformat->name;
-      long_names (i) = oformat->long_name;
-      mime_types (i) = oformat->mime_type;
-      extensions (i) = oformat->extensions;
-
-      octave_map map_codecs;
-
-      if (oformat->codec_tag)
-        {
-          // printf ("%s %s %s\n", oformat->name, oformat->long_name, oformat->mime_type);
-
-          std::vector<std::string> video_codecs;
-          const AVCodecTag * ptags = oformat->codec_tag[0];
-          while (ptags->id != AV_CODEC_ID_NONE)
-            {
-              AVCodecID id = (AVCodecID) ptags->id;
-              // get descriptor
-              const AVCodecDescriptor* d = avcodec_descriptor_get (id);
-              if (d)
-                {
-                  // only add encoder video codecs
-                  if (d->type == AVMEDIA_TYPE_VIDEO)
-                    {
-                      // prüfen, ob es einen encoder gibt
-                      if (avcodec_find_encoder (d->id))
-                        {
-                          unsigned int tag = ptags->tag;
-
-                          if (! strcmp (oformat->name, "mp4")) // use riff
-                            {
-                              const struct AVCodecTag *table[] = { avformat_get_riff_video_tags(), 0 };
-                              tag = av_codec_get_tag(table, id);
-                            }
-
-                          char buf[5];
-                          snprintf (buf, 5, "%c%c%c%c", CV_TAG_TO_PRINTABLE_CHAR4(tag));
-
-                          //printf("fourcc tag 0x%08x '%s' codec_id %04X\n", tag, buf, id);
-
-                          video_codecs.push_back (buf);
-                        }
-                    }
-
-                }
-
-              ptags++;
-
-            }
-
-          // unique but keep order
-          {
-            auto last = std::unique(video_codecs.begin(), video_codecs.end());
-            video_codecs.erase (last, video_codecs.end());
-            Cell codec_fourcc (video_codecs.size (), 1);
-            for (unsigned int k = 0; k < video_codecs.size (); ++k)
-              codec_fourcc(k) = video_codecs[k];
-            codecs (i) = codec_fourcc;
-          }
-        }
-      i++;
-    }
-
-  octave_map m;
-
-  m.assign ("name", names);
-  m.assign ("long_name", long_names);
-  m.assign ("mime_type", mime_types);
-  m.assign ("extensions", extensions);
-  m.assign ("codecs", codecs);
-
-  return octave_value (m);
-}
-
 /******************    CvCapture_FFMPEG     **************************/
 
 CvCapture_FFMPEG* get_cap_from_ov (octave_value ov)
@@ -453,7 +354,7 @@ undocumented internal function\n\
       }
 
       MSG_INFO ("Guessed format '%s' from filename '%s'", fmt->long_name, filename.c_str ());
-
+/*
       // list supported codecs for guessed format
       if (fmt && fmt->codec_tag)
         {
@@ -466,7 +367,7 @@ undocumented internal function\n\
               ptags++;
             }
         }
-
+*/
       tag = av_codec_get_tag (fmt->codec_tag, fmt->video_codec);
     }
   else if (fourcc.size () == 4)

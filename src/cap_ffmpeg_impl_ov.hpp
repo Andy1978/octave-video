@@ -189,7 +189,7 @@ extern "C" {
 // 4 = + libav debug messages
 
 static int verbosity_level = -1;
-const char lvl_prefix[][8] = {"ERR", "WARN", "INFO", "VERBOSE", "DEBUG"};
+const char lvl_prefix[][8] = {"ERROR", "WARN", "INFO", "VERBOSE", "DEBUG"};
 
 #define MSG(l, fmt, ...) if (verbosity_level >= l)\
   { fprintf (stderr, "%s: ", lvl_prefix[l]);\
@@ -282,9 +282,6 @@ std::string get_last_err_msg ()
 #ifndef AVERROR_EOF
 #define AVERROR_EOF (-MKTAG( 'E','O','F',' '))
 #endif
-
-#define CV_CODEC_ID AVCodecID
-#define CV_CODEC(name) AV_##name
 
 #ifndef PKT_FLAG_KEY
 #define PKT_FLAG_KEY AV_PKT_FLAG_KEY
@@ -421,13 +418,6 @@ struct AVInterruptCallbackMetadata
     int timeout;
 };
 
-// https://github.com/opencv/opencv/pull/12693#issuecomment-426236731
-static
-inline const char* _opencv_avcodec_get_name(CV_CODEC_ID id)
-{
-    return avcodec_get_name(id);
-}
-
 static
 inline int _opencv_ffmpeg_interrupt_callback(void *ptr)
 {
@@ -509,7 +499,7 @@ class CvCapture_FFMPEG: public octave_base_value
 
     const char* get_video_codec_name () const
       {
-        return (ok)? _opencv_avcodec_get_name(video_st->codecpar->codec_id) : NULL;
+        return (ok)? avcodec_get_name(video_st->codecpar->codec_id) : NULL;
       }
 
     double  r2d(AVRational r) const;
@@ -989,7 +979,7 @@ bool CvCapture_FFMPEG::open(const char* _filename)
                         codec = avcodec_find_decoder(codec_id);
                         if (!codec)
                         {
-                            fprintf (stderr, "Could not find decoder for codec_id = %i", codec_id);
+                            MSG_ERR("Could not find decoder for codec '%s'(id = %i)", avcodec_get_name (codec_id), (int)codec_id);
                         }
                     }
                     else
@@ -1085,13 +1075,13 @@ bool CvCapture_FFMPEG::processRawPacket()
     if (!rawModeInitialized)
     {
         rawModeInitialized = true;
-        CV_CODEC_ID eVideoCodec = ic->streams[video_stream]->codecpar->codec_id;
+        AVCodecID eVideoCodec = ic->streams[video_stream]->codecpar->codec_id;
         const char* filterName = NULL;
-        if (   eVideoCodec == CV_CODEC(CODEC_ID_H264)
-            || eVideoCodec == CV_CODEC(CODEC_ID_H265))
+        if (   eVideoCodec == AV_CODEC_ID_H264
+            || eVideoCodec == AV_CODEC_ID_H265)
         {
             if(h26xContainer(ic->iformat->long_name))
-                filterName = eVideoCodec == CV_CODEC(CODEC_ID_H264) ? "h264_mp4toannexb" : "hevc_mp4toannexb";
+                filterName = eVideoCodec == AV_CODEC_ID_H264 ? "h264_mp4toannexb" : "hevc_mp4toannexb";
         }
         if (filterName)
         {
@@ -1668,7 +1658,7 @@ class CvVideoWriter_FFMPEG: public octave_base_value
 
     const char* get_video_codec_name () const
     {
-      return _opencv_avcodec_get_name(video_st->codecpar->codec_id);
+      return avcodec_get_name(video_st->codecpar->codec_id);
     }
 
     bool is_constant (void) const
@@ -1738,7 +1728,7 @@ static const char * icvFFMPEGErrStr(int err)
 
 /* function internal to FFMPEG (libavformat/riff.c) to lookup codec id by fourcc tag*/
 extern "C" {
-    enum CV_CODEC_ID codec_get_bmp_id(unsigned int tag);
+    enum AVCodecID codec_get_bmp_id(unsigned int tag);
 }
 
 void CvVideoWriter_FFMPEG::init()
@@ -1864,10 +1854,10 @@ static AVCodecContext * icv_configure_video_stream_FFMPEG(AVFormatContext *oc,
 
     c->gop_size = 12; /* emit one intra frame every twelve frames at most */
     c->pix_fmt = pixel_format;
-    if (c->codec_id == CV_CODEC(CODEC_ID_MPEG2VIDEO)) {
+    if (c->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
         c->max_b_frames = 2;
     }
-    if (c->codec_id == CV_CODEC(CODEC_ID_MPEG1VIDEO) || c->codec_id == CV_CODEC(CODEC_ID_MSMPEG4V3)){
+    if (c->codec_id == AV_CODEC_ID_MPEG1VIDEO || c->codec_id == AV_CODEC_ID_MSMPEG4V3){
         /* needed to avoid using macroblocks in which some coeffs overflow
            this doesn't happen with normal video, it just happens here as the
            motion of the chroma plane doesn't match the luma plane */
@@ -2129,42 +2119,6 @@ void CvVideoWriter_FFMPEG::close()
 #define CV_PRINTABLE_CHAR(ch) ((ch) < 32 ? '?' : (ch))
 #define CV_TAG_TO_PRINTABLE_CHAR4(tag) CV_PRINTABLE_CHAR((tag) & 255), CV_PRINTABLE_CHAR(((tag) >> 8) & 255), CV_PRINTABLE_CHAR(((tag) >> 16) & 255), CV_PRINTABLE_CHAR(((tag) >> 24) & 255)
 
-static inline bool cv_ff_codec_tag_match(const AVCodecTag *tags, CV_CODEC_ID id, unsigned int tag)
-{
-    while (tags->id != AV_CODEC_ID_NONE)
-    {
-        if (tags->id == id && tags->tag == tag)
-            return true;
-        tags++;
-    }
-    return false;
-}
-
-static inline bool cv_ff_codec_tag_list_match(const AVCodecTag *const *tags, CV_CODEC_ID id, unsigned int tag)
-{
-    int i;
-    for (i = 0; tags && tags[i]; i++) {
-        bool res = cv_ff_codec_tag_match(tags[i], id, tag);
-        if (res)
-            return res;
-    }
-    return false;
-}
-
-static inline void cv_ff_codec_tag_dump(const AVCodecTag *const *tags)
-{
-    int i;
-    for (i = 0; tags && tags[i]; i++) {
-        const AVCodecTag * ptags = tags[i];
-        while (ptags->id != AV_CODEC_ID_NONE)
-        {
-            unsigned int tag = ptags->tag;
-            printf("fourcc tag 0x%08x/'%c%c%c%c' codec_id %04X\n", tag, CV_TAG_TO_PRINTABLE_CHAR4(tag), ptags->id);
-            ptags++;
-        }
-    }
-}
-
 /// Create a video writer object that uses FFMPEG
 bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
                                  double fps, int width, int height, bool is_color)
@@ -2173,7 +2127,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 
 	AutoLock lock(_mutex);
 
-    CV_CODEC_ID codec_id = CV_CODEC(CODEC_ID_NONE);
+    AVCodecID codec_id = AV_CODEC_ID_NONE;
     AVPixelFormat codec_pix_fmt;
     double bitrate_scale = 1;
 
@@ -2239,22 +2193,22 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
     if (fourcc == -1)
     {
         MSG_ERR ("OpenCV: FFMPEG: format %s / %s\n", fmt->name, fmt->long_name);
-        cv_ff_codec_tag_dump(fmt->codec_tag);
+        //cv_ff_codec_tag_dump(fmt->codec_tag);
         return false;
     }
 
     /* Lookup codec_id for given fourcc */
-    if( (codec_id = av_codec_get_id(fmt->codec_tag, fourcc)) == CV_CODEC(CODEC_ID_NONE) )
+    if( (codec_id = av_codec_get_id(fmt->codec_tag, fourcc)) == AV_CODEC_ID_NONE )
     {
         const struct AVCodecTag * fallback_tags[] = {
                 avformat_get_riff_video_tags(),
                 avformat_get_mov_video_tags(),
                 //codec_bmp_tags, // fallback for avformat < 54.1
                 NULL };
-        if (codec_id == CV_CODEC(CODEC_ID_NONE)) {
+        if (codec_id == AV_CODEC_ID_NONE) {
             codec_id = av_codec_get_id(fallback_tags, fourcc);
         }
-        if (codec_id == CV_CODEC(CODEC_ID_NONE)) {
+        if (codec_id == AV_CODEC_ID_NONE) {
             char *p = (char *) &fourcc;
             char name[] = {(char)tolower(p[0]), (char)tolower(p[1]), (char)tolower(p[2]), (char)tolower(p[3]), 0};
             const AVCodecDescriptor *desc = avcodec_descriptor_get_by_name(name);
@@ -2262,29 +2216,12 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
                 codec_id = desc->id;
         }
 
-        if (codec_id == CV_CODEC(CODEC_ID_NONE))
+        if (codec_id == AV_CODEC_ID_NONE)
         {
             MSG_ERR ("OpenCV: FFMPEG: tag 0x%08x/'%c%c%c%c' is not found (format '%s / %s')'\n",
                     fourcc, CV_TAG_TO_PRINTABLE_CHAR4(fourcc),
                     fmt->name, fmt->long_name);
             return false;
-        }
-    }
-
-
-    // validate tag
-    if (cv_ff_codec_tag_list_match(fmt->codec_tag, codec_id, fourcc) == false)
-    {
-        fflush(stdout);
-        MSG_ERR ("OpenCV: FFMPEG: tag 0x%08x/'%c%c%c%c' is not supported with codec id %d and format '%s / %s'\n",
-                fourcc, CV_TAG_TO_PRINTABLE_CHAR4(fourcc),
-                codec_id, fmt->name, fmt->long_name);
-        int supported_tag;
-        if( (supported_tag = av_codec_get_tag(fmt->codec_tag, codec_id)) != 0 )
-        {
-            MSG_WARN("OpenCV: FFMPEG: fallback to use tag 0x%08x/'%c%c%c%c'\n",
-                    supported_tag, CV_TAG_TO_PRINTABLE_CHAR4(supported_tag));
-            fourcc = supported_tag;
         }
     }
 
@@ -2305,13 +2242,13 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 
     // set a few optimal pixel formats for lossless codecs of interest..
     switch (codec_id) {
-    case CV_CODEC(CODEC_ID_JPEGLS):
+    case AV_CODEC_ID_JPEGLS:
         // BGR24 or GRAY8 depending on is_color...
         // supported: bgr24 rgb24 gray gray16le
         // as of version 3.4.1
         codec_pix_fmt = input_pix_fmt;
         break;
-    case CV_CODEC(CODEC_ID_HUFFYUV):
+    case AV_CODEC_ID_HUFFYUV:
         // supported: yuv422p rgb24 bgra
         // as of version 3.4.1
         switch(input_pix_fmt)
@@ -2328,7 +2265,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
                 break;
         }
         break;
-    case CV_CODEC(CODEC_ID_PNG):
+    case AV_CODEC_ID_PNG:
         // supported: rgb24 rgba rgb48be rgba64be pal8 gray ya8 gray16be ya16be monob
         // as of version 3.4.1
         switch(input_pix_fmt)
@@ -2350,7 +2287,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
                 break;
         }
         break;
-    case CV_CODEC(CODEC_ID_FFV1):
+    case AV_CODEC_ID_FFV1:
         // supported: MANY
         // as of version 3.4.1
         switch(input_pix_fmt)
@@ -2379,12 +2316,12 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
                 break;
         }
         break;
-    case CV_CODEC(CODEC_ID_MJPEG):
-    case CV_CODEC(CODEC_ID_LJPEG):
+    case AV_CODEC_ID_MJPEG:
+    case AV_CODEC_ID_LJPEG:
         codec_pix_fmt = AV_PIX_FMT_YUVJ420P;
         bitrate_scale = 3;
         break;
-    case CV_CODEC(CODEC_ID_RAWVIDEO):
+    case AV_CODEC_ID_RAWVIDEO:
         // RGBA is the only RGB fourcc supported by AVI and MKV format
         if(fourcc == CV_FOURCC('R','G','B','A'))
         {
@@ -2430,14 +2367,13 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
     int err = -1;
     const AVCodec* codec = NULL;
     do {
-        {
-            codec = avcodec_find_encoder(codec_id);
-            if (!codec) {
-                MSG_ERR("Could not find encoder for codec_id = %i, error: %s", (int)codec_id, icvFFMPEGErrStr(AVERROR_ENCODER_NOT_FOUND));
-            }
-        }
+        codec = avcodec_find_encoder(codec_id);
         if (!codec)
+        {
+            MSG_ERR("Could not find encoder for codec '%s'(id = %i)", avcodec_get_name (codec_id), (int)codec_id);
             continue;
+        }
+
         AVPixelFormat format = codec_pix_fmt;
 
         avcodec_free_context(&context);
@@ -2449,13 +2385,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
             continue;
         }
 
-#if 0
-#if FF_API_DUMP_FORMAT
-        dump_format(oc, 0, filename, 1);
-#else
-        av_dump_format(oc, 0, filename, 1);
-#endif
-#endif
+        //av_dump_format(oc, 0, filename, 1);
 
         int64_t lbit_rate = (int64_t) context->bit_rate;
         lbit_rate += (int64_t)(bitrate / 2);
@@ -2521,10 +2451,14 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
     }
 
     /* write the stream header, if any */
-    global_err=avformat_write_header(oc, NULL);
+    global_err = avformat_write_header(oc, NULL);
+
+    //printf ("global_err = %i = %s\n", global_err, get_last_err_msg ().c_str());
+    //printf ("DEBUG codec_id = %i, fourcc = %i = '%c%c%c%c'\n", codec_id, fourcc, CV_TAG_TO_PRINTABLE_CHAR4(fourcc));
 
     if(global_err < 0)
     {
+        MSG_ERR ("avformat_write_header failed with '%s'", get_last_err_msg ().c_str());
         close();
         remove(filename);
         return false;

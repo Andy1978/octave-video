@@ -226,6 +226,6 @@ endclassdef
 %!   drawnow
 %! endwhile
 
-# VideoReader is currently tested with VideoWriter
+# VideoReader currently is tested together with VideoWriter
 %!test
 %! assert (true);

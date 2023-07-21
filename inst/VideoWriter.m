@@ -289,14 +289,24 @@ endclassdef
 %! close (w)
 %! printf ("Now run 'open %s' to read the video with your default video player or try 'demo VideoReader'!\n", fn);
 
-%!test
-%! fn = fullfile (tempdir(), "rainbow.mp4");
+# Create synthetic video (rainbow circshifting from left to right),
+# encode and decode it and compare decoded video with original data.
+# Throw error if relative deviation exceeds given threshold [%].
+#
+# This check is error prone since codecs may produce more artifacts on
+# different architectures. See bugreports:
+#   (https://savannah.gnu.org/bugs/?58451)
+#   (https://savannah.gnu.org/bugs/?64452)
+#     both for ppc64el
+#
+%!function encode_decode (fn, tag, thres, exp_size)
+%!
 %! width = 200;
 %! height = 150;
 %! nframes = 120;
 %! p = permute (rainbow (width), [3 1 2]);
 %! raw_video = zeros (height, width, 3, nframes);
-%! w = VideoWriter (fn);
+%! w = VideoWriter (fn, tag);
 %! for k=1:nframes
 %!   ps = circshift (p, k * 6);
 %!   img = uint8 (255 * repmat (ps, height, 1));
@@ -304,21 +314,51 @@ endclassdef
 %!   writeVideo (w, img);
 %! endfor
 %! close (w)
+%!
 %! ## read video and compare
-%! clear -x raw_video fn
+%! clear -x raw_video fn thres exp_size
 %! r = VideoReader (fn);
-%! for k=1:size (raw_video, 4)
+%! n = size (raw_video, 4);
+%! rel_err = zeros (n, 1);
+%! for k=1:n
 %!   img = readFrame (r);
 %!   d = double (img) - raw_video(:,:,:,k);
-%!   # FIXME: This write/read roundtrip check doesn't work well due to compression artifacts
-%!   #        see also bug #58451 (https://savannah.gnu.org/bugs/?58451)
-%!   #        what would be a better way?
-%!   rel_err = sum (abs(d(:)))/numel(d)/255;
-%!   warn_thres = 0.025;
-%!   if (rel_err > warn_thres)
-%!     warning ("The realtive deviation exceeds the given threshold (%.3f > %.3f).\n\
-%!     Please inspect '%s' manually. You should see a horizontal rainbow running from left to right.", rel_err, warn_thres, fn);
-%!   endif
-%!   assert (rel_err < 2 * warn_thres)
+%!   rel_err(k) = sum (abs(d(:)))/numel(d)/255;
 %! endfor
 %! close (r);
+%! median_rel_error = 1e2 * median(rel_err); # in %
+%! printf ("INFO: median(relative error) = %.2f%%\n", median_rel_error);
+%! if (median_rel_error > thres)
+%!   error ("The median of the relative error exceeds the given threshold (%.2f%% > %.2f%%).\
+%! Please inspect '%s' manually. You should see a horizontal rainbow running\
+%! from left to right.", median_rel_error, thres, fn);
+%! endif
+%! s = stat (fn);
+%! rel_size_err = abs(exp_size - s.size) / exp_size
+%! rel_size_err_thres = 0.5; # 50%
+%! if (rel_size_err > rel_size_err_thres)
+%!   error ("The difference between the expected (%i kB) and observed (%i kB)\
+%! filesize of the written video exceeds the given relative threshold (%.1f%%).\
+%! Please inspect '%s' manually. You should see a horizontal rainbow running\
+%! from left to right.", exp_size/1e3, s.size/1e3, rel_size_err_thres * 1e2, fn);
+%! endif
+%!endfunction
+
+%!test
+%! # raw/uncompressed video
+%! fn = [tempname() "_rainbow1.avi"];
+%! # median(rel_err) = 0% on Debian GNU/Linux 11 on AMD64
+%! encode_decode (fn, "RGBA", 0.5, 14.4e+06); # allow 0.5% median error
+
+%!test
+%! # mp4 + avc1
+%! fn = [tempname() "_rainbow1.mp4"];
+%! # median(rel_err) = 0.71% on Debian GNU/Linux 11 on AMD64
+%! # but 14.8%, reported here: https://savannah.gnu.org/bugs/?func=detailitem&item_id=64452
+%! encode_decode (fn, "avc1", 15.0, 12157); # allow 15.0% median error
+
+%!test
+%! # mkv + VP9
+%! fn = [tempname() "_rainbow1.mkv"];
+%! # median(rel_err) = 0.64% on Debian GNU/Linux 11 on AMD64
+%! encode_decode (fn, "VP90", 15.0, 15822); # allow 15.0% median error

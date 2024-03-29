@@ -132,6 +132,7 @@
 extern "C" {
 #endif
 
+#include <cassert>
 #include "ffmpeg_codecs.hpp"
 
 #include <libavutil/mathematics.h>

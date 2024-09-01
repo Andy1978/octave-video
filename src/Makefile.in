@@ -20,7 +20,7 @@ style:
 	astyle --style=gnu -s2 -n cap_ffmpeg_wrapper.cc
 
 check:
-	cppcheck -q --enable=all --force --language=c++ cap_ffmpeg_impl_ov.hpp cap_ffmpeg_wrapper.cc ffmpeg_codecs.hpp
+	cppcheck -q --enable=all --force --language=c++ cap_ffmpeg_impl_ov.hpp cap_ffmpeg_wrapper.cc
 
 realclean: clean
 	rm -f Makefile

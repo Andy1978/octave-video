@@ -333,7 +333,7 @@ undocumented internal function\n\
 
   // codec tag, in OpenCV "fourcc" is used interchangeably
   // empty fourcc selects default codec_id for guessed container
-  unsigned int tag;
+  int tag;
   std::string fourcc = args(1).string_value ();
 
   // FIXME no error handling yet
@@ -344,31 +344,7 @@ undocumented internal function\n\
 
   if (fourcc.size () == 0)
     {
-      // get tag for default codec for guessed container from filename
-      const AVOutputFormat* fmt = av_guess_format	(NULL, filename.c_str (), NULL);
-
-      if (! fmt)
-      {
-        error ("Can't guess container format from filename '%s'", filename.c_str ());
-        return retval;
-      }
-
-      MSG_INFO ("Guessed format '%s' from filename '%s'", fmt->long_name, filename.c_str ());
-/*
-      // list supported codecs for guessed format
-      if (fmt && fmt->codec_tag)
-        {
-          MSG_VERBOSE ("supported codecs for format '%s':", fmt->long_name);
-          const AVCodecTag * ptags = fmt->codec_tag[0];
-          while (ptags->id != AV_CODEC_ID_NONE)
-            {
-              unsigned int tag = ptags->tag;
-              MSG_VERBOSE("  fourcc tag 0x%08x/'%c%c%c%c' codec_id %04X", tag, CV_TAG_TO_PRINTABLE_CHAR4(tag), ptags->id);
-              ptags++;
-            }
-        }
-*/
-      tag = av_codec_get_tag (fmt->codec_tag, fmt->video_codec);
+      tag = -1;
     }
   else if (fourcc.size () == 4)
     {
@@ -376,8 +352,6 @@ undocumented internal function\n\
     }
   else
     error ("fourcc has to be empty or 4 chars long");
-
-  MSG_INFO ("selected tag = %i = %#x = '%c%c%c%c'", tag, tag, CV_TAG_TO_PRINTABLE_CHAR4(tag));
 
   // list codecs
   //~ AVCodec * codec = av_codec_next(NULL);
@@ -433,7 +407,6 @@ undocumented internal function\n\
   // und zum tag zurück, Achtung, das ergibt nicht mehr 0x21
   tag = av_codec_get_tag (table, AV_CODEC_ID_H264);
   printf ("tag = %i = %#x = %c%c%c%c\n", tag, tag, CV_TAG_TO_PRINTABLE_CHAR4(tag));
-
 #endif
 
   // welche API wäre denn von Octave aus gewünscht?

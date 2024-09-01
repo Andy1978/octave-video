@@ -55,7 +55,7 @@ $(RELEASE_DIR): all
 	mkdir -p $@/src
 	cp COPYING DESCRIPTION NEWS $@
 	cp -r ./inst $@
-	cp ./src/configure ./src/configure.ac ./src/bootstrap ./src/Makefile.in ./src/cap_ffmpeg_impl_ov.hpp ./src/cap_ffmpeg_wrapper.cc ./src/ffmpeg_codecs.hpp $@/src
+	cp ./src/configure ./src/configure.ac ./src/bootstrap ./src/Makefile.in ./src/cap_ffmpeg_impl_ov.hpp ./src/cap_ffmpeg_wrapper.cc $@/src
 	sed -i '/###/q' $@/src/Makefile.in
 	chmod -R a+rX,u+w,go-w $@
 
@@ -113,6 +113,7 @@ debug: clean
 	  --eval 'addpath (fullfile ([pwd filesep "src"]));' \
 	  --eval 'addpath (fullfile ([pwd filesep "inst"]));' \
 	  --eval '${PKG_ADD}' \
+	  --eval '__octave_video_set_verbosity_level__(2);' \
 	  --eval 'system (sprintf ("xfce4-terminal --command \"gdb -p %d\"", getpid ()), "async");'
 
 style:

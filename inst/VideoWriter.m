@@ -129,7 +129,7 @@ classdef VideoWriter < handle
       ## ffmpeg -codecs
       ## https://superuser.com/questions/300897/what-is-a-codec-e-g-divx-and-how-does-it-differ-from-a-file-format-e-g-mp/300997#300997
 
-      if (numel (varargin) > 0)
+      if (numel (varargin) > 0 && !isempty (varargin{1}))
         v.FourCC = varargin{1};
       else
         v.FourCC = "";
@@ -308,7 +308,7 @@ endclassdef
 %! raw_video = zeros (height, width, 3, nframes);
 %! w = VideoWriter (fn, tag);
 %! for k=1:nframes
-%!   ps = circshift (p, k * 6);
+%!   ps = circshift (p, k * 6, 2);
 %!   img = uint8 (255 * repmat (ps, height, 1));
 %!   raw_video (:, :, :, k) = img;
 %!   writeVideo (w, img);
@@ -322,6 +322,7 @@ endclassdef
 %! rel_err = zeros (n, 1);
 %! for k=1:n
 %!   img = readFrame (r);
+%!   #img(1,1,1)
 %!   d = double (img) - raw_video(:,:,:,k);
 %!   rel_err(k) = sum (abs(d(:)))/numel(d)/255;
 %! endfor
@@ -334,8 +335,9 @@ endclassdef
 %! from left to right.", median_rel_error, thres, fn);
 %! endif
 %! s = stat (fn);
-%! rel_size_err = abs(exp_size - s.size) / exp_size
-%! rel_size_err_thres = 0.5; # 50%
+%! printf ("INFO: size = %i kB\n", s.size / 1e3);
+%! rel_size_err = abs(exp_size - s.size) / exp_size;
+%! rel_size_err_thres = 0.3; # 30%
 %! if (rel_size_err > rel_size_err_thres)
 %!   error ("The difference between the expected (%i kB) and observed (%i kB)\
 %! filesize of the written video exceeds the given relative threshold (%.1f%%).\
@@ -346,19 +348,37 @@ endclassdef
 
 %!test
 %! # raw/uncompressed video
-%! fn = [tempname() "_rainbow1.avi"];
-%! # median(rel_err) = 0% on Debian GNU/Linux 11 on AMD64
-%! encode_decode (fn, "RGBA", 0.5, 14.4e+06); # allow 0.5% median error
+%! fn = [tempname() "_rainbow_raw.avi"];
+%! # median(rel_err) = 0% on Debian GNU/Linux 12 on AMD Ryzen 7 5700X
+%! encode_decode (fn, "RGBA", 0.5, 14408600); # allow 0.5% median error
 
 %!test
-%! # mp4 + avc1
-%! fn = [tempname() "_rainbow1.mp4"];
-%! # median(rel_err) = 0.71% on Debian GNU/Linux 11 on AMD64
-%! # but 14.8%, reported here: https://savannah.gnu.org/bugs/?func=detailitem&item_id=64452
-%! encode_decode (fn, "avc1", 15.0, 12157); # allow 15.0% median error
+%! # mp4 + mp4v
+%! fn = [tempname() "_rainbow_mp4v.mp4"];
+%! # median(rel_err) = 0.70% on Debian GNU/Linux 12 on AMD Ryzen 7 5700X
+%! encode_decode (fn, "mp4v", 15.0, 69554); # allow 15.0% median error
 
 %!test
 %! # mkv + VP9
-%! fn = [tempname() "_rainbow1.mkv"];
-%! # median(rel_err) = 0.64% on Debian GNU/Linux 11 on AMD64
+%! fn = [tempname() "_rainbow_vp9.mkv"];
+%! # median(rel_err) = 0.63% on Debian GNU/Linux 12 on AMD Ryzen 7 5700X
 %! encode_decode (fn, "VP90", 15.0, 15822); # allow 15.0% median error
+
+%!test
+%! # mp4 + default codec (= avc1)
+%! fn = [tempname() "_rainbow_h264.mp4"];
+%! # median(rel_err) = 0.71% on Debian GNU/Linux 12 on AMD Ryzen 7 5700X
+%! # but 14.8%, reported here: https://savannah.gnu.org/bugs/?func=detailitem&item_id=64452
+%! encode_decode (fn, "", 15.0, 12157);
+
+%!test
+%! # mkv + default codec (= H264 on Debian GNU/Linux 12)
+%! fn = [tempname() "_rainbow_default.mkv"];
+%! # median(rel_err) = 0.71% on Debian GNU/Linux 12 on AMD Ryzen 7 5700X
+%! encode_decode (fn, [], 15.0, 12143); # allow 15.0% median error
+
+%!test <*64383>
+%! fn = fullfile (tempdir (), "comma_not_dot,mp4");
+%! w = VideoWriter (fn);
+%! open (w);
+%! fail ("writeVideo (w, rand(100,100,3))", "failed");

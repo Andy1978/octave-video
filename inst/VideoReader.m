@@ -100,7 +100,7 @@ classdef VideoReader < handle
       # varargin could be name/value property pairs
       # FIXME: implement me
 
-      [v.h] = __cap_open__ (fullfile (v.Path, v.Name));
+      [v.h] = __cap_open__ (filename);
 
       v.FFmpeg_versions = __ffmpeg_defines__ ().LIBAV_IDENT;
 

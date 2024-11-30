@@ -132,6 +132,7 @@
 extern "C" {
 #endif
 
+#include <cassert>
 #include <libavcodec/version.h>
 #include <libavformat/avformat.h>
 

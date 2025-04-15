@@ -53,7 +53,7 @@ $(RELEASE_DIR): all
 	@echo "Creating package version $(VERSION) release ..."
 	-rm -rf $@
 	mkdir -p $@/src
-	cp COPYING DESCRIPTION NEWS $@
+	cp COPYING DESCRIPTION NEWS INDEX $@
 	cp -r ./inst $@
 	cp ./src/configure ./src/configure.ac ./src/bootstrap ./src/Makefile.in ./src/cap_ffmpeg_impl_ov.hpp ./src/__cap_ffmpeg_wrapper__.cc $@/src
 	sed -i '/###/q' $@/src/Makefile.in

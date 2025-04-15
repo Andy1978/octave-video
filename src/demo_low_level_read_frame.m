@@ -3,14 +3,14 @@
 
 clear all;
 
-autoload ("__cap_open__", which ("cap_ffmpeg_wrapper.oct"));
-autoload ("__cap_get_properties__", which ("cap_ffmpeg_wrapper.oct"));
-autoload ("__cap_grab_frame__", which ("cap_ffmpeg_wrapper.oct"))
-autoload ("__cap_retrieve_frame__", which ("cap_ffmpeg_wrapper.oct"));
+autoload ("__cap_open__", which ("__cap_ffmpeg_wrapper__.oct"));
+autoload ("__cap_get_properties__", which ("__cap_ffmpeg_wrapper__.oct"));
+autoload ("__cap_grab_frame__", which ("__cap_ffmpeg_wrapper__.oct"))
+autoload ("__cap_retrieve_frame__", which ("__cap_ffmpeg_wrapper__.oct"));
 
-autoload ("__writer_open__", which ("cap_ffmpeg_wrapper.oct"));
-autoload ("__writer_close__", which ("cap_ffmpeg_wrapper.oct"));
-autoload ("__writer_write_frame__", which ("cap_ffmpeg_wrapper.oct"));
+autoload ("__writer_open__", which ("__cap_ffmpeg_wrapper__.oct"));
+autoload ("__writer_close__", which ("__cap_ffmpeg_wrapper__.oct"));
+autoload ("__writer_write_frame__", which ("__cap_ffmpeg_wrapper__.oct"));
 
 ## Open Video, read frames, show them
 

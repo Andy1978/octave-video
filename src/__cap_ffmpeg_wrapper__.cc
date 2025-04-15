@@ -20,8 +20,8 @@
 static bool writer_type_loaded = false;
 static bool capture_type_loaded = false;
 
-// PKG_ADD: autoload ("__octave_video_set_verbosity_level__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__octave_video_set_verbosity_level__", "cap_ffmpeg_wrapper.oct", "remove");
+// PKG_ADD: autoload ("__octave_video_set_verbosity_level__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__octave_video_set_verbosity_level__", "__cap_ffmpeg_wrapper__.oct", "remove");
 DEFUN_DLD(__octave_video_set_verbosity_level__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{def} =} __octave_video_set_verbosity_level__ ()\n\
@@ -35,8 +35,8 @@ undocumented internal function\n\
   return retval;
 }
 
-// PKG_ADD: autoload ("__ffmpeg_defines__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__ffmpeg_defines__", "cap_ffmpeg_wrapper.oct", "remove");
+// PKG_ADD: autoload ("__ffmpeg_defines__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__ffmpeg_defines__", "__cap_ffmpeg_wrapper__.oct", "remove");
 DEFUN_DLD(__ffmpeg_defines__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{def} =} __ffmpeg_defines__ ()\n\
@@ -88,8 +88,8 @@ CvCapture_FFMPEG* get_cap_from_ov (octave_value ov)
   return p;
 }
 
-// PKG_ADD: autoload ("__cap_open__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__cap_open__", "cap_ffmpeg_wrapper.oct", "remove");
+// PKG_ADD: autoload ("__cap_open__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__cap_open__", "__cap_ffmpeg_wrapper__.oct", "remove");
 DEFUN_DLD(__cap_open__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{h} =} __cap_open__ (@var{filename})\n\
@@ -117,8 +117,8 @@ Creates an instance of CvCapture_FFMPEG.\n\
   return retval;
 }
 
-// PKG_ADD: autoload ("__cap_get_properties__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__cap_get_properties__", "cap_ffmpeg_wrapper.oct", "remove");
+// PKG_ADD: autoload ("__cap_get_properties__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__cap_get_properties__", "__cap_ffmpeg_wrapper__.oct", "remove");
 DEFUN_DLD(__cap_get_properties__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {[@var{h}, @var{opt}] =} __cap_get_properties__ (@var{h})\n\
@@ -169,8 +169,8 @@ Gets CvCapture_FFMPEG properties like bitrate, fps, total_frames, duration_sec..
   return retval;
 }
 
-// PKG_ADD: autoload ("__cap_grab_frame__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__cap_grab_frame__", "cap_ffmpeg_wrapper.oct", "remove");
+// PKG_ADD: autoload ("__cap_grab_frame__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__cap_grab_frame__", "__cap_ffmpeg_wrapper__.oct", "remove");
 DEFUN_DLD(__cap_grab_frame__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{f} =} __cap_grab_frame__ (@var{h})\n\
@@ -190,8 +190,8 @@ DEFUN_DLD(__cap_grab_frame__, args, nargout,
   return retval;
 }
 
-// PKG_ADD: autoload ("__cap_retrieve_frame__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__cap_retrieve_frame__", "cap_ffmpeg_wrapper.oct", "remove");
+// PKG_ADD: autoload ("__cap_retrieve_frame__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__cap_retrieve_frame__", "__cap_ffmpeg_wrapper__.oct", "remove");
 DEFUN_DLD(__cap_retrieve_frame__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{f} =} __cap_retrieve_frame__ (@var{h})\n\
@@ -260,8 +260,8 @@ DEFUN_DLD(__cap_retrieve_frame__, args, nargout,
   return retval;
 }
 
-// PKG_ADD: autoload ("__cap_close__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__cap_close__", "cap_ffmpeg_wrapper.oct", "remove");
+// PKG_ADD: autoload ("__cap_close__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__cap_close__", "__cap_ffmpeg_wrapper__.oct", "remove");
 DEFUN_DLD(__cap_close__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{h} =} __cap_close__ (@var{h})\n\
@@ -306,8 +306,8 @@ CvVideoWriter_FFMPEG* get_writer_from_ov (octave_value ov)
   return (CvVideoWriter_FFMPEG *) p;
 }
 
-// PKG_ADD: autoload ("__writer_open__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__writer_open__", "cap_ffmpeg_wrapper.oct", "remove");
+// PKG_ADD: autoload ("__writer_open__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__writer_open__", "__cap_ffmpeg_wrapper__.oct", "remove");
 DEFUN_DLD(__writer_open__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{h} =} __writer_open__ (@var{filename}, @var{fourcc}, @var{fps}, @var{width}, @var{height}, @var{isColor})\n\
@@ -449,8 +449,8 @@ undocumented internal function\n\
   return retval;
 }
 
-// PKG_ADD: autoload ("__writer_get_properties__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__writer_get_properties__", "cap_ffmpeg_wrapper.oct", "remove");
+// PKG_ADD: autoload ("__writer_get_properties__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__writer_get_properties__", "__cap_ffmpeg_wrapper__.oct", "remove");
 DEFUN_DLD(__writer_get_properties__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {[@var{h}, @var{opt}] =} __cap_get_properties__ (@var{h})\n\
@@ -478,8 +478,8 @@ Gets CvVideoWriter_FFMPEG properties...\n\
   return retval;
 }
 
-// PKG_ADD: autoload ("__writer_write_frame__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__writer_write_frame__", "cap_ffmpeg_wrapper.oct", "remove");
+// PKG_ADD: autoload ("__writer_write_frame__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__writer_write_frame__", "__cap_ffmpeg_wrapper__.oct", "remove");
 DEFUN_DLD(__writer_write_frame__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{h} =} __writer_write_frame__ (@var{h}, @var{frame})\n\
@@ -529,8 +529,8 @@ undocumented internal function\n\
   return retval;
 }
 
-// PKG_ADD: autoload ("__writer_close__", "cap_ffmpeg_wrapper.oct");
-// PKG_DEL: autoload ("__writer_close__", "cap_ffmpeg_wrapper.oct", "remove");
+// PKG_ADD: autoload ("__writer_close__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__writer_close__", "__cap_ffmpeg_wrapper__.oct", "remove");
 DEFUN_DLD(__writer_close__, args, nargout,
           "-*- texinfo -*-\n\
 @deftypefn {Loadable Function} {@var{h} =} __writer_close__ (@var{h})\n\

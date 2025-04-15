@@ -19,7 +19,7 @@ HTML_DIR        = $(PACKAGE)-html
 HTML_TARBALL    = $(PACKAGE)-html.tar.gz
 
 M_SOURCES   = $(wildcard inst/*.m)
-CC_SOURCES  = src/cap_ffmpeg_wrapper.cc
+CC_SOURCES  = src/__cap_ffmpeg_wrapper__.cc
 #OCT_FILES   = $(patsubst %.cc,%.oct,$(CC_SOURCES))
 PKG_ADD     = $(shell grep -Pho '(?<=// PKG_ADD: ).*' $(CC_SOURCES) $(M_SOURCES))
 

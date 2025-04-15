@@ -55,7 +55,7 @@ $(RELEASE_DIR): all
 	mkdir -p $@/src
 	cp COPYING DESCRIPTION NEWS $@
 	cp -r ./inst $@
-	cp ./src/configure ./src/configure.ac ./src/bootstrap ./src/Makefile.in ./src/cap_ffmpeg_impl_ov.hpp ./src/cap_ffmpeg_wrapper.cc $@/src
+	cp ./src/configure ./src/configure.ac ./src/bootstrap ./src/Makefile.in ./src/cap_ffmpeg_impl_ov.hpp ./src/__cap_ffmpeg_wrapper__.cc $@/src
 	sed -i '/###/q' $@/src/Makefile.in
 	chmod -R a+rX,u+w,go-w $@
 

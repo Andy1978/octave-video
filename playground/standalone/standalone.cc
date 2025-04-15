@@ -1,6 +1,6 @@
 /*
  * Playground to test implementation in cap_ffmpeg_impl_ov.hpp
- * (Not using (or bypassing) functions in cap_ffmpeg_wrapper.cc)
+ * (Not using (or bypassing) functions in __cap_ffmpeg_wrapper__.cc)
  */
 
 #include <iostream>

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2019-2023 Andreas Weber <octave@josoansi.de>
+  Copyright (C) 2019-2025 Andreas Weber <octave@josoansi.de>
 
   This file is part of octave-video; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
@@ -165,6 +165,29 @@ Gets CvCapture_FFMPEG properties like bitrate, fps, total_frames, duration_sec..
       opt.contents ("is_okay") = h->is_ok();
 
       retval.append (opt);
+    }
+  return retval;
+}
+
+// PKG_ADD: autoload ("__cap_seek_framenumber__", "__cap_ffmpeg_wrapper__.oct");
+// PKG_DEL: autoload ("__cap_seek_framenumber__", "__cap_ffmpeg_wrapper__.oct", "remove");
+DEFUN_DLD(__cap_seek_framenumber__, args, nargout,
+          "-*- texinfo -*-\n\
+@deftypefn {Loadable Function} __cap_seek_framenumber__ (@var{h}, @var{framenumber})\n\
+seek to given framenumber\n\
+@end deftypefn")
+{
+  octave_value_list retval;
+  int nargin = args.length ();
+
+  if (nargin != 2)
+    error("__cap_seek_framenumber__ needs two parameter");
+
+  CvCapture_FFMPEG* h = get_cap_from_ov (args(0));
+  if (h)
+    {
+      int64_t framenum = args(1).int_value ();
+      h->seek (framenum);
     }
   return retval;
 }

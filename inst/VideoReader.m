@@ -1,6 +1,6 @@
 ########################################################################
 ##
-## Copyright (C) 2019-2023 Andreas Weber <octave@josoansi.de>
+## Copyright (C) 2019-2025 Andreas Weber <octave@josoansi.de>
 ##
 ## This file is part of octave-video.
 ##
@@ -65,7 +65,6 @@ classdef VideoReader < handle
     VideoFormat    = "RGB24";
 
     ## GNU Octave extensions
-    FrameNumber    = 0;        # 0-based index of the frame to be decoded/captured next.
     VideoCodec     = "";       # Name of used video codec as obtained by AVCodecDescriptor->name
     AspectRatio    = [0, 1];
     FFmpeg_versions        = "";
@@ -74,8 +73,11 @@ classdef VideoReader < handle
 
   properties (SetAccess = public, GetAccess = public)
 
-    CurrentTime    = 0;    # [s]
+    CurrentTime    = 0;
     Tag            = "";
+
+    ## GNU Octave extensions
+    FrameNumber    = 0;        # 0-based index of the frame to be decoded/captured next.
 
   endproperties
 
@@ -155,9 +157,27 @@ classdef VideoReader < handle
 
     endfunction
 
+    function v = set.FrameNumber (v, num)
+
+      __cap_seek_framenumber__ (v.h, num);
+
+    endfunction
+
+    function val = get.CurrentTime (v)
+
+      val = v.FrameNumber * 1 / v.FrameRate;
+
+    endfunction
+
+    function v = set.CurrentTime (v, val)
+
+      v.FrameNumber = val * v.FrameRate;
+
+    endfunction
+
     function r = hasFrame (v)
 
-      r = v.FrameNumber < v.NumberOfFrames;
+      r = v.FrameNumber < (v.NumberOfFrames - 1);
 
     endfunction
 

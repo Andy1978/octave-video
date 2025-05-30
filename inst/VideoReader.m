@@ -73,11 +73,11 @@ classdef VideoReader < handle
 
   properties (SetAccess = public, GetAccess = public)
 
-    CurrentTime    = 0;
+    CurrentTime;
     Tag            = "";
 
     ## GNU Octave extensions
-    FrameNumber    = 0;        # 0-based index of the frame to be decoded/captured next.
+    FrameNumber;              # 0-based index of the frame to be decoded/captured next.
 
   endproperties
 
@@ -126,7 +126,6 @@ classdef VideoReader < handle
       printf ("    VideoFormat     = '%s'\n", v.VideoFormat);
 
       ## GNU Octave extensions
-      printf ("    FrameNumber     = %i\n", v.FrameNumber);
       printf ("    VideoCodec      = '%s'\n", v.VideoCodec);
       printf ("    AspectRatio     = '%s'\n", mat2str (v.AspectRatio));
       printf ("    FFmpeg_versions = '%s'\n", v.FFmpeg_versions);
@@ -135,6 +134,9 @@ classdef VideoReader < handle
       printf ("  read-write access:\n");
       printf ("    CurrentTime     = %i\n", v.CurrentTime);
       printf ("    Tag             = '%s'\n", v.Tag);
+
+      ## GNU Octave extensions
+      printf ("    FrameNumber     = %i\n", v.FrameNumber);
 
     endfunction
 
@@ -177,7 +179,7 @@ classdef VideoReader < handle
 
     function r = hasFrame (v)
 
-      r = v.FrameNumber < (v.NumberOfFrames - 1);
+      r = v.FrameNumber < v.NumberOfFrames;
 
     endfunction
 
@@ -200,7 +202,6 @@ classdef VideoReader < handle
       v.Duration    = prop.duration_sec;
       v.FrameRate   = prop.fps;
       v.NumberOfFrames = prop.total_frames;
-      v.FrameNumber    = prop.frame_number;
       v.Bitrate        = prop.bitrate;
       v.Width          = prop.width;
       v.Height         = prop.height;

@@ -319,14 +319,26 @@ endclassdef
 %! clear -x raw_video fn thres exp_size
 %! r = VideoReader (fn);
 %! n = size (raw_video, 4);
+%! assert (r.NumberOfFrames, n);
 %! rel_err = zeros (n, 1);
-%! for k=1:n
+%! cnt = 0;
+%! while (hasFrame (r))
 %!   img = readFrame (r);
-%!   #img(1,1,1)
-%!   d = double (img) - raw_video(:,:,:,k);
-%!   rel_err(k) = sum (abs(d(:)))/numel(d)/255;
+%!   cnt++;
+%!   d = double (img) - raw_video(:,:,:,r.FrameNumber);
+%!   rel_err(r.FrameNumber) = sum (abs(d(:)))/numel(d)/255;
+%! endwhile
+%! assert (cnt, n);
+%!
+%! # Check seek, both img should be identically
+%! for k = 1:2
+%!   r.FrameNumber = 30;
+%!   assert (r.FrameNumber, 30)
+%!   img(:,:,:,k) = readFrame (r);
 %! endfor
+%! assert (img(:,:,:,1) == img(:,:,:,2))
 %! close (r);
+%!
 %! median_rel_error = 1e2 * median(rel_err); # in %
 %! printf ("INFO: median(relative error) = %.2f%%\n", median_rel_error);
 %! if (median_rel_error > thres)

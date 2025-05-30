@@ -392,7 +392,7 @@ undocumented internal function\n\
 
 #if 0
   // that would be a workaround:
-  AVOutputFormat* foo = av_guess_format	(NULL, "foo.mp4", NULL);
+  AVOutputFormat* foo = av_guess_format (NULL, "foo.mp4", NULL);
   printf ("default video_codec = %i = %#x\n", foo->video_codec, foo->video_codec);
 
   unsigned int tag = av_codec_get_tag (foo->codec_tag, AV_CODEC_ID_H264);
@@ -423,14 +423,14 @@ undocumented internal function\n\
   CvVideoWriter_FFMPEG *h = new CvVideoWriter_FFMPEG ();
 
   // https://docs.opencv.org/3.4.1/dd/d9e/classcv_1_1VideoWriter.html#ac3478f6257454209fa99249cc03a5c59
-  // fourcc	4-character code of codec used to compress the frames. For example,
+  // fourcc 4-character code of codec used to compress the frames. For example,
   // VideoWriter::fourcc('P','I','M','1') is a MPEG-1 codec,
   // VideoWriter::fourcc('M','J','P','G') is a motion-jpeg codec etc.
   // List of codes can be obtained at Video Codecs by FOURCC page.
   // FFMPEG backend with MP4 container natively uses other values as fourcc code: see http://mp4ra.org/#/codecs,
   // so you may receive a warning message from OpenCV about fourcc code conversion.
 
-  // fps	    Framerate of the created video stream.
+  // fps      Framerate of the created video stream.
   // isColor    If it is not zero, the encoder will expect and encode color frames,
   // otherwise  it will work with grayscale frames (the flag is currently supported on Windows only).
 

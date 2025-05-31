@@ -56,7 +56,7 @@ $(RELEASE_DIR): all
 	cp COPYING DESCRIPTION NEWS INDEX $@
 	cp -r ./inst $@
 	cp ./src/configure ./src/configure.ac ./src/bootstrap ./src/Makefile.in ./src/cap_ffmpeg_impl_ov.hpp ./src/__cap_ffmpeg_wrapper__.cc $@/src
-	sed -i '/###/q' $@/src/Makefile.in
+	$(SED) -i '/###/q' $@/src/Makefile.in
 	chmod -R a+rX,u+w,go-w $@
 
 $(RELEASE_TARBALL): $(RELEASE_DIR)
@@ -117,7 +117,7 @@ debug: clean
 	  --eval 'system (sprintf ("xfce4-terminal --command \"gdb -p %d\"", getpid ()), "async");'
 
 style:
-	find ./src \( -name "*.cc" -or -name "*.h" -or -name "*.m" \) -exec sed -i 's/[[:space:]]*$$//' {} \;
+	find ./src \( -name "*.cc" -or -name "*.h" -or -name "*.m" \) -exec $(SED) -i 's/[[:space:]]*$$//' {} \;
 	find ./src \( -name "*.cc" -or -name "*.h" \) -exec astyle --style=gnu -s2 -n {} \;
 
 doc:

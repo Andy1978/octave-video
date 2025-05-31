@@ -1446,6 +1446,7 @@ double CvCapture_FFMPEG::get_duration_sec() const
         return -1;
 
     double sec = (double)ic->duration / (double)AV_TIME_BASE;
+    //printf ("sec = %f\n", sec);
 
     if (sec < eps_zero)
     {
@@ -1481,7 +1482,10 @@ int64_t CvCapture_FFMPEG::get_total_frames() const
 
     if (nbf == 0)
     {
-        nbf = (int64_t)floor(get_duration_sec() * get_fps() + 0.5);
+        double t = get_duration_sec ();
+        double fps = get_fps();
+        MSG_WARN ("'nb_frames' returned %li -> calculate total_frames from duration = %.2fs and fps = %.2f/s", nbf, t, fps);
+        nbf = (int64_t)floor(t * fps + 0.5);
     }
     return nbf;
 }

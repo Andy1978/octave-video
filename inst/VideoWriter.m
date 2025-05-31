@@ -167,7 +167,7 @@ classdef VideoWriter < handle
     function open (v)
 
       ## We can't create an instance of CvVideoWriter_FFMPEG right now
-      ## because width,height, codec and so on aren't known yet.
+      ## because width, height, codec and so on aren't known yet.
       ##
       ## This implementation just opens the given filename to check if the
       ## file could be created. A new instance of CvVideoWriter_FFMPEG is

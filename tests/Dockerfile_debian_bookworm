@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y g++ make\
 
 RUN apt-get update && apt-get --no-install-recommends install -y pkg-config octave liboctave-dev patch
 
-RUN apt-get update && apt-get --no-install-recommends install -y pkg-config libswscale-dev libavformat-dev libavcodec-dev patch
+RUN apt-get update && apt-get --no-install-recommends install -y libswscale-dev libavformat-dev libavcodec-dev
 
 COPY ./video-*.tar.gz /app/
 

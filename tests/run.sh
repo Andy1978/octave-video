@@ -11,12 +11,11 @@ do_run () {
   echo "---"
 }
 
-do_run debian_buster
 do_run debian_bullseye
 do_run debian_bookworm
-do_run fedora31_ffmpeg
-do_run fedora33_ffmpeg
+do_run debian_trixie
 do_run fedora38_ffmpeg
-do_run ubuntu_20_04
+do_run fedora44_ffmpeg
 do_run ubuntu_22_04
-do_run ubuntu_23_04
+do_run ubuntu_24_04
+do_run ubuntu_26_04

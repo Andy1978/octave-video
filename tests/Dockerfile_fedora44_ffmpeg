@@ -1,0 +1,18 @@
+FROM fedora:44
+
+WORKDIR /app
+
+RUN dnf -y install octave
+RUN dnf -y install octave-devel
+
+RUN dnf -y install ffmpeg ffmpeg-free-devel
+
+RUN dnf -y install make patch redhat-rpm-config
+
+COPY ./video-*.tar.gz /app/
+
+RUN octave --eval "pkg install -verbose video-*.tar.gz"
+
+CMD ["/bin/bash"]
+
+

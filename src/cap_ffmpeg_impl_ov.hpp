@@ -1489,8 +1489,8 @@ int64_t CvCapture_FFMPEG::get_total_frames() const
     {
         double t = get_duration_sec ();
         double fps = get_fps();
-        MSG_WARN ("'nb_frames' returned %li -> calculate total_frames from duration = %.2fs and fps = %.2f/s", nbf, t, fps);
         nbf = (int64_t)floor(t * fps + 0.5);
+        //MSG_WARN ("'nb_frames' returned 0 -> calculate total_frames from duration = %.2fs and fps = %.2f/s => nbf = %li", t, fps, nbf);
     }
     return nbf;
 }

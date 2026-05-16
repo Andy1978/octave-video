@@ -2,17 +2,11 @@
 
 cp ../video-2*.tar.gz .
 
-## Debian bullseye
-docker build -f Dockerfile_debian_bullseye -t debian_bullseye .
-
 ## Debian bookworm
 docker build -f Dockerfile_debian_bookworm -t debian_bookworm .
 
 ## Debian trixie
 docker build -f Dockerfile_debian_trixie -t debian_trixie .
-
-## Fedora 38
-docker build -f Dockerfile_fedora38_ffmpeg -t fedora38_ffmpeg .
 
 ## Fedora 44
 docker build -f Dockerfile_fedora44_ffmpeg -t fedora44_ffmpeg .

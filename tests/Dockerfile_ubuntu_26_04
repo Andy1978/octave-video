@@ -13,7 +13,7 @@ RUN apt-get update && apt-get --no-install-recommends install -y libswscale-dev 
 
 COPY ./video-*.tar.gz /app/
 
-RUN octave --eval "pkg install -verbose video-*.tar.gz"
+RUN octave --eval "pkg (\"install\", \"-verbose\", glob(\"video-*.tar.gz\"){1})"
 
 CMD ["/usr/bin/octave"]
 #CMD ["/bin/bash"]

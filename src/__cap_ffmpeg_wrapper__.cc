@@ -467,7 +467,7 @@ undocumented internal function\n\
   else
     {
       // FIXME: CvVideoWriter_FFMPEG::open just returns false without explanation why
-      error ("Opening '%s' for writing failed", filename.c_str ());
+      error ("Opening '%s' for writing failed: %s", filename.c_str (), get_last_err_msg().c_str ());
     }
   return retval;
 }

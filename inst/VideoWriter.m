@@ -393,4 +393,4 @@ endclassdef
 %! fn = fullfile (tempdir (), "comma_not_dot,mp4");
 %! w = VideoWriter (fn);
 %! open (w);
-%! fail ("writeVideo (w, rand(100,100,3))", "failed");
+%! fail ("writeVideo (w, rand(100,100,3))", "Can't guess output format from filename");

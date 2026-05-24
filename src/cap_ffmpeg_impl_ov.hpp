@@ -2194,7 +2194,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
     }
     else
     {
-        MSG_ERR ("Can't guess output format from filename '%s'", filename);
+        error ("Can't guess output format from filename '%s'", filename);
         return false;
     }
 
